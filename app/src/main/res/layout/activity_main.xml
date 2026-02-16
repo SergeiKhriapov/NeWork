@@ -7,13 +7,30 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <!-- Текст посередине -->
     <TextView
+        android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
         android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toTopOf="@+id/testButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Кнопка с иконкой под текстом -->
+    <ImageButton
+        android:id="@+id/testButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Test Icon"
+        android:src="@drawable/ic_blind"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
