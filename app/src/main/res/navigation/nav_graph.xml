@@ -1,6 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<navigation xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:app="http://schemas.android.com/apk/res-auto"
-             android:id="@+id/nav_graph.xml">
+<navigation
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:startDestination="@id/feedFragment">
+
+    <!-- Feed Screen -->
+    <fragment
+        android:id="@+id/feedFragment"
+        android:name="ru.netology.nework.ui.feed.FeedFragment"
+        android:label="NeWork">
+
+        <action
+            android:id="@+id/action_feed_to_postCreate"
+            app:destination="@id/postCreateFragment" />
+
+        <action
+            android:id="@+id/action_feed_to_postDetail"
+            app:destination="@id/postDetailFragment" />
+
+    </fragment>
+
+    <!-- Create Post Screen -->
+    <fragment
+        android:id="@+id/postCreateFragment"
+        android:name="ru.netology.nework.ui.post.PostCreateFragment"
+        android:label="Create Post" />
+
+    <!-- Post Detail Screen (заглушка) -->
+    <fragment
+        android:id="@+id/postDetailFragment"
+        android:name="ru.netology.nework.ui.post.PostDetailFragment"
+        android:label="Post Detail" />
+
+    <!-- Login Screen -->
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="ru.netology.nework.ui.auth.LoginFragment"
+        android:label="Login" />
+
+    <!-- Register Screen -->
+    <fragment
+        android:id="@+id/registerFragment"
+        android:name="ru.netology.nework.ui.auth.RegisterFragment"
+        android:label="Register" />
 
 </navigation>

@@ -1,7 +1,34 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.NeWork" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+
+    <!-- Базовая тема -->
+    <style name="Theme.NeWork" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/nav_item_active</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:statusBarColor">@color/nav_item_active</item>
+        <item name="android:navigationBarColor">@color/background_nav</item>
+
+        <!-- Подключаем стиль для BottomNavigationView -->
+        <item name="bottomNavigationStyle">@style/Widget.NeWork.BottomNavigationView</item>
     </style>
+
+    <!-- Стили для BottomNavigationView -->
+    <style name="Widget.NeWork.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:background">@color/background_nav</item>
+        <item name="itemIconSize">24dp</item>
+        <item name="itemIconTint">@color/nav_item_color</item>
+        <item name="itemTextColor">@color/nav_item_color</item>
+        <item name="itemTextAppearanceActive">@style/NavTextStyle</item>
+        <item name="itemTextAppearanceInactive">@style/NavTextStyle</item>
+    </style>
+
+    <!-- Текст для пунктов навигации -->
+    <style name="NavTextStyle" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:lineSpacingExtra">4sp</item>
+        <item name="android:textAlignment">center</item>
+    </style>
+
 </resources>

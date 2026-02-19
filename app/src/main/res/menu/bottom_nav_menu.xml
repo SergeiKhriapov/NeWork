@@ -1,4 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
+    <item
+        android:id="@+id/postsFragment"
+        android:icon="@drawable/ic_rss_feed"
+        android:title="@string/Posts" />
+    <item
+        android:id="@+id/eventsFragment"
+        android:icon="@drawable/ic_event"
+        android:title="@string/Events" />
+    <item
+        android:id="@+id/usersFragment"
+        android:icon="@drawable/ic_people"
+        android:title="@string/Users" />
 </menu>

@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">NeWork</string>
+    <string name="like">Like post</string>
+    <string name="share">Share post</string>
+    <string name="play_video">Play video</string>
+    <string name="profile">Profile</string>
+    <string name="Create">Create</string>
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="view_profile">Viewprofile</string>
+    <string name="Posts">Posts</string>
+    <string name="Events">Events</string>
+    <string name="Users">Users</string>
 </resources>
