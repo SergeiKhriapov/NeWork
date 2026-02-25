@@ -1,5 +1,6 @@
 package ru.netology.nework.ui.feed
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,14 +15,17 @@ import ru.netology.nework.model.Post
 import java.text.SimpleDateFormat
 import java.util.*
 
+private const val TAG = "PostAdapter"
+
 class PostAdapter(
     private val onLike: (Post) -> Unit,
     private val onOpen: (Post) -> Unit,
     private val onMenu: (Post, View) -> Unit,
-    private val onPlayVideo: (String) -> Unit
+    private val onPlayMedia: (String, Boolean) -> Unit
 ) : ListAdapter<Post, PostAdapter.PostViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
+        Log.d(TAG, "onCreateViewHolder")
         val binding = ItemPostBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
@@ -31,6 +35,7 @@ class PostAdapter(
     }
 
     override fun onBindViewHolder(holder: PostViewHolder, position: Int) {
+        Log.d(TAG, "onBindViewHolder position=$position")
         holder.bind(getItem(position))
     }
 
@@ -39,6 +44,7 @@ class PostAdapter(
     ) : RecyclerView.ViewHolder(b.root) {
 
         fun bind(post: Post) = with(b) {
+            Log.d(TAG, "bind post id=${post.id}, type=${post.attachment?.type}")
 
             // ---------- AUTHOR ----------
             tvAuthor.text = post.author
@@ -95,6 +101,7 @@ class PostAdapter(
 
                 when (attachment.type) {
                     AttachmentType.IMAGE -> {
+                        Log.d(TAG, "Post ${post.id}: IMAGE attachment")
                         ivImage.visibility = View.VISIBLE
                         Glide.with(itemView)
                             .load(attachment.url)
@@ -104,32 +111,66 @@ class PostAdapter(
                     }
 
                     AttachmentType.VIDEO -> {
-                        val previewUrl = attachment.url
-                        val videoUrl = post.link
-                        ivVideoPreview.visibility = View.VISIBLE
-                        ivPlay?.visibility = View.VISIBLE
-                        Glide.with(itemView)
-                            .load(previewUrl)
-                            .centerCrop()
-                            .into(ivVideoPreview)
+                        Log.d(TAG, "Post ${post.id}: VIDEO attachment")
+                        // Определяем URL видео (для воспроизведения)
+                        val videoUrl = attachment.url
+                        // Определяем источник превью:
+                        // 1) Если post.link не пуст и отличается от videoUrl, используем его как превью (старый формат)
+                        // 2) Иначе пытаемся извлечь кадр из самого видео через Glide
+                        if (!post.link.isNullOrBlank() && post.link != videoUrl) {
+                            // Старый формат: превью в post.link
+                            ivVideoPreview.visibility = View.VISIBLE
+                            ivPlay?.visibility = View.VISIBLE
+                            Glide.with(itemView)
+                                .load(post.link)
+                                .centerCrop()
+                                .into(ivVideoPreview)
+                        } else {
+                            // Новый формат: извлекаем кадр из видео
+                            ivVideoPreview.visibility = View.VISIBLE
+                            ivPlay?.visibility = View.VISIBLE
+                            Glide.with(itemView)
+                                .load(videoUrl)
+                                .frame(1000000) // кадр на 1 секунде
+                                .centerCrop()
+                                .placeholder(R.drawable.ic_play_circle_filled)
+                                .error(R.drawable.ic_play_circle_filled)
+                                .into(ivVideoPreview)
+                        }
+
                         if (!videoUrl.isNullOrBlank()) {
-                            ivVideoPreview.setOnClickListener { onPlayVideo(videoUrl) }
-                            ivPlay?.setOnClickListener { onPlayVideo(videoUrl) }
+                            ivVideoPreview.setOnClickListener {
+                                Log.d(TAG, "Video preview clicked")
+                                onPlayMedia(videoUrl, true)
+                            }
+                            ivPlay?.setOnClickListener {
+                                Log.d(TAG, "Play button clicked")
+                                onPlayMedia(videoUrl, true)
+                            }
+                        } else {
+                            Log.e(TAG, "Video URL is null or blank for post ${post.id}")
                         }
                     }
 
                     AttachmentType.AUDIO -> {
+                        Log.d(TAG, "Post ${post.id}: AUDIO attachment")
                         ivImage.visibility = View.VISIBLE
                         ivImage.setImageResource(R.drawable.ic_audio)
-                        ivImage.setOnClickListener { onPlayVideo(attachment.url) }
+                        ivImage.setOnClickListener {
+                            Log.d(TAG, "Audio icon clicked")
+                            onPlayMedia(attachment.url, false)
+                        }
                         ivVideoPreview.visibility = View.GONE
                         ivPlay?.visibility = View.GONE
                     }
 
                     else -> {
+                        Log.w(TAG, "Unknown attachment type: ${attachment.type}")
                         mediaContainer.visibility = View.GONE
                     }
                 }
+            } else {
+                Log.d(TAG, "Post ${post.id}: no attachment")
             }
 
             // ---------- OTHER CLICKS ----------

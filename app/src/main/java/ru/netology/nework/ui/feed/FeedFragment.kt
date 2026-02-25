@@ -1,7 +1,5 @@
 package ru.netology.nework.ui.feed
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -15,6 +13,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nework.R
 import ru.netology.nework.model.Post
+import ru.netology.nework.ui.dialog.MediaPlayerDialog
 import ru.netology.nework.viewmodel.FeedViewModel
 
 @AndroidEntryPoint
@@ -41,12 +40,12 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
             onMenu = { post, anchor ->
                 showPopupMenu(post, anchor)
             },
-            onPlayVideo = { url ->   // ✅ добавили
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                startActivity(intent)
+            onPlayMedia = { url, isVideo ->
+                // Открываем диалог с плеером
+                val dialog = MediaPlayerDialog.newInstance(url, isVideo)
+                dialog.show(parentFragmentManager, "media_player")
             }
         )
-
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
