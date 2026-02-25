@@ -79,8 +79,6 @@
                 tools:visibility="visible">
 
                 <!-- IMAGE -->
-
-                <!-- VIDEO PREVIEW -->
                 <ImageView
                     android:id="@+id/iv_image"
                     android:layout_width="match_parent"
@@ -90,6 +88,7 @@
                     tools:src="@tools:sample/backgrounds/scenic"
                     tools:visibility="visible" />
 
+                <!-- VIDEO PREVIEW -->
                 <ImageView
                     android:id="@+id/iv_video_preview"
                     android:layout_width="match_parent"
@@ -99,15 +98,14 @@
                     tools:src="@tools:sample/backgrounds/scenic" />
 
                 <!-- PLAY BUTTON -->
-                <ImageButton
-                    android:id="@+id/btn_play"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
+                <ImageView
+                    android:id="@+id/iv_play"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_play_circle_filled"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/play_video"/>
-
+                    android:visibility="gone"
+                    tools:visibility="visible" />
 
             </FrameLayout>
 

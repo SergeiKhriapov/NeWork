@@ -8,21 +8,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar_register"
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:background="@color/purple_disabled"
-            android:contentInsetStart="0dp"
-            android:elevation="0dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            app:navigationIcon="@drawable/ic_arrow_back"
-            app:title="Регистрация"
-            app:titleCentered="false"
-            app:titleTextAppearance="@style/TextAppearance.Material3.HeadlineSmall"
-            />
-
         <!-- Контент под тулбаром -->
         <ScrollView
             android:id="@+id/scroll_content"
@@ -46,13 +31,14 @@
                     android:layout_height="120dp"
                     android:layout_marginTop="16dp">
 
-                    <ImageView
+                    <com.google.android.material.imageview.ShapeableImageView
                         android:id="@+id/iv_avatar"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="avatar"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:contentDescription="@string/avatar"
                         android:scaleType="centerCrop"
-                        android:src="@drawable/ic_monogram" />
+                        android:src="@drawable/ic_monogram"
+                        app:shapeAppearanceOverlay="@style/CircleImageStyle"/>
                 </FrameLayout>
 
                 <!-- Поля ввода -->
@@ -68,7 +54,7 @@
                         android:id="@+id/et_login"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Login"
+                        android:hint="@string/Login"
                         android:inputType="textEmailAddress" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -84,7 +70,7 @@
                         android:id="@+id/et_name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Name"
+                        android:hint="@string/Name"
                         android:inputType="textPersonName" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -101,7 +87,7 @@
                         android:id="@+id/et_password"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Password"
+                        android:hint="@string/Password"
                         android:inputType="textPassword" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -118,7 +104,7 @@
                         android:id="@+id/et_password_confirm"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Confirm password"
+                        android:hint="@string/Confirm_password"
                         android:inputType="textPassword" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -130,8 +116,8 @@
                     android:layout_marginTop="20dp"
                     android:layout_marginBottom="8dp"
                     android:background="@drawable/bg_button_ripple"
-                    android:contentDescription="Зарегистрироваться"
-                    android:text="Зарегистрироваться"
+                    android:contentDescription="@string/Registration"
+                    android:text="@string/registration"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="16sp"

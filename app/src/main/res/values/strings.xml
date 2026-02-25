@@ -11,4 +11,14 @@
     <string name="Posts">Posts</string>
     <string name="Events">Events</string>
     <string name="Users">Users</string>
+    <string name="Login">Login</string>
+    <string name="Name">Name</string>
+    <string name="Password">Password</string>
+    <string name="Confirm_password">Confirm password</string>
+    <string name="Registration">Registration</string>
+    <string name="registration">Registration</string>
+    <string name="avatar">avatar</string>
+    <string name="dont_have_account_register">dont have account? Register</string>
+    <string name="don_t_have_account_register">Don\'t have account? register</string>
+    <string name="don_t_have_an_account_register">Don\'t have an account? Register</string>
 </resources>

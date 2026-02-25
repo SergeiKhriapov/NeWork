@@ -1,3 +1,6 @@
+import java.util.Properties
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -17,6 +20,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Чтение API-ключа из local.properties
+        val apiKey = getApiKey()
+        buildConfigField("String", "API_KEY", "\"$apiKey\"")
     }
 
     buildTypes {
@@ -35,19 +42,37 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
-    kotlinOptions {
-        jvmTarget = "11"
+    // Новый DSL для настроек компилятора Kotlin
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_11
+        }
     }
 
     buildFeatures {
         compose = false
         viewBinding = true
         dataBinding = true
+        buildConfig = true
     }
 }
 
-dependencies {
+// ✅ Блок kapt
+kapt {
+    correctErrorTypes = true
+}
 
+// Функция для чтения ключа из local.properties
+fun getApiKey(): String {
+    val props = Properties()
+    val file = rootDir.resolve("local.properties")
+    if (file.exists()) {
+        file.inputStream().use { props.load(it) }
+    }
+    return props.getProperty("API_KEY") ?: ""
+}
+
+dependencies {
     // Desugaring (java.time)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 
@@ -74,23 +99,23 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.squareup.moshi:moshi:1.15.1")
-    kapt("com.squareup.moshi:moshi-kotlin-codegen:1.15.1")
+    /*kapt("com.squareup.moshi:moshi-kotlin-codegen:1.15.1")*/
 
     // Dagger Hilt
-    implementation("com.google.dagger:hilt-android:2.48")
-    kapt("com.google.dagger:hilt-compiler:2.48")
+    implementation("com.google.dagger:hilt-android:2.55")
+    kapt("com.google.dagger:hilt-compiler:2.55")
 
     // Room
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-runtime:2.7.0")
+    implementation("androidx.room:room-ktx:2.7.0")
+    kapt("androidx.room:room-compiler:2.7.0")
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
-    // 🔥 Glide (полное подключение)
+    // Glide
     implementation("com.github.bumptech.glide:glide:4.16.0")
-    kapt("com.github.bumptech.glide:compiler:4.16.0")
+    // kapt("com.github.bumptech.glide:compiler:4.16.0")         // при необходимости раскомментируйте
 
     // ExoPlayer
     implementation("com.google.android.exoplayer:exoplayer-core:2.19.1")
@@ -98,6 +123,10 @@ dependencies {
 
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1")
+
+    //Moshi-Kotlin
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
+
 
     // Testing
     testImplementation("junit:junit:4.13.2")

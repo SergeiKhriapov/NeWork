@@ -3,6 +3,7 @@ package ru.netology.nework.ui.feed
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
@@ -11,10 +12,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nework.R
 import ru.netology.nework.model.Post
 import ru.netology.nework.viewmodel.FeedViewModel
 
+@AndroidEntryPoint
 class FeedFragment : Fragment(R.layout.fragment_feed) {
 
     private val viewModel: FeedViewModel by viewModels()
@@ -49,6 +52,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         recyclerView.adapter = adapter
 
         viewModel.posts.observe(viewLifecycleOwner) { posts ->
+            Log.d("FeedFragment", "Received ${posts.size} posts")
             adapter.submitList(posts)
         }
     }

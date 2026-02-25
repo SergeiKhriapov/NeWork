@@ -40,14 +40,28 @@ class PostAdapter(
 
         fun bind(post: Post) = with(b) {
 
-            // ---------- TEXT ----------
+            // ---------- AUTHOR ----------
             tvAuthor.text = post.author
 
+            // ---------- AVATAR ----------
+            if (!post.authorAvatar.isNullOrBlank()) {
+                Glide.with(itemView)
+                    .load(post.authorAvatar)
+                    .placeholder(R.drawable.ic_account_circle)
+                    .error(R.drawable.ic_account_circle)
+                    .circleCrop()
+                    .into(ivAvatar)
+            } else {
+                ivAvatar.setImageResource(R.drawable.ic_account_circle)
+            }
+
+            // ---------- DATE ----------
             tvDate.text = SimpleDateFormat(
                 "dd.MM.yyyy HH:mm",
                 Locale.getDefault()
             ).format(Date(post.published))
 
+            // ---------- CONTENT ----------
             if (post.content.isBlank()) {
                 tvContent.visibility = View.GONE
             } else {
@@ -55,16 +69,14 @@ class PostAdapter(
                 tvContent.text = post.content
             }
 
+            // ---------- LIKES ----------
             tvLikes.text = post.likes.toString()
-
-            // ---------- LIKE ----------
             ivLike.setImageResource(
                 if (post.likedByMe)
                     R.drawable.ic_liked
                 else
                     R.drawable.ic_like
             )
-
             btnLike.setOnClickListener { onLike(post) }
 
             // ---------- RESET MEDIA ----------
@@ -79,50 +91,40 @@ class PostAdapter(
             // ---------- ATTACHMENT ----------
             val attachment = post.attachment
             if (attachment != null) {
-
                 mediaContainer.visibility = View.VISIBLE
 
                 when (attachment.type) {
-
                     AttachmentType.IMAGE -> {
                         ivImage.visibility = View.VISIBLE
-
                         Glide.with(itemView)
                             .load(attachment.url)
                             .centerCrop()
                             .into(ivImage)
-
-                        ivImage.setOnClickListener {
-                            onOpen(post)
-                        }
+                        ivImage.setOnClickListener { onOpen(post) }
                     }
 
                     AttachmentType.VIDEO -> {
-
                         val previewUrl = attachment.url
                         val videoUrl = post.link
-
                         ivVideoPreview.visibility = View.VISIBLE
                         ivPlay?.visibility = View.VISIBLE
-
-                        ivVideoPreview.let {
-                            Glide.with(itemView)
-                                .load(previewUrl)
-                                .centerCrop()
-                                .into(it)
-                        }
-
+                        Glide.with(itemView)
+                            .load(previewUrl)
+                            .centerCrop()
+                            .into(ivVideoPreview)
                         if (!videoUrl.isNullOrBlank()) {
-                            ivVideoPreview.setOnClickListener {
-                                onPlayVideo(videoUrl)
-                            }
-
-                            ivPlay?.setOnClickListener {
-                                onPlayVideo(videoUrl)
-                            }
+                            ivVideoPreview.setOnClickListener { onPlayVideo(videoUrl) }
+                            ivPlay?.setOnClickListener { onPlayVideo(videoUrl) }
                         }
                     }
 
+                    AttachmentType.AUDIO -> {
+                        ivImage.visibility = View.VISIBLE
+                        ivImage.setImageResource(R.drawable.ic_audio)
+                        ivImage.setOnClickListener { onPlayVideo(attachment.url) }
+                        ivVideoPreview.visibility = View.GONE
+                        ivPlay?.visibility = View.GONE
+                    }
 
                     else -> {
                         mediaContainer.visibility = View.GONE

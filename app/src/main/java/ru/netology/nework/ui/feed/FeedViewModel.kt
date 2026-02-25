@@ -1,87 +1,53 @@
 package ru.netology.nework.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import ru.netology.nework.model.Attachment
-import ru.netology.nework.model.AttachmentType
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import ru.netology.nework.domain.repository.PostRepository
 import ru.netology.nework.model.Post
+import javax.inject.Inject
 
-class FeedViewModel : ViewModel() {
+@HiltViewModel
+class FeedViewModel @Inject constructor(
+    private val postRepository: PostRepository
+) : ViewModel() {
 
     private val _posts = MutableLiveData<List<Post>>(emptyList())
     val posts: LiveData<List<Post>> = _posts
 
+    private val _isLoading = MutableLiveData(false)
+    val isLoading: LiveData<Boolean> = _isLoading
+
+    private val _error = MutableLiveData<String?>(null)
+    val error: LiveData<String?> = _error
+
     init {
-        loadMock()
+        loadPosts()
     }
 
-    private fun loadMock() {
-        _posts.value = listOf(
-            Post(
-                id = 1,
-                author = "Leo Lipshutz",
-                authorAvatar = null,
-                published = System.currentTimeMillis(),
-                content = "Шляпа — это головной убор, который носили в Древней Греции. В наше время шляпы носят для защиты от солнца или просто для красоты.",
-                likedByMe = false,
-                likes = 10,
-                attachment = null,
-                link = null,
-                authorId = 1
-            ),
-            Post(
-                id = 2,
-                author = "Leo Lipshutz",
-                authorAvatar = null,
-                published = System.currentTimeMillis(),
-                content = "Шляпа — это головной убор, который носили в Древней Греции. В наше время шляпы носят для защиты от солнца или просто для красоты.",
-                likedByMe = false,
-                likes = 10,
-                attachment = Attachment(
-                    url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRnTQ04WdzI8_nx_D7_gGQK5nyjsunQOHNm5g&s",
-                    type = AttachmentType.IMAGE
-                ),
-
-                link = null,
-                authorId = 1
-            ),
-            Post(
-                id = 3,
-                author = "Leo Lipshutz",
-                authorAvatar = null,
-                published = System.currentTimeMillis(),
-                content = "Видео пост",
-                likedByMe = false,
-                likes = 10,
-                attachment = Attachment(
-                    url = "https://img.youtube.com/vi/KnQJbQXjiH0/0.jpg",
-                    type = AttachmentType.VIDEO
-                ),
-                link = "https://www.youtube.com/watch?v=KnQJbQXjiH0",
-                authorId = 1
-            ),
-                    Post(
-                    id = 4,
-            author = "Leo Lipshutz",
-            authorAvatar = null,
-            published = System.currentTimeMillis(),
-            content = "Видео пост",
-            likedByMe = false,
-            likes = 10,
-            attachment = Attachment(
-                url = "https://img.youtube.com/vi/RCrHfrb9uWA/hqdefault.jpg",
-                type = AttachmentType.VIDEO
-            ),
-            link = "https://www.youtube.com/watch?v=RCrHfrb9uWA",
-            authorId = 1
-        )
-
-        )
+    fun loadPosts() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            Log.d("FeedViewModel", "Loading posts...")
+            val result = postRepository.getPosts()
+            _isLoading.value = false
+            result.onSuccess { list ->
+                Log.d("FeedViewModel", "Loaded ${list.size} posts")
+                _posts.value = list
+            }.onFailure { exception ->
+                Log.e("FeedViewModel", "Error loading posts", exception)
+                _error.value = exception.message ?: "Ошибка загрузки"
+            }
+        }
     }
-
 
     fun toggleLike(postId: Long) {
+        // Здесь позже можно будет отправить запрос на сервер, а пока локальное обновление
         _posts.value = _posts.value?.map {
             if (it.id == postId) {
                 it.copy(
@@ -93,7 +59,7 @@ class FeedViewModel : ViewModel() {
     }
 
     fun isLoggedIn(): Boolean {
+        // В будущем можно проверять токен через TokenManager, пока заглушка
         return false
     }
 }
-

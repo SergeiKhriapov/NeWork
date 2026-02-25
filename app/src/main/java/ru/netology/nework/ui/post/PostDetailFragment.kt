@@ -9,6 +9,6 @@ class PostDetailFragment : Fragment(R.layout.fragment_post_detail) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // Пока ничего не делаем — это заглушка
+        // todo
     }
 }

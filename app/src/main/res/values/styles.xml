@@ -11,4 +11,18 @@
         <item name="android:windowExitAnimation">@anim/slide_out_right</item>
     </style>
 
+    <style name="PopupGrowAnimation">
+        <item name="android:windowEnterAnimation">@anim/grow_from_corner</item>
+        <item name="android:windowExitAnimation">@anim/shrink_to_corner</item>
+    </style>
+    <style name="PopupExpandDownAnimation">
+        <item name="android:windowEnterAnimation">@anim/expand_down</item>
+        <item name="android:windowExitAnimation">@anim/collapse_up</item>
+    </style>
+
+    <style name="CircleImageStyle">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
 </resources>

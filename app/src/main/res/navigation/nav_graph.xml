@@ -36,12 +36,19 @@
     <fragment
         android:id="@+id/loginFragment"
         android:name="ru.netology.nework.ui.auth.LoginFragment"
-        android:label="Login" />
+        android:label="Login">
+
+        <!-- Добавленное действие для перехода на главный экран после логина -->
+        <action
+            android:id="@+id/action_loginFragment_to_feedFragment"
+            app:destination="@id/feedFragment" />
+
+    </fragment>
 
     <!-- Register Screen -->
     <fragment
         android:id="@+id/registerFragment"
         android:name="ru.netology.nework.ui.auth.RegisterFragment"
-        android:label="Register" />
+        android:label="Registration" />
 
 </navigation>
