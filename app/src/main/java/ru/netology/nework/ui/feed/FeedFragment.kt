@@ -3,6 +3,7 @@ package ru.netology.nework.ui.feed
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -41,7 +42,6 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 showPopupMenu(post, anchor)
             },
             onPlayMedia = { url, isVideo ->
-                // Открываем диалог с плеером
                 val dialog = MediaPlayerDialog.newInstance(url, isVideo)
                 dialog.show(parentFragmentManager, "media_player")
             }
@@ -53,6 +53,14 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         viewModel.posts.observe(viewLifecycleOwner) { posts ->
             Log.d("FeedFragment", "Received ${posts.size} posts")
             adapter.submitList(posts)
+        }
+
+        viewModel.error.observe(viewLifecycleOwner) { errorMsg ->
+            errorMsg?.let { Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show() }
+        }
+
+        viewModel.authError.observe(viewLifecycleOwner) { errorMsg ->
+            errorMsg?.let { Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show() }
         }
     }
 

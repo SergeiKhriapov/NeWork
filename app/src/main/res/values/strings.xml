@@ -21,4 +21,6 @@
     <string name="dont_have_account_register">dont have account? Register</string>
     <string name="don_t_have_account_register">Don\'t have account? register</string>
     <string name="don_t_have_an_account_register">Don\'t have an account? Register</string>
+    <string name="volume">volume</string>
+    <string name="play">play</string>
 </resources>

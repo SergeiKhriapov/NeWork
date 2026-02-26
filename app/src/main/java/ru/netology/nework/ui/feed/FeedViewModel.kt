@@ -25,6 +25,9 @@ class FeedViewModel @Inject constructor(
     private val _error = MutableLiveData<String?>(null)
     val error: LiveData<String?> = _error
 
+    private val _authError = MutableLiveData<String?>(null)
+    val authError: LiveData<String?> = _authError
+
     init {
         loadPosts()
     }
@@ -46,16 +49,34 @@ class FeedViewModel @Inject constructor(
         }
     }
 
-    fun toggleLike(postId: Long) {
-        // Здесь позже можно будет отправить запрос на сервер, а пока локальное обновление
-        _posts.value = _posts.value?.map {
-            if (it.id == postId) {
-                it.copy(
-                    likedByMe = !it.likedByMe,
-                    likes = if (!it.likedByMe) it.likes + 1 else it.likes - 1
-                )
-            } else it
+    fun likePost(postId: Long, isLiked: Boolean) {
+        viewModelScope.launch {
+            val result = if (isLiked) {
+                postRepository.unlikePost(postId)
+            } else {
+                postRepository.likePost(postId)
+            }
+            result.onSuccess { updatedPost ->
+                // Обновляем список: заменяем пост на полученный с сервера
+                _posts.value = _posts.value?.map { if (it.id == updatedPost.id) updatedPost else it }
+            }.onFailure { error ->
+                when (error.message) {
+                    "Нужно авторизоваться" -> {
+                        _authError.value = error.message
+                    }
+                    else -> {
+                        _error.value = error.message ?: "Ошибка при обновлении лайка"
+                    }
+                }
+            }
         }
+    }
+
+    // Для обратной совместимости с адаптером (который пока вызывает toggleLike)
+    fun toggleLike(postId: Long) {
+        // Используем текущее состояние поста, чтобы определить, лайкнут ли он
+        val post = _posts.value?.find { it.id == postId } ?: return
+        likePost(postId, post.likedByMe)
     }
 
     fun isLoggedIn(): Boolean {

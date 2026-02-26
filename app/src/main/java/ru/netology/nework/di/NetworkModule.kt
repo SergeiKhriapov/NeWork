@@ -12,6 +12,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import ru.netology.nework.data.api.ApiKeyInterceptor
 import ru.netology.nework.data.api.ApiService
+import ru.netology.nework.data.api.AuthInterceptor
+import ru.netology.nework.data.datastore.TokenManager
 import javax.inject.Singleton
 
 @Module
@@ -22,17 +24,26 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(apiKeyInterceptor: ApiKeyInterceptor): OkHttpClient {
+    fun provideOkHttpClient(
+        apiKeyInterceptor: ApiKeyInterceptor,
+        authInterceptor: AuthInterceptor
+    ): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
         return OkHttpClient.Builder()
             .addInterceptor(logging)
             .addInterceptor(apiKeyInterceptor)
+            .addInterceptor(authInterceptor)
             .build()
     }
 
     @Provides
     @Singleton
     fun provideApiKeyInterceptor(): ApiKeyInterceptor = ApiKeyInterceptor()
+
+    @Provides
+    @Singleton
+    fun provideAuthInterceptor(tokenManager: TokenManager): AuthInterceptor =
+        AuthInterceptor(tokenManager)
 
     @Provides
     @Singleton

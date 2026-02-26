@@ -51,4 +51,44 @@ class PostRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun likePost(id: Long): Result<Post> = try {
+        val response = apiService.likePost(id)
+        if (response.isSuccessful) {
+            val postDto = response.body() ?: return Result.failure(Exception("Пустой ответ"))
+            // Сохраняем обновлённый пост в Room
+            postDao.insert(listOf(postDto.toEntity()))
+            Log.d(TAG, "Updated post ${postDto.id} after like")
+            Result.success(postDto.toDomain())
+        } else {
+            val errorMsg = when (response.code()) {
+                403 -> "Нужно авторизоваться"
+                404 -> "Пост не найден"
+                else -> "Ошибка ${response.code()}"
+            }
+            Result.failure(Exception(errorMsg))
+        }
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun unlikePost(id: Long): Result<Post> = try {
+        val response = apiService.unlikePost(id)
+        if (response.isSuccessful) {
+            val postDto = response.body() ?: return Result.failure(Exception("Пустой ответ"))
+            // Сохраняем обновлённый пост в Room
+            postDao.insert(listOf(postDto.toEntity()))
+            Log.d(TAG, "Updated post ${postDto.id} after unlike")
+            Result.success(postDto.toDomain())
+        } else {
+            val errorMsg = when (response.code()) {
+                403 -> "Нужно авторизоваться"
+                404 -> "Пост не найден"
+                else -> "Ошибка ${response.code()}"
+            }
+            Result.failure(Exception(errorMsg))
+        }
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 }

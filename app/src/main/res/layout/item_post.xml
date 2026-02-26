@@ -17,8 +17,7 @@
             android:background="@color/background"
             android:padding="12dp">
 
-            <!-- ================= HEADER ================= -->
-
+            <!-- HEADER -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -68,8 +67,7 @@
                     android:src="@drawable/ic_more_vert" />
             </LinearLayout>
 
-            <!-- ================= MEDIA ================= -->
-
+            <!-- MEDIA (изображения / видео) -->
             <FrameLayout
                 android:id="@+id/media_container"
                 android:layout_width="match_parent"
@@ -78,7 +76,6 @@
                 android:visibility="gone"
                 tools:visibility="visible">
 
-                <!-- IMAGE -->
                 <ImageView
                     android:id="@+id/iv_image"
                     android:layout_width="match_parent"
@@ -88,7 +85,6 @@
                     tools:src="@tools:sample/backgrounds/scenic"
                     tools:visibility="visible" />
 
-                <!-- VIDEO PREVIEW -->
                 <ImageView
                     android:id="@+id/iv_video_preview"
                     android:layout_width="match_parent"
@@ -97,7 +93,6 @@
                     android:visibility="gone"
                     tools:src="@tools:sample/backgrounds/scenic" />
 
-                <!-- PLAY BUTTON -->
                 <ImageView
                     android:id="@+id/iv_play"
                     android:layout_width="56dp"
@@ -106,11 +101,44 @@
                     android:src="@drawable/ic_play_circle_filled"
                     android:visibility="gone"
                     tools:visibility="visible" />
-
             </FrameLayout>
 
-            <!-- ================= TEXT ================= -->
+            <!-- АУДИОПЛЕЕР (без верхнего отступа) -->
+            <LinearLayout
+                android:id="@+id/audio_player"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
 
+                <ImageButton
+                    android:id="@+id/btn_play_pause"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_audio_play"
+                    android:contentDescription="@string/play" />
+
+                <SeekBar
+                    android:id="@+id/seek_bar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="100" />
+
+                <TextView
+                    android:id="@+id/tv_audio_duration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="00:00 / 00:00"
+                    android:textSize="12sp"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp" />
+            </LinearLayout>
+
+            <!-- ТЕКСТ ПОСТА -->
             <TextView
                 android:id="@+id/tv_content"
                 android:layout_width="match_parent"
@@ -123,8 +151,7 @@
                 tools:text="Шляпа — это головной убор, который носили в Древней Греции."
                 tools:visibility="visible" />
 
-            <!-- ================= ACTIONS ================= -->
-
+            <!-- ДЕЙСТВИЯ (лайк, шеры) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -138,6 +165,7 @@
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     android:background="@drawable/bg_action_button"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp">
 
@@ -165,6 +193,7 @@
                     android:layout_marginStart="16dp"
                     android:gravity="center"
                     android:background="@drawable/bg_action_button"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp">
 
@@ -174,11 +203,8 @@
                         android:src="@drawable/ic_share"
                         android:contentDescription="@string/share" />
                 </LinearLayout>
-
             </LinearLayout>
 
         </LinearLayout>
-
     </androidx.cardview.widget.CardView>
-
 </layout>

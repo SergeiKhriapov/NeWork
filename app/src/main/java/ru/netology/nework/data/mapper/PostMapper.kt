@@ -7,12 +7,7 @@ import ru.netology.nework.model.AttachmentType
 import ru.netology.nework.model.Post
 
 fun PostDto.toEntity(): PostEntity {
-    // Количество лайков = размер списка likeOwnerIds (если не null, иначе 0)
     val likesCount = likeOwnerIds?.size ?: 0
-
-    // Преобразуем дату: предположим, что сервер отдаёт строку в ISO формате,
-    // но пока для совместимости оставляем попытку преобразовать в Long.
-    // Если не получается, ставим текущее время.
     val publishedLong = try {
         published.toLongOrNull() ?: System.currentTimeMillis()
     } catch (e: Exception) {
@@ -25,7 +20,7 @@ fun PostDto.toEntity(): PostEntity {
         authorAvatar = authorAvatar,
         content = content,
         published = publishedLong,
-        likes = likesCount,  // ← используем вычисленное значение
+        likes = likesCount,
         likedByMe = likedByMe,
         attachmentUrl = attachment?.url,
         attachmentType = attachment?.type,
@@ -46,6 +41,27 @@ fun PostEntity.toDomain(): Post {
         likedByMe = likedByMe,
         likes = likes,
         attachment = attachment,
+        link = link,
+        authorId = authorId
+    )
+}
+
+fun PostDto.toDomain(): Post {
+    val likesCount = likeOwnerIds?.size ?: 0
+    val publishedLong = try {
+        published.toLongOrNull() ?: System.currentTimeMillis()
+    } catch (e: Exception) {
+        System.currentTimeMillis()
+    }
+    return Post(
+        id = id,
+        author = author,
+        authorAvatar = authorAvatar,
+        published = publishedLong,
+        content = content,
+        likedByMe = likedByMe,
+        likes = likesCount,
+        attachment = attachment?.let { Attachment(it.url, AttachmentType.valueOf(it.type)) },
         link = link,
         authorId = authorId
     )

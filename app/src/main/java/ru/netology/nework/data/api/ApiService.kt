@@ -3,6 +3,7 @@ package ru.netology.nework.data.api
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
@@ -47,4 +48,10 @@ interface ApiService {
 
     @GET("api/posts")
     suspend fun getPosts(): Response<List<PostDto>>
+
+    @POST("api/posts/{id}/likes")
+    suspend fun likePost(@Path("id") id: Long): Response<PostDto>
+
+    @DELETE("api/posts/{id}/likes")
+    suspend fun unlikePost(@Path("id") id: Long): Response<PostDto>
 }
