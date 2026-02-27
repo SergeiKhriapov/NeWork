@@ -117,8 +117,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     private fun updateMenuVisibilityForDestination(destinationId: Int?) {
         when (destinationId) {
             R.id.feedFragment,
-            R.id.usersFragment,      // добавлено
-            R.id.eventsFragment -> {  // добавлено
+            R.id.usersFragment,
+            R.id.eventsFragment -> {
                 profileMenuItem?.isVisible = true
                 postMenuItem?.isVisible = false
                 bottomNav.visibility = View.VISIBLE
@@ -126,10 +126,14 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             R.id.newPostFragment -> {
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = true
-                // Скрываем стандартную нижнюю навигацию, чтобы показать BottomAppBar фрагмента
                 bottomNav.visibility = View.GONE
             }
             R.id.loginFragment, R.id.registerFragment -> {
+                profileMenuItem?.isVisible = false
+                postMenuItem?.isVisible = false
+                bottomNav.visibility = View.GONE
+            }
+            R.id.locationPickerFragment -> {
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false
                 bottomNav.visibility = View.GONE
@@ -179,7 +183,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 } else {
                     val name = currentUser?.name ?: return
                     val firstLetter = name.firstOrNull()?.toString() ?: "?"
-                    val size = resources.getDimensionPixelSize(R.dimen.menu_icon_size) // убедитесь, что размер определён
+                    val size = resources.getDimensionPixelSize(R.dimen.menu_icon_size)
                     val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
                     val canvas = Canvas(bitmap)
                     val drawable = LetterAvatarDrawable(

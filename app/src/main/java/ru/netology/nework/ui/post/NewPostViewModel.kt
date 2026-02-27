@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import ru.netology.nework.domain.repository.PostRepository
+import ru.netology.nework.model.Coordinates
 import ru.netology.nework.model.MediaAttachment
 import javax.inject.Inject
 
@@ -20,6 +21,9 @@ class NewPostViewModel @Inject constructor(
 
     private val _attachment = MutableLiveData<MediaAttachment?>(null)
     val attachment: LiveData<MediaAttachment?> = _attachment
+
+    private val _coordinates = MutableLiveData<Coordinates?>(null)   // новое поле
+    val coordinates: LiveData<Coordinates?> = _coordinates
 
     private val _isSaving = MutableLiveData(false)
     val isSaving: LiveData<Boolean> = _isSaving
@@ -35,9 +39,14 @@ class NewPostViewModel @Inject constructor(
         _attachment.value = attachment
     }
 
+    fun setCoordinates(coordinates: Coordinates?) {   // новый метод
+        _coordinates.value = coordinates
+    }
+
     fun savePost() {
         val text = _postText.value
         val attachment = _attachment.value
+        val coords = _coordinates.value
 
         if (text.isNullOrBlank() && attachment == null) {
             _saveCompleted.value = false
@@ -47,7 +56,7 @@ class NewPostViewModel @Inject constructor(
         viewModelScope.launch {
             _isSaving.value = true
             try {
-                val result = repository.savePost(text, attachment)
+                val result = repository.savePost(text, attachment, coords)
                 _saveCompleted.value = result.isSuccess
             } catch (e: Exception) {
                 _saveCompleted.value = false
@@ -58,14 +67,11 @@ class NewPostViewModel @Inject constructor(
     }
 
     fun updatePost(id: Long, content: String?, attachment: MediaAttachment?) {
-        if (content.isNullOrBlank() && attachment == null) {
-            _saveCompleted.value = false
-            return
-        }
+        val coords = _coordinates.value
         viewModelScope.launch {
             _isSaving.value = true
             try {
-                val result = repository.updatePost(id, content, attachment)
+                val result = repository.updatePost(id, content, attachment, coords)
                 _saveCompleted.value = result.isSuccess
             } catch (e: Exception) {
                 _saveCompleted.value = false

@@ -30,6 +30,7 @@ import kotlinx.coroutines.withContext
 import ru.netology.nework.R
 import ru.netology.nework.app.OnPostActionListener
 import ru.netology.nework.databinding.FragmentNewPostBinding
+import ru.netology.nework.model.Coordinates
 import ru.netology.nework.model.MediaAttachment
 import ru.netology.nework.model.MediaType
 import java.io.File
@@ -38,6 +39,7 @@ import java.util.Date
 import java.util.Locale
 
 private const val TAG = "NewPostFragment"
+private const val LOCATION_REQUEST_KEY = "location_request"
 
 @AndroidEntryPoint
 class NewPostFragment : Fragment(), OnPostActionListener {
@@ -144,6 +146,11 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 updateMediaPreview(attachment)
             }
 
+        // Наблюдение за координатами (для отображения индикатора)
+        viewModel.coordinates.observe(viewLifecycleOwner) { coords ->
+            binding.tvLocationInfo.visibility = if (coords != null) View.VISIBLE else View.GONE
+        }
+
         // Наблюдение за состоянием сохранения
         viewModel.saveCompleted.observe(viewLifecycleOwner) { success ->
             if (success != null && isAdded) {
@@ -183,7 +190,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                     true
                 }
                 R.id.action_location -> {
-                    // Добавить местоположение (пока заглушка)
+                    openLocationPicker()
                     true
                 }
                 else -> false
@@ -194,6 +201,19 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         binding.btnRemove.setOnClickListener {
             viewModel.setAttachment(null)
         }
+
+        // Слушаем результат из LocationPickerFragment
+        parentFragmentManager.setFragmentResultListener(LOCATION_REQUEST_KEY, viewLifecycleOwner) { _, bundle ->
+            val lat = bundle.getDouble("lat")
+            val lng = bundle.getDouble("lng")
+            viewModel.setCoordinates(Coordinates(lat, lng))
+            Toast.makeText(requireContext(), "Местоположение выбрано", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun openLocationPicker() {
+        // Используем Navigation Component вместо ручной транзакции
+        findNavController().navigate(R.id.locationPickerFragment)
     }
 
     private fun checkCameraPermissionAndOpen() {
@@ -301,7 +321,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
     private fun updateMediaPreview(attachment: MediaAttachment?) {
         Log.d(TAG, "updateMediaPreview attachment=$attachment")
-        // Отменяем предыдущие загрузки Glide
         Glide.with(this).clear(binding.imagePreview)
         Glide.with(this).clear(binding.videoPreview)
 
@@ -312,8 +331,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
         binding.imageContainer.visibility = View.VISIBLE
         binding.btnRemove.visibility = View.VISIBLE
-
-        // Скрываем все элементы предпросмотра
         binding.imagePreview.visibility = View.GONE
         binding.videoContainer.visibility = View.GONE
         binding.audioPlayer.visibility = View.GONE
@@ -336,10 +353,8 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                     .skipMemoryCache(true)
                     .into(binding.imagePreview)
             }
-
             MediaType.VIDEO -> {
                 binding.videoContainer.visibility = View.VISIBLE
-                // Асинхронное создание миниатюры
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                     val bitmap = ThumbnailUtils.createVideoThumbnail(
                         file.absolutePath,
@@ -354,7 +369,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                     }
                 }
             }
-
             MediaType.AUDIO -> {
                 binding.audioPlayer.visibility = View.VISIBLE
                 binding.btnPlayPause.setOnClickListener {
@@ -367,11 +381,14 @@ class NewPostFragment : Fragment(), OnPostActionListener {
     override fun onPostAction() {
         val text = binding.editTextPost.text.toString()
         val attachment = viewModel.attachment.value
+        val coordinates = viewModel.coordinates.value
         if (isEditing) {
             editingPostId?.let { postId ->
+                // TODO: передать coordinates в updatePost
                 viewModel.updatePost(postId, text, attachment)
             }
         } else {
+            // TODO: передать coordinates в savePost
             viewModel.savePost()
         }
     }

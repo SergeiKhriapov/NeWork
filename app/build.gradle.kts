@@ -14,16 +14,26 @@ android {
 
     defaultConfig {
         applicationId = "ru.netology.nework"
-        minSdk = 23
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Чтение API-ключа из local.properties
-        val apiKey = getApiKey()
+        // Чтение ключей из local.properties
+        val localProps = Properties().apply {
+            val file = rootDir.resolve("local.properties")
+            if (file.exists()) file.inputStream().use { load(it) }
+        }
+
+        // API_KEY (если нужен для чего-то ещё)
+        val apiKey = localProps.getProperty("API_KEY") ?: ""
         buildConfigField("String", "API_KEY", "\"$apiKey\"")
+
+        // Ключ для Яндекс Карт
+        val mapkitApiKey = localProps.getProperty("MAPKIT_API_KEY") ?: ""
+        buildConfigField("String", "MAPKIT_API_KEY", "\"$mapkitApiKey\"")
     }
 
     buildTypes {
@@ -42,7 +52,6 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
-    // Новый DSL для настроек компилятора Kotlin
     kotlin {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_11
@@ -57,19 +66,8 @@ android {
     }
 }
 
-// ✅ Блок kapt
 kapt {
     correctErrorTypes = true
-}
-
-// Функция для чтения ключа из local.properties
-fun getApiKey(): String {
-    val props = Properties()
-    val file = rootDir.resolve("local.properties")
-    if (file.exists()) {
-        file.inputStream().use { props.load(it) }
-    }
-    return props.getProperty("API_KEY") ?: ""
 }
 
 dependencies {
@@ -83,7 +81,7 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.12.4")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
-    // Lifecycle / ViewModel / Navigation
+    // Lifecycle / Navigation
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     implementation("androidx.navigation:navigation-fragment-ktx:2.8.5")
@@ -99,7 +97,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.squareup.moshi:moshi:1.15.1")
-    /*kapt("com.squareup.moshi:moshi-kotlin-codegen:1.15.1")*/
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.1") // Объединено с предыдущим
 
     // Dagger Hilt
     implementation("com.google.dagger:hilt-android:2.55")
@@ -115,25 +113,21 @@ dependencies {
 
     // Glide
     implementation("com.github.bumptech.glide:glide:4.16.0")
-    // kapt("com.github.bumptech.glide:compiler:4.16.0")         // при необходимости раскомментируйте
+    kapt("com.github.bumptech.glide:compiler:4.16.0")
 
-    // ExoPlayer
+    // ExoPlayer (один раз)
     implementation("com.google.android.exoplayer:exoplayer-core:2.19.1")
     implementation("com.google.android.exoplayer:exoplayer-ui:2.19.1")
 
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1")
 
-    //Moshi-Kotlin
-    implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
-
+    // Yandex MapKit
+    /*implementation("com.yandex.android:maps.mobile:4.30.0-full")*/
+    implementation("com.yandex.android:maps.mobile:4.0.0-full")
 
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-
-    //Player
-    implementation("com.google.android.exoplayer:exoplayer-core:2.19.1")
-    implementation("com.google.android.exoplayer:exoplayer-ui:2.19.1")
 }

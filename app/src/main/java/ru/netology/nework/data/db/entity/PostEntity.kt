@@ -2,7 +2,6 @@ package ru.netology.nework.data.db.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import ru.netology.nework.model.AttachmentType
 
 @Entity(tableName = "posts")
 data class PostEntity(
@@ -16,6 +15,8 @@ data class PostEntity(
     val likes: Int,
     val likedByMe: Boolean,
     val attachmentUrl: String?,
-    val attachmentType: String?, // храним как строку, конвертер превратит в enum
-    val link: String?
+    val attachmentType: String?,
+    val link: String?,
+    val lat: Double?,      // добавлено
+    val lng: Double?       // добавлено
 )

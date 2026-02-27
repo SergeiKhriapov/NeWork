@@ -8,11 +8,13 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import ru.netology.nework.data.api.ApiService
 import ru.netology.nework.data.api.dto.AttachmentDto
+import ru.netology.nework.data.api.dto.CoordinatesDto
 import ru.netology.nework.data.api.dto.CreatePostRequest
 import ru.netology.nework.data.db.dao.PostDao
 import ru.netology.nework.data.mapper.toDomain
 import ru.netology.nework.data.mapper.toEntity
 import ru.netology.nework.domain.repository.PostRepository
+import ru.netology.nework.model.Coordinates
 import ru.netology.nework.model.MediaAttachment
 import ru.netology.nework.model.MediaType
 import ru.netology.nework.model.Post
@@ -48,7 +50,6 @@ class PostRepositoryImpl @Inject constructor(
             val entities = postsDto.map { it.toEntity() }
             Log.d(TAG, "Inserting ${entities.size} posts into DB")
             postDao.insert(entities)
-            // После вставки LiveData автоматически обновится
             val fromDb = postDao.getAll().map { it.toDomain() }
             Log.d(TAG, "Returning ${fromDb.size} posts from DB")
             Result.success(fromDb)
@@ -111,7 +112,11 @@ class PostRepositoryImpl @Inject constructor(
         Result.failure(e)
     }
 
-    override suspend fun savePost(content: String?, attachment: MediaAttachment?): Result<Unit> {
+    override suspend fun savePost(
+        content: String?,
+        attachment: MediaAttachment?,
+        coords: Coordinates?
+    ): Result<Unit> {
         return try {
             var mediaUrl: String? = null
 
@@ -145,7 +150,15 @@ class PostRepositoryImpl @Inject constructor(
                 AttachmentDto(url, attachment!!.type.name)
             }
 
-            val request = CreatePostRequest(content, attachmentDto)
+            val coordinatesDto = coords?.let {
+                CoordinatesDto(lat = it.lat, lng = it.lng)
+            }
+
+            val request = CreatePostRequest(
+                content = content,
+                attachment = attachmentDto,
+                coords = coordinatesDto
+            )
             val response = apiService.createPost(request)
 
             if (response.isSuccessful) {
@@ -180,7 +193,12 @@ class PostRepositoryImpl @Inject constructor(
         Result.failure(e)
     }
 
-    override suspend fun updatePost(id: Long, content: String?, attachment: MediaAttachment?): Result<Post> {
+    override suspend fun updatePost(
+        id: Long,
+        content: String?,
+        attachment: MediaAttachment?,
+        coords: Coordinates?
+    ): Result<Post> {
         return try {
             var mediaUrl: String? = null
 
@@ -214,7 +232,15 @@ class PostRepositoryImpl @Inject constructor(
                 AttachmentDto(url, attachment!!.type.name)
             }
 
-            val request = CreatePostRequest(content, attachmentDto)
+            val coordinatesDto = coords?.let {
+                CoordinatesDto(lat = it.lat, lng = it.lng)
+            }
+
+            val request = CreatePostRequest(
+                content = content,
+                attachment = attachmentDto,
+                coords = coordinatesDto
+            )
             val response = apiService.updatePost(id, request)
 
             if (response.isSuccessful) {
