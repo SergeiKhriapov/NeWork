@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
-  
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_camera"
+        android:icon="@drawable/ic_photo_camera"
+        android:title="@string/camera"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_attach"
+        android:icon="@drawable/ic_attach_file"
+        android:title="@string/attach"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_users"
+        android:icon="@drawable/ic_people"
+        android:title="@string/users"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_location"
+        android:icon="@drawable/ic_location_pin"
+        android:title="@string/location"
+        app:showAsAction="always" />
 </menu>

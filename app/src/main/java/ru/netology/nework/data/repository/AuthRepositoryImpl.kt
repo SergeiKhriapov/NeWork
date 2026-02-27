@@ -44,8 +44,10 @@ class AuthRepositoryImpl @Inject constructor(
             tokenManager.saveToken(authBody.token)
             Log.d(TAG, "Token saved")
 
-            Log.d(TAG, "Calling apiService.getUser for id=${authBody.id}")
-            val userResponse = apiService.getUser(authBody.id)
+            // Преобразуем id в Long для вызова getUser
+            val userId = authBody.id.toLong()
+            Log.d(TAG, "Calling apiService.getUser for id=$userId")
+            val userResponse = apiService.getUser(userId)
             Log.d(TAG, "apiService.getUser returned code: ${userResponse.code()}")
 
             if (!userResponse.isSuccessful) {
@@ -55,7 +57,7 @@ class AuthRepositoryImpl @Inject constructor(
             val userDto = userResponse.body() ?: return Result.failure(Exception("Пустой ответ"))
             val user = userDto.toDomain()
             Log.d(TAG, "user received: $user")
-            tokenManager.setCurrentUser(user) // сохраняем пользователя
+            tokenManager.saveUser(user) // сохраняем пользователя в DataStore
             Result.success(user)
         } catch (e: Exception) {
             Log.e(TAG, "Exception in login", e)
@@ -98,8 +100,10 @@ class AuthRepositoryImpl @Inject constructor(
             tokenManager.saveToken(authBody.token)
             Log.d(TAG, "Token saved")
 
-            Log.d(TAG, "Calling apiService.getUser for id=${authBody.id}")
-            val userResponse = apiService.getUser(authBody.id)
+            // Преобразуем id в Long
+            val userId = authBody.id.toLong()
+            Log.d(TAG, "Calling apiService.getUser for id=$userId")
+            val userResponse = apiService.getUser(userId)
             Log.d(TAG, "apiService.getUser returned code: ${userResponse.code()}")
 
             if (!userResponse.isSuccessful) {
@@ -110,7 +114,7 @@ class AuthRepositoryImpl @Inject constructor(
             val userDto = userResponse.body() ?: return Result.failure(Exception("Пустой ответ"))
             val user = userDto.toDomain()
             Log.d(TAG, "user received: $user")
-            tokenManager.setCurrentUser(user) // сохраняем пользователя
+            tokenManager.saveUser(user) // сохраняем пользователя в DataStore
             Result.success(user)
         } catch (e: Exception) {
             Log.e(TAG, "Exception in register", e)

@@ -24,5 +24,12 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>
+    <style name="NavTextStyle" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:fontFamily">sans-serif-medium</item> <!-- semi-bold -->
+        <item name="android:textSize">12sp</item>
+        <item name="android:lineSpacingExtra">4sp</item> <!-- 12 + 4 = 16sp line-height -->
+        <item name="android:includeFontPadding">false</item> <!-- убирает лишние отступы -->
+        <item name="android:letterSpacing">0.04</item> <!-- ≈0.5px при 12sp -->
+    </style>
 
 </resources>

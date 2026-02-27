@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<navigation
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     app:startDestination="@id/feedFragment">
 
     <!-- Feed Screen -->
     <fragment
         android:id="@+id/feedFragment"
         android:name="ru.netology.nework.ui.feed.FeedFragment"
-        android:label="NeWork">
+        android:label="NeWork"
+        tools:layout="@layout/fragment_feed">
 
         <action
-            android:id="@+id/action_feed_to_postCreate"
-            app:destination="@id/postCreateFragment" />
+            android:id="@+id/action_feed_to_newPost"
+            app:destination="@id/newPostFragment" />
 
         <action
             android:id="@+id/action_feed_to_postDetail"
@@ -22,15 +23,17 @@
 
     <!-- Create Post Screen -->
     <fragment
-        android:id="@+id/postCreateFragment"
-        android:name="ru.netology.nework.ui.post.PostCreateFragment"
-        android:label="Create Post" />
+        android:id="@+id/newPostFragment"
+        android:name="ru.netology.nework.ui.post.NewPostFragment"
+        android:label="New Post"
+        tools:layout="@layout/fragment_new_post" />
 
-    <!-- Post Detail Screen (заглушка) -->
+    <!-- Post Detail Screen -->
     <fragment
         android:id="@+id/postDetailFragment"
         android:name="ru.netology.nework.ui.post.PostDetailFragment"
-        android:label="Post Detail" />
+        android:label="Post Detail"
+        tools:layout="@layout/fragment_post_detail" />
 
     <!-- Login Screen -->
     <fragment
@@ -38,7 +41,6 @@
         android:name="ru.netology.nework.ui.auth.LoginFragment"
         android:label="Login">
 
-        <!-- Добавленное действие для перехода на главный экран после логина -->
         <action
             android:id="@+id/action_loginFragment_to_feedFragment"
             app:destination="@id/feedFragment" />
@@ -50,5 +52,19 @@
         android:id="@+id/registerFragment"
         android:name="ru.netology.nework.ui.auth.RegisterFragment"
         android:label="Registration" />
+
+    <!-- Users Screen -->
+    <fragment
+        android:id="@+id/usersFragment"
+        android:name="ru.netology.nework.ui.users.UsersFragment"
+        android:label="Users"
+        tools:layout="@layout/fragment_users" />
+
+    <!-- Events Screen (добавлено) -->
+    <fragment
+        android:id="@+id/eventsFragment"
+        android:name="ru.netology.nework.ui.events.EventsFragment"
+        android:label="Events"
+        tools:layout="@layout/fragment_events" />
 
 </navigation>

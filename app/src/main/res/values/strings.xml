@@ -23,4 +23,9 @@
     <string name="don_t_have_an_account_register">Don\'t have an account? Register</string>
     <string name="volume">volume</string>
     <string name="play">play</string>
+    <string name="camera">camera</string>
+    <string name="attach">attach</string>
+    <string name="users">users</string>
+    <string name="location">location</string>
+    <string name="post">post</string>
 </resources>

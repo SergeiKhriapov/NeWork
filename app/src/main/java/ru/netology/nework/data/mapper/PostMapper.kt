@@ -5,12 +5,14 @@ import ru.netology.nework.data.db.entity.PostEntity
 import ru.netology.nework.model.Attachment
 import ru.netology.nework.model.AttachmentType
 import ru.netology.nework.model.Post
+import java.time.Instant
 
 fun PostDto.toEntity(): PostEntity {
     val likesCount = likeOwnerIds?.size ?: 0
-    val publishedLong = try {
-        published.toLongOrNull() ?: System.currentTimeMillis()
+    val publishedMillis = try {
+        Instant.parse(published).toEpochMilli()
     } catch (e: Exception) {
+        // Если формат неверный, используем текущее время (редкий случай)
         System.currentTimeMillis()
     }
     return PostEntity(
@@ -19,7 +21,7 @@ fun PostDto.toEntity(): PostEntity {
         author = author,
         authorAvatar = authorAvatar,
         content = content,
-        published = publishedLong,
+        published = publishedMillis,
         likes = likesCount,
         likedByMe = likedByMe,
         attachmentUrl = attachment?.url,
@@ -48,8 +50,8 @@ fun PostEntity.toDomain(): Post {
 
 fun PostDto.toDomain(): Post {
     val likesCount = likeOwnerIds?.size ?: 0
-    val publishedLong = try {
-        published.toLongOrNull() ?: System.currentTimeMillis()
+    val publishedMillis = try {
+        Instant.parse(published).toEpochMilli()
     } catch (e: Exception) {
         System.currentTimeMillis()
     }
@@ -57,7 +59,7 @@ fun PostDto.toDomain(): Post {
         id = id,
         author = author,
         authorAvatar = authorAvatar,
-        published = publishedLong,
+        published = publishedMillis,
         content = content,
         likedByMe = likedByMe,
         likes = likesCount,

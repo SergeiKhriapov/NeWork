@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -20,6 +21,7 @@ import ru.netology.nework.R
 import ru.netology.nework.databinding.ItemPostBinding
 import ru.netology.nework.model.AttachmentType
 import ru.netology.nework.model.Post
+import ru.netology.nework.utils.LetterAvatarDrawable
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -30,19 +32,18 @@ class PostAdapter(
     private val onLike: (Post) -> Unit,
     private val onOpen: (Post) -> Unit,
     private val onMenu: (Post, View) -> Unit,
-    private val onPlayMedia: (String, Boolean) -> Unit // для видео
+    private val onPlayMedia: (String, Boolean) -> Unit,
+    private val onShare: (Post) -> Unit,
+    private val isOwnedByUser: (Post) -> Boolean
 ) : ListAdapter<Post, PostAdapter.PostViewHolder>(DiffCallback) {
 
-    // Единый плеер для аудио
     private var audioPlayer: ExoPlayer? = null
     private var currentlyPlayingPostId: Long? = null
     private var currentAudioHolder: PostViewHolder? = null
 
-    // Handler для периодического обновления прогресса
     private val mainHandler = Handler(Looper.getMainLooper())
     private var progressUpdateRunnable: Runnable? = null
 
-    // Обновление UI плеера
     private val playerListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             when (playbackState) {
@@ -87,7 +88,7 @@ class PostAdapter(
     }
 
     private fun startProgressUpdates() {
-        stopProgressUpdates() // на всякий случай
+        stopProgressUpdates()
         progressUpdateRunnable = object : Runnable {
             override fun run() {
                 currentAudioHolder?.updateAudioPlaybackState()
@@ -131,7 +132,6 @@ class PostAdapter(
             }
 
         init {
-            // Настройка SeekBar
             b.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                     if (fromUser && audioPlayer != null && currentlyPlayingPostId == currentPostId) {
@@ -150,16 +150,19 @@ class PostAdapter(
                     toggleAudioPlayback(post)
                 }
             }
+
+            b.btnShare.setOnClickListener {
+                val post = getItem(absoluteAdapterPosition)
+                onShare(post)
+            }
         }
 
         fun bind(post: Post) = with(b) {
             Log.d(TAG, "bind post id=${post.id}, type=${post.attachment?.type}")
             currentPostId = post.id
 
-            // ---------- AUTHOR ----------
             tvAuthor.text = post.author
 
-            // ---------- AVATAR ----------
             if (!post.authorAvatar.isNullOrBlank()) {
                 Glide.with(itemView)
                     .load(post.authorAvatar)
@@ -169,25 +172,29 @@ class PostAdapter(
                     .circleCrop()
                     .into(ivAvatar)
             } else {
-                ivAvatar.setImageResource(R.drawable.ic_account_circle)
+                val name = post.author
+                val firstLetter = name.firstOrNull()?.toString() ?: "?"
+                val letterDrawable = LetterAvatarDrawable(
+                    letter = firstLetter,
+                    backgroundColor = ContextCompat.getColor(itemView.context, R.color.purple_primary)
+                ).apply {
+                    setBounds(0, 0, 100, 100)
+                }
+                ivAvatar.setImageDrawable(letterDrawable)
             }
 
-            // ---------- DATE ----------
             tvDate.text = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(post.published))
 
-            // ---------- CONTENT ----------
             if (post.content.isBlank()) tvContent.visibility = View.GONE
             else {
                 tvContent.visibility = View.VISIBLE
                 tvContent.text = post.content
             }
 
-            // ---------- LIKES ----------
             tvLikes.text = post.likes.toString()
             ivLike.setImageResource(if (post.likedByMe) R.drawable.ic_liked else R.drawable.ic_like)
             btnLike.setOnClickListener { onLike(post) }
 
-            // ---------- RESET MEDIA ----------
             mediaContainer.visibility = View.GONE
             ivImage.visibility = View.GONE
             ivVideoPreview.visibility = View.GONE
@@ -196,7 +203,6 @@ class PostAdapter(
             Glide.with(itemView).clear(ivImage)
             ivVideoPreview.let { Glide.with(itemView).clear(it) }
 
-            // ---------- ATTACHMENT ----------
             val attachment = post.attachment
             if (attachment != null) {
                 mediaContainer.visibility = View.VISIBLE
@@ -245,12 +251,11 @@ class PostAdapter(
                     AttachmentType.AUDIO -> {
                         Log.d(TAG, "Post ${post.id}: AUDIO attachment")
                         audioPlayer.visibility = View.VISIBLE
-                        mediaContainer.visibility = View.GONE   // скрываем контейнер, чтобы не было пустого места
+                        mediaContainer.visibility = View.GONE
                         ivImage.visibility = View.GONE
                         ivVideoPreview.visibility = View.GONE
                         ivPlay?.visibility = View.GONE
 
-                        // Определяем, играет ли сейчас этот пост
                         isAudioPlayingForThisPost = (currentlyPlayingPostId == post.id)
 
                         if (isAudioPlayingForThisPost) {
@@ -272,27 +277,30 @@ class PostAdapter(
                 Log.d(TAG, "Post ${post.id}: no attachment")
             }
 
-            // ---------- OTHER CLICKS ----------
+            // Управление видимостью кнопки "ещё" в зависимости от владельца поста
+            if (isOwnedByUser(post)) {
+                btnMore.visibility = View.VISIBLE
+                btnMore.setOnClickListener { onMenu(post, btnMore) }
+            } else {
+                btnMore.visibility = View.GONE
+            }
+
             root.setOnClickListener { onOpen(post) }
-            btnMore.setOnClickListener { onMenu(post, btnMore) }
         }
 
         fun toggleAudioPlayback(post: Post) {
             if (currentlyPlayingPostId == post.id) {
-                // Останавливаем текущее
                 audioPlayer?.pause()
                 currentlyPlayingPostId = null
                 currentAudioHolder = null
                 isAudioPlayingForThisPost = false
                 stopProgressUpdates()
             } else {
-                // Запускаем новое
                 if (audioPlayer == null) {
                     audioPlayer = ExoPlayer.Builder(itemView.context).build().also {
                         it.addListener(playerListener)
                     }
                 }
-                // Останавливаем предыдущее
                 if (currentlyPlayingPostId != null) {
                     currentAudioHolder?.isAudioPlayingForThisPost = false
                     currentAudioHolder = null
@@ -304,7 +312,7 @@ class PostAdapter(
                 currentlyPlayingPostId = post.id
                 currentAudioHolder = this
                 isAudioPlayingForThisPost = true
-                startProgressUpdates() // запускаем обновление прогресса
+                startProgressUpdates()
             }
         }
 

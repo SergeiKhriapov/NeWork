@@ -25,6 +25,7 @@
             app:title="AppName"
             app:titleCentered="false"
             app:titleTextColor="@color/black" />
+
     </com.google.android.material.appbar.AppBarLayout>
 
 
@@ -34,41 +35,42 @@
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         app:defaultNavHost="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         app:navGraph="@navigation/nav_graph" />
 
 
-    <!-- 🔻 Navigation bar -->
+    <!-- 🔻 Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:layout_gravity="bottom"
         android:background="#F3EDF7"
-        app:menu="@menu/bottom_nav_menu"
-        app:labelVisibilityMode="labeled"
         app:itemIconSize="24dp"
         app:itemIconTint="@color/nav_item_color"
-        app:itemTextColor="@color/nav_item_color"
+        app:itemPaddingTop="14dp"
+        app:itemPaddingBottom="4dp"
         app:itemTextAppearanceActive="@style/NavTextStyle"
-        app:itemTextAppearanceInactive="@style/NavTextStyle" />
+        app:itemTextAppearanceInactive="@style/NavTextStyle"
+        app:itemTextColor="@color/nav_item_color"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_menu" />
 
 
-    <!-- ➕ FAB -->
+    <!-- ➕ FAB (без anchor) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_create"
         android:layout_width="56dp"
         android:layout_height="56dp"
+        android:layout_gravity="bottom|end"
         android:layout_marginEnd="24dp"
-        android:layout_marginBottom="28dp"
-        android:contentDescription="@string/Create"
+        android:layout_marginBottom="104dp"
         android:backgroundTint="#EADDFF"
+        android:contentDescription="@string/Create"
         android:elevation="8dp"
         app:shapeAppearanceOverlay="@style/FabRounded16"
         app:srcCompat="@drawable/ic_plus_math"
-        app:tint="@color/black"
-        app:layout_anchor="@id/bottom_nav"
-        app:layout_anchorGravity="top|end" />
+        app:tint="@color/black" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
