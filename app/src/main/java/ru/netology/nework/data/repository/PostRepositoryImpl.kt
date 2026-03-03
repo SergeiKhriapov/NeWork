@@ -115,7 +115,8 @@ class PostRepositoryImpl @Inject constructor(
     override suspend fun savePost(
         content: String?,
         attachment: MediaAttachment?,
-        coords: Coordinates?
+        coords: Coordinates?,
+        mentionIds: Set<Long>?
     ): Result<Unit> {
         return try {
             var mediaUrl: String? = null
@@ -157,7 +158,8 @@ class PostRepositoryImpl @Inject constructor(
             val request = CreatePostRequest(
                 content = content,
                 attachment = attachmentDto,
-                coords = coordinatesDto
+                coords = coordinatesDto,
+                mentionIds = mentionIds?.toList()
             )
             val response = apiService.createPost(request)
 
@@ -197,7 +199,8 @@ class PostRepositoryImpl @Inject constructor(
         id: Long,
         content: String?,
         attachment: MediaAttachment?,
-        coords: Coordinates?
+        coords: Coordinates?,
+        mentionIds: Set<Long>?
     ): Result<Post> {
         return try {
             var mediaUrl: String? = null
@@ -239,7 +242,8 @@ class PostRepositoryImpl @Inject constructor(
             val request = CreatePostRequest(
                 content = content,
                 attachment = attachmentDto,
-                coords = coordinatesDto
+                coords = coordinatesDto,
+                mentionIds = mentionIds?.toList()
             )
             val response = apiService.updatePost(id, request)
 

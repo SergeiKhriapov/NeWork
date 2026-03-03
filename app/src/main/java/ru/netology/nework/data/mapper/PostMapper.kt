@@ -2,10 +2,12 @@ package ru.netology.nework.data.mapper
 
 import ru.netology.nework.data.api.dto.PostDto
 import ru.netology.nework.data.db.entity.PostEntity
+import ru.netology.nework.data.db.entity.UserPreviewEntity
 import ru.netology.nework.model.Attachment
 import ru.netology.nework.model.AttachmentType
 import ru.netology.nework.model.Coordinates
 import ru.netology.nework.model.Post
+import ru.netology.nework.model.UserPreview
 import java.time.Instant
 
 fun PostDto.toEntity(): PostEntity {
@@ -28,7 +30,10 @@ fun PostDto.toEntity(): PostEntity {
         attachmentType = attachment?.type,
         link = link,
         lat = coords?.lat,
-        lng = coords?.lng   // исправлено: вместо .long теперь .lng
+        lng = coords?.lng,
+        mentionIds = mentionIds ?: emptyList(),
+        mentionedMe = mentionedMe,
+        users = users?.mapValues { UserPreviewEntity(it.value.name, it.value.avatar) }
     )
 }
 
@@ -39,8 +44,10 @@ fun PostEntity.toDomain(): Post {
     val coords = if (lat != null && lng != null) {
         Coordinates(lat!!, lng!!)
     } else null
+    val users = this.users?.mapValues { UserPreview(it.value.name, it.value.avatar) }
     return Post(
         id = id,
+        authorId = authorId,
         author = author,
         authorAvatar = authorAvatar,
         published = published,
@@ -49,8 +56,10 @@ fun PostEntity.toDomain(): Post {
         likes = likes,
         attachment = attachment,
         link = link,
-        authorId = authorId,
-        coords = coords
+        coords = coords,
+        mentionIds = mentionIds,
+        mentionedMe = mentionedMe,
+        users = users
     )
 }
 
@@ -61,18 +70,23 @@ fun PostDto.toDomain(): Post {
     } catch (e: Exception) {
         System.currentTimeMillis()
     }
-    val coords = this.coords?.let { Coordinates(it.lat, it.lng) }  // исправлено: вместо it.long теперь it.lng
+    val coords = this.coords?.let { Coordinates(it.lat, it.lng) }
+    val attachment = this.attachment?.let { Attachment(it.url, AttachmentType.valueOf(it.type)) }
+    val users = this.users?.mapValues { UserPreview(it.value.name, it.value.avatar) }
     return Post(
         id = id,
+        authorId = authorId,
         author = author,
         authorAvatar = authorAvatar,
         published = publishedMillis,
         content = content,
         likedByMe = likedByMe,
         likes = likesCount,
-        attachment = attachment?.let { Attachment(it.url, AttachmentType.valueOf(it.type)) },
+        attachment = attachment,
         link = link,
-        authorId = authorId,
-        coords = coords
+        coords = coords,
+        mentionIds = mentionIds ?: emptyList(),
+        mentionedMe = mentionedMe,
+        users = users
     )
 }

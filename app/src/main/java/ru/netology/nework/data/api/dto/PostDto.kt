@@ -3,11 +3,16 @@ package ru.netology.nework.data.api.dto
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = true)
+data class CoordinatesDto(
+    @Json(name = "lat") val lat: Double,
+    @Json(name = "long") val lng: Double
+)
 
 @JsonClass(generateAdapter = true)
 data class AttachmentDto(
     @Json(name = "url") val url: String,
-    @Json(name = "type") val type: String // "IMAGE", "VIDEO", "AUDIO"
+    @Json(name = "type") val type: String
 )
 
 @JsonClass(generateAdapter = true)
@@ -24,7 +29,7 @@ data class PostDto(
     @Json(name = "authorJob") val authorJob: String?,
     @Json(name = "authorAvatar") val authorAvatar: String?,
     @Json(name = "content") val content: String,
-    @Json(name = "published") val published: String, // ISO 8601
+    @Json(name = "published") val published: String,
     @Json(name = "coords") val coords: CoordinatesDto?,
     @Json(name = "link") val link: String?,
     @Json(name = "mentionIds") val mentionIds: List<Long>?,

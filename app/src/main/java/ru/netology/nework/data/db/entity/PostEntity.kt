@@ -17,6 +17,14 @@ data class PostEntity(
     val attachmentUrl: String?,
     val attachmentType: String?,
     val link: String?,
-    val lat: Double?,      // добавлено
-    val lng: Double?       // добавлено
+    val lat: Double?,
+    val lng: Double?,
+    val mentionIds: List<Long>,
+    val mentionedMe: Boolean,
+    val users: Map<Long, UserPreviewEntity>?
+)
+
+data class UserPreviewEntity(
+    val name: String,
+    val avatar: String?
 )

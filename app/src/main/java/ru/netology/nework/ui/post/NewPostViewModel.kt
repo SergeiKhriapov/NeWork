@@ -22,8 +22,11 @@ class NewPostViewModel @Inject constructor(
     private val _attachment = MutableLiveData<MediaAttachment?>(null)
     val attachment: LiveData<MediaAttachment?> = _attachment
 
-    private val _coordinates = MutableLiveData<Coordinates?>(null)   // новое поле
+    private val _coordinates = MutableLiveData<Coordinates?>(null)
     val coordinates: LiveData<Coordinates?> = _coordinates
+
+    private val _mentionIds = MutableLiveData<Set<Long>>(emptySet())
+    val mentionIds: LiveData<Set<Long>> = _mentionIds
 
     private val _isSaving = MutableLiveData(false)
     val isSaving: LiveData<Boolean> = _isSaving
@@ -39,15 +42,15 @@ class NewPostViewModel @Inject constructor(
         _attachment.value = attachment
     }
 
-    fun setCoordinates(coordinates: Coordinates?) {   // новый метод
+    fun setCoordinates(coordinates: Coordinates?) {
         _coordinates.value = coordinates
     }
 
-    fun savePost() {
-        val text = _postText.value
-        val attachment = _attachment.value
-        val coords = _coordinates.value
+    fun setMentionIds(ids: Set<Long>) {
+        _mentionIds.value = ids
+    }
 
+    fun savePost(text: String?, attachment: MediaAttachment?, coords: Coordinates?, mentionIds: Set<Long>?) {
         if (text.isNullOrBlank() && attachment == null) {
             _saveCompleted.value = false
             return
@@ -56,7 +59,7 @@ class NewPostViewModel @Inject constructor(
         viewModelScope.launch {
             _isSaving.value = true
             try {
-                val result = repository.savePost(text, attachment, coords)
+                val result = repository.savePost(text, attachment, coords, mentionIds)
                 _saveCompleted.value = result.isSuccess
             } catch (e: Exception) {
                 _saveCompleted.value = false
@@ -66,12 +69,16 @@ class NewPostViewModel @Inject constructor(
         }
     }
 
-    fun updatePost(id: Long, content: String?, attachment: MediaAttachment?) {
-        val coords = _coordinates.value
+    fun updatePost(id: Long, content: String?, attachment: MediaAttachment?, coords: Coordinates?, mentionIds: Set<Long>?) {
+        if (content.isNullOrBlank() && attachment == null) {
+            _saveCompleted.value = false
+            return
+        }
+
         viewModelScope.launch {
             _isSaving.value = true
             try {
-                val result = repository.updatePost(id, content, attachment, coords)
+                val result = repository.updatePost(id, content, attachment, coords, mentionIds)
                 _saveCompleted.value = result.isSuccess
             } catch (e: Exception) {
                 _saveCompleted.value = false

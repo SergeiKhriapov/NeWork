@@ -15,7 +15,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- ✏️ Поле ввода (высота 192dp, отступы common_spacing) -->
+        <!-- ✏️ Поле ввода -->
         <EditText
             android:id="@+id/editTextPost"
             android:layout_width="match_parent"
@@ -28,14 +28,13 @@
             android:padding="16dp"
             android:textColorHint="@color/textColor" />
 
-        <!-- 🖼 Контейнер для медиа (изображение, видео, аудио) -->
+        <!-- 🖼 Контейнер для медиа -->
         <FrameLayout
             android:id="@+id/imageContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp">
 
-            <!-- Изображение (фото или превью видео) -->
             <ImageView
                 android:id="@+id/imagePreview"
                 android:layout_width="match_parent"
@@ -45,7 +44,6 @@
                 tools:src="@tools:sample/backgrounds/scenic"
                 tools:visibility="visible" />
 
-            <!-- Контейнер для видео (превью + кнопка play) -->
             <FrameLayout
                 android:id="@+id/videoContainer"
                 android:layout_width="match_parent"
@@ -69,7 +67,6 @@
                     android:visibility="visible" />
             </FrameLayout>
 
-            <!-- Аудиоплеер -->
             <LinearLayout
                 android:id="@+id/audioPlayer"
                 android:layout_width="match_parent"
@@ -104,7 +101,6 @@
                     android:paddingEnd="8dp" />
             </LinearLayout>
 
-            <!-- Кнопка удаления медиа (по центру, чуть выше нижнего края) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnRemove"
                 android:layout_width="wrap_content"
@@ -129,7 +125,7 @@
 
         </FrameLayout>
 
-        <!-- Индикатор выбранного местоположения -->
+        <!-- 📍 Индикатор выбранного местоположения -->
         <TextView
             android:id="@+id/tv_location_info"
             android:layout_width="match_parent"
@@ -140,9 +136,40 @@
             android:visibility="gone"
             tools:visibility="visible" />
 
+        <!-- 👥 Выбранные пользователи (упоминания) -->
+
+        <!-- Горизонтальный скролл для карусели аватарок -->
+        <TextView
+            android:id="@+id/tv_mentioned_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Mentioned:"
+            android:textColor="@color/textColor"
+            android:textSize="14sp"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <HorizontalScrollView
+            android:id="@+id/hsv_selected_users"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:id="@+id/ll_selected_users"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingEnd="8dp" /> <!-- небольшой отступ справа для плюс-кнопки -->
+
+        </HorizontalScrollView>
+
     </LinearLayout>
 
-    <!-- 🔻 Bottom App Bar (как в макете) -->
+    <!-- 🔻 Bottom App Bar -->
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bottom_app_bar"
         android:layout_width="match_parent"

@@ -73,4 +73,10 @@
         android:label="Выбор местоположения"
         tools:layout="@layout/fragment_location_picker" />
 
+    <fragment
+        android:id="@+id/userSelectionFragment"
+        android:name="ru.netology.nework.ui.users.UserSelectionFragment"
+        android:label="Choose users"
+        tools:layout="@layout/fragment_user_selection" />
+
 </navigation>

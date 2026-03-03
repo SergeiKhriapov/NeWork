@@ -49,7 +49,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Настройка навигации
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
@@ -61,13 +60,11 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         bottomNav = findViewById(R.id.bottom_nav)
         NavigationUI.setupWithNavController(bottomNav, navController)
 
-        // Слушатель смены фрагментов для обновления меню и bottom nav
         navController.addOnDestinationChangedListener { _, destination, _ ->
             updateMenuVisibilityForDestination(destination.id)
             updateProfileIcon()
         }
 
-        // Подписка на изменения токена и данных пользователя
         lifecycleScope.launch {
             combine(tokenManager.tokenFlow, tokenManager.currentUser) { token, user ->
                 isLoggedIn = token != null
@@ -82,7 +79,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         profileMenuItem = menu?.findItem(R.id.action_profile)
         postMenuItem = menu?.findItem(R.id.action_post)
 
-        // Устанавливаем видимость пунктов в соответствии с текущим фрагментом
         val currentDestinationId = navController.currentDestination?.id
         updateMenuVisibilityForDestination(currentDestinationId)
         updateProfileIcon()
@@ -95,14 +91,27 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 showProfilePopup()
                 true
             }
+
             R.id.action_post -> {
-                handlePostAction()
-                true
+                val currentFragment = supportFragmentManager
+                    .findFragmentById(R.id.nav_host_fragment)
+                    ?.childFragmentManager
+                    ?.fragments
+                    ?.firstOrNull()
+                if (currentFragment is OnPostActionListener) {
+                    currentFragment.onPostAction()
+                    true
+                } else {
+                    // Передаём обработку MenuProvider во фрагменте
+                    false
+                }
             }
+
             android.R.id.home -> {
                 onBackPressedDispatcher.onBackPressed()
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -111,9 +120,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
-    /**
-     * Обновляет видимость пунктов меню и нижней навигации в зависимости от текущего фрагмента.
-     */
     private fun updateMenuVisibilityForDestination(destinationId: Int?) {
         when (destinationId) {
             R.id.feedFragment,
@@ -123,21 +129,31 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 postMenuItem?.isVisible = false
                 bottomNav.visibility = View.VISIBLE
             }
+
             R.id.newPostFragment -> {
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = true
                 bottomNav.visibility = View.GONE
             }
+
             R.id.loginFragment, R.id.registerFragment -> {
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false
                 bottomNav.visibility = View.GONE
             }
+
             R.id.locationPickerFragment -> {
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false
                 bottomNav.visibility = View.GONE
             }
+
+            R.id.userSelectionFragment -> {
+                profileMenuItem?.isVisible = false
+                postMenuItem?.isVisible = true
+                bottomNav.visibility = View.GONE
+            }
+
             else -> {
                 profileMenuItem?.isVisible = true
                 postMenuItem?.isVisible = false
@@ -146,21 +162,17 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         }
     }
 
-    /**
-     * Обрабатывает нажатие на галочку (сохранение поста).
-     * Делегирует выполнение текущему фрагменту, если он поддерживает интерфейс OnPostActionListener.
-     */
     private fun handlePostAction() {
-        val currentFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)?.childFragmentManager?.fragments?.firstOrNull()
+        val currentFragment = supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment)
+            ?.childFragmentManager
+            ?.fragments
+            ?.firstOrNull()
         if (currentFragment is OnPostActionListener) {
             currentFragment.onPostAction()
         }
     }
 
-    /**
-     * Обновляет иконку профиля: если пользователь залогинен и есть аватар, загружает его,
-     * если нет аватара, создаёт буквенный аватар, иначе стандартная иконка.
-     */
     private fun updateProfileIcon() {
         profileMenuItem?.let { menuItem ->
             if (isLoggedIn) {
@@ -172,7 +184,10 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                         .error(R.drawable.ic_account_circle)
                         .circleCrop()
                         .into(object : CustomTarget<Drawable>() {
-                            override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
+                            override fun onResourceReady(
+                                resource: Drawable,
+                                transition: Transition<in Drawable>?
+                            ) {
                                 menuItem.icon = resource
                             }
 
@@ -200,9 +215,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         }
     }
 
-    /**
-     * Показывает всплывающее меню профиля при нажатии на иконку.
-     */
     private fun showProfilePopup() {
         profilePopup?.dismiss()
 
@@ -247,8 +259,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             visibility = if (isLoggedIn) View.VISIBLE else View.GONE
             setOnClickListener {
                 popupWindow.dismiss()
-                // переход на профиль — реализуйте навигацию к профилю пользователя
-                // например, navController.navigate(R.id.profileFragment)
+                // переход на профиль
             }
         }
 
@@ -264,10 +275,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     }
 }
 
-/**
- * Интерфейс для обработки действий из тулбара в фрагментах.
- * Фрагменты, которые должны реагировать на нажатие галочки, реализуют этот интерфейс.
- */
 interface OnPostActionListener {
     fun onPostAction()
 }

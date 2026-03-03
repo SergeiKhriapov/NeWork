@@ -81,10 +81,10 @@ class FeedViewModel @Inject constructor(
         }
     }
 
-    // Исправленный метод: добавлен параметр coords (null при редактировании из ленты)
     fun updatePost(postId: Long, content: String?, attachment: MediaAttachment?) {
         viewModelScope.launch {
-            val result = postRepository.updatePost(postId, content, attachment, null)
+            // Передаём null для coords и mentionIds, так как при редактировании из ленты они не меняются
+            val result = postRepository.updatePost(postId, content, attachment, null, null)
             if (result.isFailure) {
                 _error.value = result.exceptionOrNull()?.message ?: "Ошибка обновления"
             }

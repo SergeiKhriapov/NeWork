@@ -3,6 +3,8 @@ package ru.netology.nework.ui.post
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.Outline
 import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Bundle
@@ -11,12 +13,18 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewOutlineProvider
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.lifecycleScope
@@ -33,6 +41,11 @@ import ru.netology.nework.databinding.FragmentNewPostBinding
 import ru.netology.nework.model.Coordinates
 import ru.netology.nework.model.MediaAttachment
 import ru.netology.nework.model.MediaType
+import ru.netology.nework.model.User
+import ru.netology.nework.ui.users.REQUEST_KEY
+import ru.netology.nework.ui.users.SELECTED_USERS_KEY
+import ru.netology.nework.utils.LetterAvatarDrawable
+import ru.netology.nework.viewmodel.UsersViewModel
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -48,12 +61,10 @@ class NewPostFragment : Fragment(), OnPostActionListener {
     private val binding get() = _binding!!
 
     private val viewModel: NewPostViewModel by viewModels()
+    private val usersViewModel: UsersViewModel by viewModels()
 
-    // Для редактирования
     private var isEditing = false
     private var editingPostId: Long? = null
-
-    // Для фото с камеры
     private var currentPhotoPath: String? = null
 
     // Лаунчеры для результатов
@@ -97,11 +108,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             if (isGranted) {
                 openCamera()
             } else {
-                Toast.makeText(
-                    requireContext(),
-                    "Необходимо разрешение на камеру",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Необходимо разрешение на камеру", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -117,7 +124,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Получаем аргументы (для редактирования)
         arguments?.let { args ->
             editingPostId = args.getLong("postId")
             isEditing = editingPostId != null
@@ -127,31 +133,33 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 val attachmentUrl = args.getString("attachmentUrl")
                 val attachmentType = args.getString("attachmentType")?.let { MediaType.valueOf(it) }
                 if (attachmentUrl != null && attachmentType != null) {
-                    // Здесь можно показать превью существующего вложения
-                    // (например, загрузить изображение по URL)
-                    // Для упрощения оставим заглушку
+                    // Показываем превью существующего вложения (можно доработать)
                 }
             }
         }
 
-        // Подписка на изменения текста
         binding.editTextPost.doAfterTextChanged { text ->
             viewModel.setText(text.toString())
         }
 
-        // Наблюдение за вложением (с distinctUntilChanged)
         viewModel.attachment
             .distinctUntilChanged()
             .observe(viewLifecycleOwner) { attachment ->
                 updateMediaPreview(attachment)
             }
 
-        // Наблюдение за координатами (для отображения индикатора)
         viewModel.coordinates.observe(viewLifecycleOwner) { coords ->
             binding.tvLocationInfo.visibility = if (coords != null) View.VISIBLE else View.GONE
         }
 
-        // Наблюдение за состоянием сохранения
+        viewModel.mentionIds.observe(viewLifecycleOwner) {
+            updateSelectedUsers()
+        }
+
+        usersViewModel.users.observe(viewLifecycleOwner) {
+            updateSelectedUsers()
+        }
+
         viewModel.saveCompleted.observe(viewLifecycleOwner) { success ->
             if (success != null && isAdded) {
                 when (success) {
@@ -174,7 +182,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             }
         }
 
-        // Обработка нажатий на иконки в BottomAppBar
         binding.bottomAppBar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.action_camera -> {
@@ -186,7 +193,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                     true
                 }
                 R.id.action_users -> {
-                    // Упомянуть пользователей (пока заглушка)
+                    openUserSelection()
                     true
                 }
                 R.id.action_location -> {
@@ -197,31 +204,47 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             }
         }
 
-        // Кнопка удаления медиа
         binding.btnRemove.setOnClickListener {
             viewModel.setAttachment(null)
         }
 
-        // Слушаем результат из LocationPickerFragment
-        parentFragmentManager.setFragmentResultListener(LOCATION_REQUEST_KEY, viewLifecycleOwner) { _, bundle ->
+        setFragmentResultListener(LOCATION_REQUEST_KEY) { _, bundle ->
             val lat = bundle.getDouble("lat")
             val lng = bundle.getDouble("lng")
             viewModel.setCoordinates(Coordinates(lat, lng))
             Toast.makeText(requireContext(), "Местоположение выбрано", Toast.LENGTH_SHORT).show()
         }
+
+        setFragmentResultListener(REQUEST_KEY) { _, bundle ->
+            val selectedIds = bundle.getLongArray(SELECTED_USERS_KEY)?.toSet() ?: emptySet()
+            Log.d(TAG, "Received selected users: ${selectedIds.joinToString()}")
+            viewModel.setMentionIds(selectedIds)
+            val count = selectedIds.size
+            val message = when (count) {
+                0 -> "Пользователи не выбраны"
+                1 -> "Выбран 1 пользователь"
+                else -> "Выбрано $count пользователей"
+            }
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun openLocationPicker() {
-        // Используем Navigation Component вместо ручной транзакции
         findNavController().navigate(R.id.locationPickerFragment)
+    }
+
+    private fun openUserSelection() {
+        val selectedIds = viewModel.mentionIds.value?.toLongArray() ?: longArrayOf()
+        Log.d(TAG, "openUserSelection with selectedIds: ${selectedIds.joinToString()}")
+        val args = Bundle().apply {
+            putLongArray("selected_ids", selectedIds)
+        }
+        findNavController().navigate(R.id.userSelectionFragment, args)
     }
 
     private fun checkCameraPermissionAndOpen() {
         when {
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED -> {
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
                 Log.d(TAG, "Camera permission already granted")
                 openCamera()
             }
@@ -290,7 +313,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
     private fun handleMediaResult(uri: Uri, type: MediaType) {
         Log.d(TAG, "handleMediaResult uri=$uri type=$type")
-        // Асинхронное копирование файла
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val internalPath = copyFileToInternalStorage(uri)
             withContext(Dispatchers.Main) {
@@ -378,18 +400,149 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         }
     }
 
+    // Обновлённый метод с корректными MarginLayoutParams
+    private fun updateSelectedUsers() {
+        val allUsers = usersViewModel.users.value ?: emptyList()
+        val selectedIds = viewModel.mentionIds.value ?: emptySet()
+        val selectedUsers = allUsers.filter { it.id in selectedIds }
+
+        if (selectedUsers.isEmpty()) {
+            binding.hsvSelectedUsers.visibility = View.GONE
+            binding.tvMentionedLabel.visibility = View.GONE
+            return
+        }
+
+        binding.hsvSelectedUsers.visibility = View.VISIBLE
+        binding.tvMentionedLabel.visibility = View.VISIBLE
+        binding.llSelectedUsers.removeAllViews()
+
+        val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)
+        val overlap = resources.getDimensionPixelSize(R.dimen.avatar_overlap) // отрицательное значение
+
+        val visibleCount = minOf(selectedUsers.size, 5)
+        val extraCount = selectedUsers.size - 5
+
+        for (i in 0 until visibleCount) {
+            val user = selectedUsers[i]
+            val imageView = ImageView(requireContext()).apply {
+                // Создаём MarginLayoutParams сразу
+                val params = ViewGroup.MarginLayoutParams(avatarSize, avatarSize)
+                if (i > 0) {
+                    params.marginStart = overlap
+                }
+                layoutParams = params
+                scaleType = ImageView.ScaleType.CENTER_CROP
+
+                outlineProvider = object : ViewOutlineProvider() {
+                    override fun getOutline(view: View, outline: Outline) {
+                        outline.setOval(0, 0, avatarSize, avatarSize)
+                    }
+                }
+                clipToOutline = true
+
+                if (!user.avatar.isNullOrBlank()) {
+                    Glide.with(this@NewPostFragment)
+                        .load(user.avatar)
+                        .placeholder(R.drawable.ic_account_circle)
+                        .error(R.drawable.ic_account_circle)
+                        .circleCrop()
+                        .into(this)
+                } else {
+                    val firstLetter = user.name.firstOrNull()?.toString() ?: "?"
+                    val drawable = LetterAvatarDrawable(
+                        letter = firstLetter,
+                        backgroundColor = ContextCompat.getColor(requireContext(), R.color.purple_primary)
+                    ).apply {
+                        setBounds(0, 0, avatarSize, avatarSize)
+                    }
+                    setImageDrawable(drawable)
+                }
+
+                setOnClickListener {
+                    showRemoveUserDialog(user)
+                }
+            }
+            binding.llSelectedUsers.addView(imageView)
+        }
+
+        if (extraCount > 0) {
+            val plusButton = createPlusButton(extraCount) {
+                openUserSelection()
+            }
+            binding.llSelectedUsers.addView(plusButton)
+        }
+    }
+
+    private fun createPlusButton(count: Int, onClick: () -> Unit): View {
+        val size = resources.getDimensionPixelSize(R.dimen.avatar_size)
+        val button = FrameLayout(requireContext()).apply {
+            layoutParams = ViewGroup.LayoutParams(size, size)
+
+            background = ContextCompat.getDrawable(requireContext(), R.drawable.circle_purple)
+            outlineProvider = object : ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: Outline) {
+                    outline.setOval(0, 0, size, size)
+                }
+            }
+            clipToOutline = true
+
+            setOnClickListener { onClick() }
+        }
+
+        val plusIcon = ImageView(requireContext()).apply {
+            setImageResource(R.drawable.ic_plus)
+            layoutParams = FrameLayout.LayoutParams(size / 2, size / 2).apply {
+                gravity = android.view.Gravity.CENTER
+            }
+        }
+        button.addView(plusIcon)
+
+        val countText = TextView(requireContext()).apply {
+            text = "+$count"
+            textSize = 10f
+            setTextColor(Color.WHITE)
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = android.view.Gravity.BOTTOM or android.view.Gravity.END
+                setMargins(0, 0, 4, 4)
+            }
+        }
+        button.addView(countText)
+
+        return button
+    }
+
+    private fun showRemoveUserDialog(user: User) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Убрать пользователя")
+            .setMessage("Убрать ${user.name} из упомянутых?")
+            .setPositiveButton("Да") { _, _ ->
+                val currentIds = viewModel.mentionIds.value?.toMutableSet() ?: return@setPositiveButton
+                currentIds.remove(user.id)
+                viewModel.setMentionIds(currentIds)
+            }
+            .setNegativeButton("Нет", null)
+            .show()
+    }
+
     override fun onPostAction() {
+        if (viewModel.isSaving.value == true) {
+            Toast.makeText(requireContext(), "Сохранение уже выполняется", Toast.LENGTH_SHORT).show()
+            return
+        }
         val text = binding.editTextPost.text.toString()
         val attachment = viewModel.attachment.value
         val coordinates = viewModel.coordinates.value
+        val mentionIds = viewModel.mentionIds.value
+        Log.d(TAG, "onPostAction: mentionIds = ${mentionIds?.joinToString()}")
         if (isEditing) {
             editingPostId?.let { postId ->
-                // TODO: передать coordinates в updatePost
-                viewModel.updatePost(postId, text, attachment)
+                viewModel.updatePost(postId, text, attachment, coordinates, mentionIds)
             }
         } else {
-            // TODO: передать coordinates в savePost
-            viewModel.savePost()
+            viewModel.savePost(text, attachment, coordinates, mentionIds)
         }
     }
 
