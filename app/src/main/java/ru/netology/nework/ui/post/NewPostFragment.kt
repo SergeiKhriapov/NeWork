@@ -400,7 +400,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         }
     }
 
-    // Обновлённый метод с корректными MarginLayoutParams
+    // ========== Обновлённый метод для карусели аватарок ==========
     private fun updateSelectedUsers() {
         val allUsers = usersViewModel.users.value ?: emptyList()
         val selectedIds = viewModel.mentionIds.value ?: emptySet()
@@ -424,94 +424,142 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
         for (i in 0 until visibleCount) {
             val user = selectedUsers[i]
-            val imageView = ImageView(requireContext()).apply {
-                // Создаём MarginLayoutParams сразу
-                val params = ViewGroup.MarginLayoutParams(avatarSize, avatarSize)
-                if (i > 0) {
-                    params.marginStart = overlap
-                }
-                layoutParams = params
-                scaleType = ImageView.ScaleType.CENTER_CROP
-
-                outlineProvider = object : ViewOutlineProvider() {
-                    override fun getOutline(view: View, outline: Outline) {
-                        outline.setOval(0, 0, avatarSize, avatarSize)
-                    }
-                }
-                clipToOutline = true
-
-                if (!user.avatar.isNullOrBlank()) {
-                    Glide.with(this@NewPostFragment)
-                        .load(user.avatar)
-                        .placeholder(R.drawable.ic_account_circle)
-                        .error(R.drawable.ic_account_circle)
-                        .circleCrop()
-                        .into(this)
-                } else {
-                    val firstLetter = user.name.firstOrNull()?.toString() ?: "?"
-                    val drawable = LetterAvatarDrawable(
-                        letter = firstLetter,
-                        backgroundColor = ContextCompat.getColor(requireContext(), R.color.purple_primary)
-                    ).apply {
-                        setBounds(0, 0, avatarSize, avatarSize)
-                    }
-                    setImageDrawable(drawable)
-                }
-
-                setOnClickListener {
-                    showRemoveUserDialog(user)
-                }
+            val avatarView = createAvatarView(user)
+            val layoutParams = avatarView.layoutParams as ViewGroup.MarginLayoutParams
+            if (i > 0) {
+                layoutParams.marginStart = overlap
             }
-            binding.llSelectedUsers.addView(imageView)
+            avatarView.layoutParams = layoutParams
+            binding.llSelectedUsers.addView(avatarView)
         }
 
         if (extraCount > 0) {
-            val plusButton = createPlusButton(extraCount) {
+            val plusButton = createPlusButton {
                 openUserSelection()
             }
+            val layoutParams = plusButton.layoutParams as ViewGroup.MarginLayoutParams
+            // Нахлест для плюс-кнопки, если она не первая
+            if (visibleCount > 0) {
+                layoutParams.marginStart = overlap
+            }
+            plusButton.layoutParams = layoutParams
             binding.llSelectedUsers.addView(plusButton)
         }
     }
 
-    private fun createPlusButton(count: Int, onClick: () -> Unit): View {
-        val size = resources.getDimensionPixelSize(R.dimen.avatar_size)
-        val button = FrameLayout(requireContext()).apply {
-            layoutParams = ViewGroup.LayoutParams(size, size)
+    /**
+     * Создаёт элемент с белой круглой обводкой и аватаркой внутри.
+     */
+    private fun createAvatarView(user: User): View {
+        val strokeWidth = resources.getDimensionPixelSize(R.dimen.avatar_stroke_width)
+        val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)
 
-            background = ContextCompat.getDrawable(requireContext(), R.drawable.circle_purple)
+        // Внешний контейнер с белой обводкой
+        val container = FrameLayout(requireContext()).apply {
+            layoutParams = ViewGroup.MarginLayoutParams(avatarSize, avatarSize)
+
+            // Фон – круг с белой обводкой
+            background = ContextCompat.getDrawable(requireContext(), R.drawable.circle_white_stroke)
             outlineProvider = object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline) {
+                    outline.setOval(0, 0, avatarSize, avatarSize)
+                }
+            }
+            clipToOutline = true
+
+            setOnClickListener {
+                showRemoveUserDialog(user)
+            }
+        }
+
+        // Внутренний ImageView с аватаркой, с отступом, чтобы не перекрывать обводку
+        val imageView = ImageView(requireContext()).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                avatarSize - 2 * strokeWidth,
+                avatarSize - 2 * strokeWidth
+            ).apply {
+                gravity = android.view.Gravity.CENTER
+            }
+            scaleType = ImageView.ScaleType.CENTER_CROP
+
+            // Круглая обрезка
+            outlineProvider = object : ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: Outline) {
+                    val size = avatarSize - 2 * strokeWidth
                     outline.setOval(0, 0, size, size)
                 }
             }
             clipToOutline = true
 
+            if (!user.avatar.isNullOrBlank()) {
+                Glide.with(this@NewPostFragment)
+                    .load(user.avatar)
+                    .placeholder(R.drawable.ic_account_circle)
+                    .error(R.drawable.ic_account_circle)
+                    .circleCrop()
+                    .into(this)
+            } else {
+                val firstLetter = user.name.firstOrNull()?.toString() ?: "?"
+                val drawable = LetterAvatarDrawable(
+                    letter = firstLetter,
+                    backgroundColor = ContextCompat.getColor(requireContext(), R.color.purple_primary)
+                ).apply {
+                    setBounds(0, 0, avatarSize - 2 * strokeWidth, avatarSize - 2 * strokeWidth)
+                }
+                setImageDrawable(drawable)
+            }
+        }
+
+        container.addView(imageView)
+        return container
+    }
+
+    /**
+     * Создаёт кнопку с плюсиком (без счётчика), которая поддерживает нахлёст.
+     */
+    private fun createPlusButton(onClick: () -> Unit): View {
+        val strokeWidth = resources.getDimensionPixelSize(R.dimen.avatar_stroke_width)
+        val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)
+        val innerSize = avatarSize - 2 * strokeWidth
+
+        // Внешний контейнер с белой обводкой
+        val container = FrameLayout(requireContext()).apply {
+            layoutParams = ViewGroup.MarginLayoutParams(avatarSize, avatarSize)
+            background = ContextCompat.getDrawable(requireContext(), R.drawable.circle_white_stroke)
+            outlineProvider = object : ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: Outline) {
+                    outline.setOval(0, 0, avatarSize, avatarSize)
+                }
+            }
+            clipToOutline = true
             setOnClickListener { onClick() }
         }
 
+        // Внутренний фиолетовый круг
+        val innerCircle = FrameLayout(requireContext()).apply {
+            layoutParams = FrameLayout.LayoutParams(innerSize, innerSize).apply {
+                gravity = android.view.Gravity.CENTER
+            }
+            background = ContextCompat.getDrawable(requireContext(), R.drawable.circle_purple)
+            outlineProvider = object : ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: Outline) {
+                    outline.setOval(0, 0, innerSize, innerSize)
+                }
+            }
+            clipToOutline = true
+        }
+
+        // Иконка плюса
         val plusIcon = ImageView(requireContext()).apply {
             setImageResource(R.drawable.ic_plus)
-            layoutParams = FrameLayout.LayoutParams(size / 2, size / 2).apply {
+            layoutParams = FrameLayout.LayoutParams(innerSize / 2, innerSize / 2).apply {
                 gravity = android.view.Gravity.CENTER
             }
         }
-        button.addView(plusIcon)
 
-        val countText = TextView(requireContext()).apply {
-            text = "+$count"
-            textSize = 10f
-            setTextColor(Color.WHITE)
-            layoutParams = FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = android.view.Gravity.BOTTOM or android.view.Gravity.END
-                setMargins(0, 0, 4, 4)
-            }
-        }
-        button.addView(countText)
-
-        return button
+        innerCircle.addView(plusIcon)
+        container.addView(innerCircle)
+        return container
     }
 
     private fun showRemoveUserDialog(user: User) {
