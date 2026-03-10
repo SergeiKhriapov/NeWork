@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
 
-    <!-- 🔝 TOP APP BAR -->
+    <!-- TOP APP BAR -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
@@ -29,7 +28,7 @@
     </com.google.android.material.appbar.AppBarLayout>
 
 
-    <!-- 📄 Контент -->
+    <!--Контент -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
@@ -40,25 +39,21 @@
         app:navGraph="@navigation/nav_graph" />
 
 
-    <!-- 🔻 Bottom Navigation -->
+    <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="#F3EDF7"
         app:itemIconSize="24dp"
         app:itemIconTint="@color/nav_item_color"
-        app:itemPaddingTop="14dp"
-        app:itemPaddingBottom="4dp"
-        app:itemTextAppearanceActive="@style/NavTextStyle"
-        app:itemTextAppearanceInactive="@style/NavTextStyle"
         app:itemTextColor="@color/nav_item_color"
         app:labelVisibilityMode="labeled"
         app:menu="@menu/bottom_nav_menu" />
 
 
-    <!-- ➕ FAB (без anchor) -->
+    <!-- FAB кнопка -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_create"
         android:layout_width="56dp"

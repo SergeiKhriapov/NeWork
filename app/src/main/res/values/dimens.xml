@@ -7,4 +7,7 @@
     <dimen name="avatar_margin_end">4dp</dimen>
     <dimen name="avatar_stroke_width">2dp</dimen>
     <dimen name="counter_margin_end">8dp</dimen>
+    <dimen name="mention_icon_margin">-16dp</dimen>
+    <dimen name="mention_count_margin">8dp</dimen>
+    <dimen name="mention_count_margin_start">12dp</dimen>
 </resources>

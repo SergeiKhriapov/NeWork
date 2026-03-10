@@ -16,16 +16,40 @@ import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.location.Location
 import com.yandex.mapkit.location.LocationListener
+import com.yandex.mapkit.location.LocationManager
 import com.yandex.mapkit.location.LocationStatus
 import com.yandex.mapkit.map.CameraPosition
 import ru.netology.nework.databinding.FragmentLocationPickerBinding
 
 private const val LOCATION_REQUEST_KEY = "location_request"
+private const val LOCATION_PERMISSION_REQUEST_CODE = 100
 
 class LocationPickerFragment : Fragment() {
 
     private var _binding: FragmentLocationPickerBinding? = null
-    private val binding get() = _binding!!
+    private val binding: FragmentLocationPickerBinding
+        get() = _binding ?: error("Binding accessed after view destroyed")
+
+    private var locationManager: LocationManager? = null
+
+    private val locationListener = object : LocationListener {
+        override fun onLocationUpdated(location: Location) {
+            val currentBinding = _binding ?: return
+
+            val point = location.position
+            currentBinding.mapView.map.move(
+                CameraPosition(point, 16.0f, 0.0f, 0.0f),
+                Animation(Animation.Type.SMOOTH, 1f),
+                null
+            )
+
+            locationManager?.unsubscribe(this)
+        }
+
+        override fun onLocationStatusUpdated(status: LocationStatus) {
+            // можно обработать статус при необходимости
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -53,31 +77,27 @@ class LocationPickerFragment : Fragment() {
             findNavController().navigateUp()
         }
 
-        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED
+        checkLocationPermission()
+    }
+
+    private fun checkLocationPermission() {
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
         ) {
-            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 100)
+            requestPermissions(
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
         } else {
             moveToCurrentLocation()
         }
     }
 
     private fun moveToCurrentLocation() {
-        val locationManager = MapKitFactory.getInstance().createLocationManager()
-        locationManager.requestSingleUpdate(object : LocationListener {
-            override fun onLocationUpdated(location: Location) {
-                val point = location.position
-                binding.mapView.map.move(
-                    CameraPosition(point, 16.0f, 0.0f, 0.0f),
-                    Animation(Animation.Type.SMOOTH, 1f),
-                    null
-                )
-            }
-
-            override fun onLocationStatusUpdated(status: LocationStatus) {
-                // при необходимости обработать ошибки
-            }
-        })
+        locationManager = MapKitFactory.getInstance().createLocationManager()
+        locationManager?.requestSingleUpdate(locationListener)
     }
 
     override fun onRequestPermissionsResult(
@@ -86,12 +106,25 @@ class LocationPickerFragment : Fragment() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 100 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE &&
+            grantResults.isNotEmpty() &&
+            grantResults[0] == PackageManager.PERMISSION_GRANTED
+        ) {
             moveToCurrentLocation()
         } else {
-            Toast.makeText(requireContext(), "Нет разрешения на геолокацию", Toast.LENGTH_SHORT).show()
+            if (_binding == null) return
+
+            Toast.makeText(
+                requireContext(),
+                "Нет разрешения на геолокацию",
+                Toast.LENGTH_SHORT
+            ).show()
+
             val defaultPoint = Point(55.751244, 37.618423)
-            binding.mapView.map.move(CameraPosition(defaultPoint, 10.0f, 0.0f, 0.0f))
+            binding.mapView.map.move(
+                CameraPosition(defaultPoint, 10.0f, 0.0f, 0.0f)
+            )
         }
     }
 
@@ -108,7 +141,9 @@ class LocationPickerFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
+        locationManager?.unsubscribe(locationListener)
+        locationManager = null
         _binding = null
+        super.onDestroyView()
     }
 }

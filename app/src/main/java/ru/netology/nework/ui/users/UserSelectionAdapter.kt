@@ -45,7 +45,26 @@ class UserSelectionAdapter(
     inner class UserViewHolder(private val binding: ItemUserCheckableBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
+        private var currentUser: User? = null
+
+        init {
+            // Слушаем изменения чекбокса
+            binding.cbSelected.setOnCheckedChangeListener { _, isChecked ->
+                currentUser?.let { user ->
+                    if (selectedIds.contains(user.id) != isChecked) {
+                        if (isChecked) {
+                            selectedIds.add(user.id)
+                        } else {
+                            selectedIds.remove(user.id)
+                        }
+                        onItemClick(user, isChecked)
+                    }
+                }
+            }
+        }
+
         fun bind(user: User) {
+            currentUser = user
             binding.apply {
                 tvName.text = user.name
                 tvLogin.text = user.login
@@ -66,19 +85,21 @@ class UserSelectionAdapter(
                     ivAvatar.setImageDrawable(drawable)
                 }
 
+                // Временно отключаем слушатель, чтобы не вызвать событие при установке состояния
+                cbSelected.setOnCheckedChangeListener(null)
                 cbSelected.isChecked = selectedIds.contains(user.id)
-
-                root.setOnClickListener {
-                    val newState = !cbSelected.isChecked
-                    cbSelected.isChecked = newState
-                    if (newState) {
-                        selectedIds.add(user.id)
-                        Log.d(TAG, "Added user ${user.id}, selected now: $selectedIds")
-                    } else {
-                        selectedIds.remove(user.id)
-                        Log.d(TAG, "Removed user ${user.id}, selected now: $selectedIds")
+                // Возвращаем слушатель
+                cbSelected.setOnCheckedChangeListener { _, isChecked ->
+                    currentUser?.let { u ->
+                        if (selectedIds.contains(u.id) != isChecked) {
+                            if (isChecked) {
+                                selectedIds.add(u.id)
+                            } else {
+                                selectedIds.remove(u.id)
+                            }
+                            onItemClick(u, isChecked)
+                        }
                     }
-                    onItemClick(user, newState)
                 }
             }
         }

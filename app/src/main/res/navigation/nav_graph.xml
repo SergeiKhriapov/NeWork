@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     app:startDestination="@id/feedFragment">
 
-    <!-- Feed Screen -->
     <fragment
         android:id="@+id/feedFragment"
         android:name="ru.netology.nework.ui.feed.FeedFragment"
@@ -21,21 +20,18 @@
 
     </fragment>
 
-    <!-- Create Post Screen -->
     <fragment
         android:id="@+id/newPostFragment"
         android:name="ru.netology.nework.ui.post.NewPostFragment"
         android:label="New Post"
         tools:layout="@layout/fragment_new_post" />
 
-    <!-- Post Detail Screen -->
     <fragment
         android:id="@+id/postDetailFragment"
         android:name="ru.netology.nework.ui.post.PostDetailFragment"
         android:label="Post Detail"
         tools:layout="@layout/fragment_post_detail" />
 
-    <!-- Login Screen -->
     <fragment
         android:id="@+id/loginFragment"
         android:name="ru.netology.nework.ui.auth.LoginFragment"
@@ -47,20 +43,17 @@
 
     </fragment>
 
-    <!-- Register Screen -->
     <fragment
         android:id="@+id/registerFragment"
         android:name="ru.netology.nework.ui.auth.RegisterFragment"
         android:label="Registration" />
 
-    <!-- Users Screen -->
     <fragment
         android:id="@+id/usersFragment"
         android:name="ru.netology.nework.ui.users.UsersFragment"
         android:label="Users"
         tools:layout="@layout/fragment_users" />
 
-    <!-- Events Screen (добавлено) -->
     <fragment
         android:id="@+id/eventsFragment"
         android:name="ru.netology.nework.ui.events.EventsFragment"
@@ -70,7 +63,7 @@
     <fragment
         android:id="@+id/locationPickerFragment"
         android:name="ru.netology.nework.ui.post.LocationPickerFragment"
-        android:label="Выбор местоположения"
+        android:label="Selecting a location"
         tools:layout="@layout/fragment_location_picker" />
 
     <fragment

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Outline
+import android.graphics.Typeface
 import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Bundle
@@ -16,12 +17,14 @@ import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.view.marginEnd
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
@@ -413,11 +416,44 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         }
 
         binding.hsvSelectedUsers.visibility = View.VISIBLE
-        binding.tvMentionedLabel.visibility = View.VISIBLE
+        binding.tvMentionedLabel.visibility = View.GONE
         binding.llSelectedUsers.removeAllViews()
 
         val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)
-        val overlap = resources.getDimensionPixelSize(R.dimen.avatar_overlap) // отрицательное значение
+        val overlap = resources.getDimensionPixelSize(R.dimen.avatar_overlap)
+        val iconMarginEnd = resources.getDimensionPixelSize(R.dimen.mention_icon_margin)
+        val countMarginEnd = resources.getDimensionPixelSize(R.dimen.mention_count_margin)
+
+        // Иконка упоминания
+        val iconView = ImageView(requireContext()).apply {
+            setImageResource(R.drawable.ic_mentioned)
+            layoutParams = ViewGroup.MarginLayoutParams(avatarSize, avatarSize).apply {
+                marginEnd = iconMarginEnd
+            }
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+        }
+        binding.llSelectedUsers.addView(iconView)
+
+        // Счётчик количества
+        val countView = TextView(requireContext()).apply {
+            text = selectedUsers.size.toString()
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                avatarSize
+            ).apply {
+                marginStart = resources.getDimensionPixelSize(R.dimen.mention_count_margin_start)
+                marginEnd = countMarginEnd
+                gravity = android.view.Gravity.CENTER_VERTICAL
+            }
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.purple_primary))
+            textSize = 14f
+            setLineSpacing(6f, 1f)
+            letterSpacing = 0.1f
+            setTypeface(null, Typeface.BOLD)
+            // убираем gravity самого TextView, оставляем только в layoutParams для центрирования по вертикали
+            gravity = android.view.Gravity.CENTER
+        }
+        binding.llSelectedUsers.addView(countView)
 
         val visibleCount = minOf(selectedUsers.size, 5)
         val extraCount = selectedUsers.size - 5
@@ -426,6 +462,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             val user = selectedUsers[i]
             val avatarView = createAvatarView(user)
             val layoutParams = avatarView.layoutParams as ViewGroup.MarginLayoutParams
+            // Первый аватар не наезжает на счётчик, поэтому marginStart = 0
             if (i > 0) {
                 layoutParams.marginStart = overlap
             }
@@ -438,7 +475,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 openUserSelection()
             }
             val layoutParams = plusButton.layoutParams as ViewGroup.MarginLayoutParams
-            // Нахлест для плюс-кнопки, если она не первая
+            // Плюс-кнопка наезжает на предыдущий аватар
             if (visibleCount > 0) {
                 layoutParams.marginStart = overlap
             }

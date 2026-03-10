@@ -45,13 +45,13 @@ interface ApiService {
     @DELETE("api/posts/{id}/likes")
     suspend fun unlikePost(@Path("id") id: Long): Response<PostDto>
 
-    // ✅ Новый метод для создания поста (JSON)
+    // Новый метод для создания поста (JSON)
     @POST("api/posts")
     suspend fun createPost(
         @Body request: CreatePostRequest
     ): Response<PostDto>
 
-    // ✅ Загрузка медиа (уже есть)
+    // Загрузка медиа
     @Multipart
     @POST("api/media")
     suspend fun uploadMedia(@Part file: MultipartBody.Part): Response<MediaResponse>

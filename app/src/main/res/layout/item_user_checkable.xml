@@ -7,15 +7,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
+        app:cardBackgroundColor="@color/background"
         app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        app:cardBackgroundColor="@color/background">
+        app:cardElevation="4dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:gravity="center_vertical"
+            android:orientation="horizontal"
             android:padding="12dp">
 
             <FrameLayout
@@ -36,35 +36,35 @@
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginStart="12dp">
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/tv_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/textColor"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="@color/textColor"
                     tools:text="Lydia Westervelt" />
 
                 <TextView
                     android:id="@+id/tv_login"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp"
                     android:textColor="@color/textColor"
+                    android:textSize="14sp"
                     tools:text="lwestervelt" />
             </LinearLayout>
 
+            <!-- ✅ ИСПРАВЛЕННЫЙ CHECKBOX -->
             <CheckBox
                 android:id="@+id/cb_selected"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:buttonTint="@color/purple_primary"
-                android:clickable="false"
-                android:focusable="false" />   <!-- добавить эти атрибуты -->
+                android:button="@drawable/checkbox_selector"
+                app:buttonTint="@null" />
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>

@@ -69,6 +69,7 @@ class UserSelectionFragment : Fragment() {
                         confirmSelection()
                         true
                     }
+
                     else -> false
                 }
             }
