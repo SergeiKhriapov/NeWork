@@ -39,19 +39,19 @@ interface ApiService {
     @GET("api/posts")
     suspend fun getPosts(): Response<List<PostDto>>
 
+    // 👇 Новый метод для получения одного поста по ID
+    @GET("api/posts/{id}")
+    suspend fun getPostById(@Path("id") id: Long): Response<PostDto>
+
     @POST("api/posts/{id}/likes")
     suspend fun likePost(@Path("id") id: Long): Response<PostDto>
 
     @DELETE("api/posts/{id}/likes")
     suspend fun unlikePost(@Path("id") id: Long): Response<PostDto>
 
-    // Новый метод для создания поста (JSON)
     @POST("api/posts")
-    suspend fun createPost(
-        @Body request: CreatePostRequest
-    ): Response<PostDto>
+    suspend fun createPost(@Body request: CreatePostRequest): Response<PostDto>
 
-    // Загрузка медиа
     @Multipart
     @POST("api/media")
     suspend fun uploadMedia(@Part file: MultipartBody.Part): Response<MediaResponse>
@@ -61,5 +61,4 @@ interface ApiService {
 
     @PUT("api/posts/{id}")
     suspend fun updatePost(@Path("id") id: Long, @Body request: CreatePostRequest): Response<PostDto>
-
 }

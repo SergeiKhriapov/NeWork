@@ -154,6 +154,13 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 bottomNav.visibility = View.GONE
             }
 
+            // 👇 Добавлено для PostDetailFragment
+            R.id.postDetailFragment -> {
+                profileMenuItem?.isVisible = false
+                postMenuItem?.isVisible = false
+                bottomNav.visibility = View.GONE
+            }
+
             else -> {
                 profileMenuItem?.isVisible = true
                 postMenuItem?.isVisible = false

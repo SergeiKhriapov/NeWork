@@ -74,6 +74,36 @@ class PostRepositoryImpl @Inject constructor(
         }
     }
 
+    // 👇 Новый метод для получения одного поста по ID
+    override suspend fun getPostById(id: Long): Result<Post> = try {
+        Log.d(TAG, "Fetching post $id from network")
+        val response = apiService.getPostById(id)
+        if (response.isSuccessful) {
+            val postDto = response.body() ?: return Result.failure(Exception("Пустой ответ"))
+            Log.d(TAG, "Post $id received from network")
+            postDao.insert(listOf(postDto.toEntity()))
+            Result.success(postDto.toDomain())
+        } else {
+            Log.e(TAG, "Network error fetching post $id: ${response.code()}")
+            val cached: Post? = postDao.getById(id)?.toDomain() // явно указываем тип
+            if (cached != null) {
+                Log.d(TAG, "Returning cached post $id")
+                Result.success(cached)
+            } else {
+                Result.failure(Exception("Пост не найден (код ${response.code()})"))
+            }
+        }
+    } catch (e: Exception) {
+        Log.e(TAG, "Exception in getPostById for id $id", e)
+        val cached: Post? = postDao.getById(id)?.toDomain()
+        if (cached != null) {
+            Log.d(TAG, "Returning cached post $id after exception")
+            Result.success(cached)
+        } else {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun likePost(id: Long): Result<Post> = try {
         val response = apiService.likePost(id)
         if (response.isSuccessful) {

@@ -10,4 +10,7 @@
     <dimen name="mention_icon_margin">-16dp</dimen>
     <dimen name="mention_count_margin">8dp</dimen>
     <dimen name="mention_count_margin_start">12dp</dimen>
+    <dimen name="carousel_icon_margin_end">0dp</dimen>
+    <dimen name="carousel_count_margin_end">0dp</dimen>
+    <dimen name="carousel_avatar_first_margin_start">30dp</dimen>
 </resources>

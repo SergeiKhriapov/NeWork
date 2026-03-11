@@ -9,12 +9,13 @@ data class Post(
     val published: Long,
     val likedByMe: Boolean = false,
     val likes: Int = 0,
+    val likeOwnerIds: Set<Long> = emptySet(),   // добавлено
+    val mentionIds: Set<Long> = emptySet(),
+    val mentionedMe: Boolean = false,
     val attachment: Attachment? = null,
     val link: String? = null,
     val coords: Coordinates? = null,
-    val mentionIds: List<Long> = emptyList(),       // добавлено
-    val mentionedMe: Boolean = false,               // добавлено
-    val users: Map<Long, UserPreview>? = null       // добавлено
+    val users: Map<Long, UserPreview>? = null
 )
 
 data class Attachment(val url: String, val type: AttachmentType)

@@ -15,6 +15,7 @@ interface PostRepository {
         coords: Coordinates?,
         mentionIds: Set<Long>?
     ): Result<Unit>
+
     suspend fun deletePost(id: Long): Result<Unit>
     suspend fun updatePost(
         id: Long,
@@ -23,5 +24,8 @@ interface PostRepository {
         coords: Coordinates?,
         mentionIds: Set<Long>?
     ): Result<Post>
+
     fun getPostsLiveData(): LiveData<List<Post>>
+    suspend fun getPostById(id: Long): Result<Post>
+
 }
