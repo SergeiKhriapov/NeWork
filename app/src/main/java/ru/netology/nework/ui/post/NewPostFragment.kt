@@ -410,13 +410,13 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         val selectedUsers = allUsers.filter { it.id in selectedIds }
 
         if (selectedUsers.isEmpty()) {
-            binding.hsvSelectedUsers.visibility = View.GONE
+            binding.llSelectedUsers.visibility = View.GONE
             binding.tvMentionedLabel.visibility = View.GONE
             return
         }
 
-        binding.hsvSelectedUsers.visibility = View.VISIBLE
-        binding.tvMentionedLabel.visibility = View.GONE
+        binding.llSelectedUsers.visibility = View.VISIBLE
+        binding.tvMentionedLabel.visibility = View.VISIBLE
         binding.llSelectedUsers.removeAllViews()
 
         val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)
@@ -450,7 +450,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             setLineSpacing(6f, 1f)
             letterSpacing = 0.1f
             setTypeface(null, Typeface.BOLD)
-            // убираем gravity самого TextView, оставляем только в layoutParams для центрирования по вертикали
             gravity = android.view.Gravity.CENTER
         }
         binding.llSelectedUsers.addView(countView)
@@ -462,7 +461,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             val user = selectedUsers[i]
             val avatarView = createAvatarView(user)
             val layoutParams = avatarView.layoutParams as ViewGroup.MarginLayoutParams
-            // Первый аватар не наезжает на счётчик, поэтому marginStart = 0
             if (i > 0) {
                 layoutParams.marginStart = overlap
             }
@@ -475,7 +473,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 openUserSelection()
             }
             val layoutParams = plusButton.layoutParams as ViewGroup.MarginLayoutParams
-            // Плюс-кнопка наезжает на предыдущий аватар
             if (visibleCount > 0) {
                 layoutParams.marginStart = overlap
             }

@@ -6,170 +6,167 @@
     android:layout_height="match_parent"
     android:background="@color/background">
 
-    <!-- 📄 Контент -->
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize"
         android:layout_marginBottom="80dp"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:fillViewport="true">
 
-        <!-- ✏️ Поле ввода -->
-        <EditText
-            android:id="@+id/editTextPost"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:gravity="top"
-            android:hint="Write something..."
-            android:inputType="textMultiLine"
-            android:maxLines="8"
-            android:padding="16dp"
-            android:textColorHint="@color/textColor" />
+            android:layout_marginTop="?attr/actionBarSize"
+            android:background="@color/white"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <!-- 🖼 Контейнер для медиа -->
-        <FrameLayout
-            android:id="@+id/imageContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp">
-
-            <ImageView
-                android:id="@+id/imagePreview"
-                android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:scaleType="centerCrop"
-                android:visibility="gone"
-                tools:src="@tools:sample/backgrounds/scenic"
-                tools:visibility="visible" />
-
-            <FrameLayout
-                android:id="@+id/videoContainer"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:visibility="gone"
-                tools:visibility="gone">
-
-                <ImageView
-                    android:id="@+id/videoPreview"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
-                    tools:src="@tools:sample/backgrounds/scenic" />
-
-                <ImageView
-                    android:id="@+id/ivPlay"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_play_circle_filled"
-                    android:visibility="visible" />
-            </FrameLayout>
-
-            <LinearLayout
-                android:id="@+id/audioPlayer"
+            <!-- Поле ввода -->
+            <EditText
+                android:id="@+id/editTextPost"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:visibility="gone"
-                tools:visibility="gone">
+                android:background="@android:color/transparent"
+                android:gravity="top"
+                android:hint="Write something..."
+                android:inputType="textMultiLine"
+                android:maxLines="8"
+                android:padding="16dp"
+                android:textColorHint="@color/textColor" />
 
-                <ImageButton
-                    android:id="@+id/btnPlayPause"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_audio_play"
-                    android:contentDescription="@string/play" />
+            <!--Контейнер для медиа -->
+            <FrameLayout
+                android:id="@+id/imageContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp">
 
-                <SeekBar
-                    android:id="@+id/seekBar"
-                    android:layout_width="0dp"
+                <ImageView
+                    android:id="@+id/imagePreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    tools:src="@tools:sample/backgrounds/scenic"
+                    tools:visibility="visible" />
+
+                <FrameLayout
+                    android:id="@+id/videoContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:visibility="gone"
+                    tools:visibility="gone">
+
+                    <ImageView
+                        android:id="@+id/videoPreview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        tools:src="@tools:sample/backgrounds/scenic" />
+
+                    <ImageView
+                        android:id="@+id/ivPlay"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_play_circle_filled"
+                        android:visibility="visible" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:id="@+id/audioPlayer"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:max="100" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone"
+                    tools:visibility="gone">
 
-                <TextView
-                    android:id="@+id/tvAudioDuration"
+                    <ImageButton
+                        android:id="@+id/btnPlayPause"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/play"
+                        android:src="@drawable/ic_audio_play" />
+
+                    <SeekBar
+                        android:id="@+id/seekBar"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:max="100" />
+
+                    <TextView
+                        android:id="@+id/tvAudioDuration"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:text="00:00 / 00:00"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRemove"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="00:00 / 00:00"
-                    android:textSize="12sp"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp" />
-            </LinearLayout>
+                    android:layout_gravity="center_horizontal|bottom"
+                    android:layout_marginBottom="16dp"
+                    android:backgroundTint="@color/purple_primary"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.01"
+                    android:lineHeight="20sp"
+                    android:paddingStart="24dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="24dp"
+                    android:paddingBottom="10dp"
+                    android:text="Remove"
+                    android:textAlignment="center"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnRemove"
-                android:layout_width="wrap_content"
+            </FrameLayout>
+
+            <!-- 📍 Индикатор выбранного местоположения -->
+            <TextView
+                android:id="@+id/tv_location_info"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal|bottom"
-                android:layout_marginBottom="16dp"
-                android:backgroundTint="@color/purple_primary"
-                android:fontFamily="sans-serif-medium"
-                android:letterSpacing="0.01"
-                android:lineHeight="20sp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:text="Remove"
-                android:textAlignment="center"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
+                android:layout_marginTop="8dp"
+                android:text="📍 Location selected"
+                android:textColor="@color/purple_primary"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+
+            <!-- Горизонтальный контейнер для аватарок -->
+            <TextView
+                android:id="@+id/tv_mentioned_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Mentioned:"
+                android:textColor="@color/textColor"
                 android:textSize="14sp"
                 android:visibility="gone"
                 tools:visibility="visible" />
 
-        </FrameLayout>
-
-        <!-- 📍 Индикатор выбранного местоположения -->
-        <TextView
-            android:id="@+id/tv_location_info"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="📍 Местоположение выбрано"
-            android:textColor="@color/purple_primary"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <!-- 👥 Выбранные пользователи (упоминания) -->
-
-        <!-- Горизонтальный скролл для карусели аватарок -->
-        <TextView
-            android:id="@+id/tv_mentioned_label"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Mentioned:"
-            android:textColor="@color/textColor"
-            android:textSize="14sp"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <HorizontalScrollView
-            android:id="@+id/hsv_selected_users"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:visibility="gone"
-            tools:visibility="visible">
-
             <LinearLayout
                 android:id="@+id/ll_selected_users"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:paddingEnd="8dp" /> <!-- небольшой отступ справа для плюс-кнопки -->
+                android:paddingEnd="8dp"
+                android:visibility="gone"
+                tools:visibility="visible" />
 
-        </HorizontalScrollView>
+        </LinearLayout>
+    </ScrollView>
 
-    </LinearLayout>
-
-    <!-- 🔻 Bottom App Bar -->
+    <!-- Bottom App Bar -->
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bottom_app_bar"
         android:layout_width="match_parent"
