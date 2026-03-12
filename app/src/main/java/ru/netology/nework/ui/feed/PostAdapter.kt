@@ -21,9 +21,8 @@ import ru.netology.nework.R
 import ru.netology.nework.databinding.ItemPostBinding
 import ru.netology.nework.model.AttachmentType
 import ru.netology.nework.model.Post
+import ru.netology.nework.utils.DateUtils.formatForDisplay  // Добавьте этот класс
 import ru.netology.nework.utils.LetterAvatarDrawable
-import java.text.SimpleDateFormat
-import java.util.*
 
 private const val TAG = "PostAdapter"
 private const val PROGRESS_UPDATE_INTERVAL_MS = 200L
@@ -183,7 +182,8 @@ class PostAdapter(
                 ivAvatar.setImageDrawable(letterDrawable)
             }
 
-            tvDate.text = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(post.published))
+            // ИСПРАВЛЕНО: используем formatForDisplay для OffsetDateTime
+            tvDate.text = post.published.formatForDisplay()
 
             if (post.content.isBlank()) tvContent.visibility = View.GONE
             else {
@@ -191,7 +191,8 @@ class PostAdapter(
                 tvContent.text = post.content
             }
 
-            tvLikes.text = post.likes.toString()
+            // ИСПРАВЛЕНО: используем likeOwnerIds.size вместо likes
+            tvLikes.text = post.likeOwnerIds.size.toString()
             ivLike.setImageResource(if (post.likedByMe) R.drawable.ic_liked else R.drawable.ic_like)
             btnLike.setOnClickListener { onLike(post) }
 

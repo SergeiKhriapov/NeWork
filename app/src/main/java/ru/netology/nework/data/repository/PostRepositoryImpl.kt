@@ -15,8 +15,8 @@ import ru.netology.nework.data.mapper.toDomain
 import ru.netology.nework.data.mapper.toEntity
 import ru.netology.nework.domain.repository.PostRepository
 import ru.netology.nework.model.Coordinates
-import ru.netology.nework.model.MediaAttachment
-import ru.netology.nework.model.MediaType
+import ru.netology.nework.model.Attachment  // Изменён импорт
+import ru.netology.nework.model.AttachmentType  // Новый импорт
 import ru.netology.nework.model.Post
 import java.io.File
 import javax.inject.Inject
@@ -84,7 +84,7 @@ class PostRepositoryImpl @Inject constructor(
             Result.success(postDto.toDomain())
         } else {
             Log.e(TAG, "Network error fetching post $id: ${response.code()}")
-            val cached: Post? = postDao.getById(id)?.toDomain() // явно указываем тип
+            val cached: Post? = postDao.getById(id)?.toDomain()
             if (cached != null) {
                 Log.d(TAG, "Returning cached post $id")
                 Result.success(cached)
@@ -143,18 +143,21 @@ class PostRepositoryImpl @Inject constructor(
 
     override suspend fun savePost(
         content: String?,
-        attachment: MediaAttachment?,
+        attachment: Attachment?,  // Изменён тип
         coords: Coordinates?,
         mentionIds: Set<Long>?
     ): Result<Unit> {
         return try {
             var mediaUrl: String? = null
+            var attachmentType: AttachmentType? = null
 
             if (attachment != null) {
-                val file = File(attachment.uri)
+                val file = File(attachment.url)  // Изменено: uri → url
                 if (!file.exists()) {
                     return Result.failure(Exception("File not found"))
                 }
+
+                attachmentType = attachment.type  // Сохраняем тип
 
                 val mimeType = attachment.type.toMimeType()
                 val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
@@ -177,11 +180,11 @@ class PostRepositoryImpl @Inject constructor(
             }
 
             val attachmentDto = mediaUrl?.let { url ->
-                AttachmentDto(url, attachment!!.type.name)
+                AttachmentDto(url, attachmentType?.name ?: return Result.failure(Exception("No attachment type")))
             }
 
             val coordinatesDto = coords?.let {
-                CoordinatesDto(lat = it.lat, lng = it.lng)
+                CoordinatesDto(lat = it.lat, lng = it.lng)  // Убедитесь, что используется lng или long
             }
 
             val request = CreatePostRequest(
@@ -227,18 +230,21 @@ class PostRepositoryImpl @Inject constructor(
     override suspend fun updatePost(
         id: Long,
         content: String?,
-        attachment: MediaAttachment?,
+        attachment: Attachment?,  // Изменён тип
         coords: Coordinates?,
         mentionIds: Set<Long>?
     ): Result<Post> {
         return try {
             var mediaUrl: String? = null
+            var attachmentType: AttachmentType? = null
 
             if (attachment != null) {
-                val file = File(attachment.uri)
+                val file = File(attachment.url)  // Изменено: uri → url
                 if (!file.exists()) {
                     return Result.failure(Exception("File not found"))
                 }
+
+                attachmentType = attachment.type
 
                 val mimeType = attachment.type.toMimeType()
                 val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
@@ -261,7 +267,7 @@ class PostRepositoryImpl @Inject constructor(
             }
 
             val attachmentDto = mediaUrl?.let { url ->
-                AttachmentDto(url, attachment!!.type.name)
+                AttachmentDto(url, attachmentType?.name ?: return Result.failure(Exception("No attachment type")))
             }
 
             val coordinatesDto = coords?.let {
@@ -295,9 +301,9 @@ class PostRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun MediaType.toMimeType(): String = when (this) {
-        MediaType.IMAGE -> "image/*"
-        MediaType.VIDEO -> "video/*"
-        MediaType.AUDIO -> "audio/*"
+    private fun AttachmentType.toMimeType(): String = when (this) {
+        AttachmentType.IMAGE -> "image/*"
+        AttachmentType.VIDEO -> "video/*"
+        AttachmentType.AUDIO -> "audio/*"
     }
 }

@@ -8,7 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import ru.netology.nework.domain.repository.PostRepository
 import ru.netology.nework.model.Coordinates
-import ru.netology.nework.model.MediaAttachment
+import ru.netology.nework.model.Attachment  // Изменён импорт
 import javax.inject.Inject
 
 @HiltViewModel
@@ -19,8 +19,9 @@ class NewPostViewModel @Inject constructor(
     private val _postText = MutableLiveData<String>()
     val postText: LiveData<String> = _postText
 
-    private val _attachment = MutableLiveData<MediaAttachment?>(null)
-    val attachment: LiveData<MediaAttachment?> = _attachment
+    // Изменено с AttachmentType? на Attachment?
+    private val _attachment = MutableLiveData<Attachment?>(null)
+    val attachment: LiveData<Attachment?> = _attachment
 
     private val _coordinates = MutableLiveData<Coordinates?>(null)
     val coordinates: LiveData<Coordinates?> = _coordinates
@@ -38,7 +39,8 @@ class NewPostViewModel @Inject constructor(
         _postText.value = text
     }
 
-    fun setAttachment(attachment: MediaAttachment?) {
+    // Изменён тип параметра
+    fun setAttachment(attachment: Attachment?) {
         _attachment.value = attachment
     }
 
@@ -50,7 +52,8 @@ class NewPostViewModel @Inject constructor(
         _mentionIds.value = ids
     }
 
-    fun savePost(text: String?, attachment: MediaAttachment?, coords: Coordinates?, mentionIds: Set<Long>?) {
+    // Изменён тип параметра attachment
+    fun savePost(text: String?, attachment: Attachment?, coords: Coordinates?, mentionIds: Set<Long>?) {
         if (text.isNullOrBlank() && attachment == null) {
             _saveCompleted.value = false
             return
@@ -69,7 +72,8 @@ class NewPostViewModel @Inject constructor(
         }
     }
 
-    fun updatePost(id: Long, content: String?, attachment: MediaAttachment?, coords: Coordinates?, mentionIds: Set<Long>?) {
+    // Изменён тип параметра attachment
+    fun updatePost(id: Long, content: String?, attachment: Attachment?, coords: Coordinates?, mentionIds: Set<Long>?) {
         if (content.isNullOrBlank() && attachment == null) {
             _saveCompleted.value = false
             return

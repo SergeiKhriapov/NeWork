@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import ru.netology.nework.data.datastore.TokenManager
 import ru.netology.nework.domain.repository.PostRepository
-import ru.netology.nework.model.MediaAttachment
+import ru.netology.nework.model.Attachment  // Изменён импорт
 import ru.netology.nework.model.Post
 import javax.inject.Inject
 
@@ -81,7 +81,8 @@ class FeedViewModel @Inject constructor(
         }
     }
 
-    fun updatePost(postId: Long, content: String?, attachment: MediaAttachment?) {
+    // Изменён тип attachment с MediaAttachment? на Attachment?
+    fun updatePost(postId: Long, content: String?, attachment: Attachment?) {
         viewModelScope.launch {
             val result = postRepository.updatePost(postId, content, attachment, null, null)
             if (result.isFailure) {

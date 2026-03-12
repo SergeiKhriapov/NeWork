@@ -62,7 +62,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 R.id.feedFragment,
                 R.id.usersFragment,
                 R.id.eventsFragment,
-                R.id.postDetailFragment
             )
         )
         setupActionBarWithNavController(navController, appBarConfiguration)

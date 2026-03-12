@@ -6,6 +6,8 @@ import android.graphics.Outline
 import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
@@ -15,15 +17,20 @@ import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.PlaybackException
+import com.google.android.exoplayer2.Player
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
@@ -38,14 +45,12 @@ import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentPostDetailBinding
 import ru.netology.nework.model.AttachmentType
 import ru.netology.nework.model.UserPreview
+import ru.netology.nework.utils.DateUtils.formatForDisplay
 import ru.netology.nework.utils.LetterAvatarDrawable
 import ru.netology.nework.viewmodel.PostDetailViewModel
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 private const val TAG = "PostDetailFragment"
+private const val PROGRESS_UPDATE_INTERVAL_MS = 200L
 
 @AndroidEntryPoint
 class PostDetailFragment : Fragment() {
@@ -55,6 +60,41 @@ class PostDetailFragment : Fragment() {
 
     private val viewModel: PostDetailViewModel by viewModels()
     private var mapView: MapView? = null
+
+    // Audio player
+    private var audioPlayer: ExoPlayer? = null
+    private var currentAudioUrl: String? = null
+    private var isAudioPlaying = false
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var progressUpdateRunnable: Runnable? = null
+
+    private val playerListener = object : Player.Listener {
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            when (playbackState) {
+                Player.STATE_READY -> {
+                    updateAudioPlaybackState()
+                }
+                Player.STATE_ENDED -> {
+                    stopAudioPlayback()
+                }
+            }
+        }
+
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            updateAudioPlaybackState()
+            if (isPlaying) {
+                startProgressUpdates()
+            } else {
+                stopProgressUpdates()
+            }
+        }
+
+        override fun onPlayerError(error: PlaybackException) {
+            Log.e(TAG, "Audio player error: ${error.message}")
+            stopAudioPlayback()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -74,6 +114,9 @@ class PostDetailFragment : Fragment() {
             return
         }
         Log.d(TAG, "Received postId = $postId")
+
+        setupSeekBar()
+        setupAudioButton()
 
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
@@ -95,17 +138,15 @@ class PostDetailFragment : Fragment() {
             loadAvatar(binding.ivAvatar, post.authorAvatar, post.author)
             binding.tvAuthorName.text = post.author
 
-            // Получаем логин автора из post.users по authorId
             val authorLogin = post.users?.get(post.authorId)?.name ?: post.author
             binding.tvAuthorLogin.text = "@$authorLogin"
             binding.tvAuthorLogin.visibility = View.VISIBLE
 
-            binding.tvPostDate.text = formatDate(post.published)
+            binding.tvPostDate.text = post.published.formatForDisplay()
             binding.tvPostContent.text = post.content
 
             updateMediaPreview(post.attachment)
 
-            // Отображение карты
             if (post.coords != null) {
                 Log.d(TAG, "Post has coordinates: ${post.coords}")
                 showMap(post.coords.lat, post.coords.lng)
@@ -137,6 +178,102 @@ class PostDetailFragment : Fragment() {
         }
     }
 
+    private fun setupSeekBar() {
+        binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser && audioPlayer != null && currentAudioUrl != null) {
+                    val duration = audioPlayer?.duration ?: 0
+                    val seekPosition = ((progress / 100f) * duration).toLong()
+                    audioPlayer?.seekTo(seekPosition)
+                }
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+    }
+
+    private fun setupAudioButton() {
+        binding.btnPlayPause.setOnClickListener {
+            toggleAudioPlayback()
+        }
+    }
+
+    private fun toggleAudioPlayback() {
+        if (currentAudioUrl == null) return
+
+        if (isAudioPlaying) {
+            audioPlayer?.pause()
+            isAudioPlaying = false
+            stopProgressUpdates()
+        } else {
+            if (audioPlayer == null) {
+                audioPlayer = ExoPlayer.Builder(requireContext()).build().also {
+                    it.addListener(playerListener)
+                }
+            }
+            val mediaItem = MediaItem.fromUri(Uri.parse(currentAudioUrl))
+            audioPlayer?.setMediaItem(mediaItem)
+            audioPlayer?.prepare()
+            audioPlayer?.play()
+            isAudioPlaying = true
+            startProgressUpdates()
+        }
+        updateAudioPlaybackState()
+    }
+
+    private fun startProgressUpdates() {
+        stopProgressUpdates()
+        progressUpdateRunnable = object : Runnable {
+            override fun run() {
+                updateAudioPlaybackState()
+                mainHandler.postDelayed(this, PROGRESS_UPDATE_INTERVAL_MS)
+            }
+        }.also { mainHandler.post(it) }
+    }
+
+    private fun stopProgressUpdates() {
+        progressUpdateRunnable?.let { mainHandler.removeCallbacks(it) }
+        progressUpdateRunnable = null
+    }
+
+    private fun stopAudioPlayback() {
+        stopProgressUpdates()
+        audioPlayer?.stop()
+        audioPlayer?.clearMediaItems()
+        currentAudioUrl?.let {
+            isAudioPlaying = false
+            updateAudioPlaybackState()
+        }
+    }
+
+    private fun releaseAudioPlayer() {
+        stopProgressUpdates()
+        audioPlayer?.removeListener(playerListener)
+        audioPlayer?.release()
+        audioPlayer = null
+        currentAudioUrl = null
+        isAudioPlaying = false
+    }
+
+    private fun updateAudioPlaybackState() {
+        val player = audioPlayer ?: return
+        val isPlaying = player.isPlaying
+        binding.btnPlayPause.setImageResource(if (isPlaying) R.drawable.ic_audio_pause_24 else R.drawable.ic_audio_play)
+        val current = player.currentPosition
+        val total = player.duration
+        if (total > 0) {
+            binding.seekBar.progress = ((current.toFloat() / total) * 100).toInt()
+            binding.tvAudioDuration.text = formatDuration(current) + " / " + formatDuration(total)
+        }
+    }
+
+    private fun formatDuration(durationMs: Long): String {
+        val totalSeconds = durationMs / 1000
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        return String.format("%02d:%02d", minutes, seconds)
+    }
+
     private fun showMap(lat: Double, lng: Double) {
         binding.mapContainer.visibility = View.VISIBLE
         binding.mapContainer.removeAllViews()
@@ -159,7 +296,6 @@ class PostDetailFragment : Fragment() {
         )
 
         try {
-            // Конвертируем векторный drawable в Bitmap
             val drawable = ContextCompat.getDrawable(requireContext(), R.drawable.ic_map_pin)
             val bitmap = Bitmap.createBitmap(
                 drawable?.intrinsicWidth ?: 48,
@@ -170,13 +306,9 @@ class PostDetailFragment : Fragment() {
             drawable?.setBounds(0, 0, canvas.width, canvas.height)
             drawable?.draw(canvas)
 
-            // Создаём ImageProvider из Bitmap
             val imageProvider = ImageProvider.fromBitmap(bitmap)
-
-            // Добавляем маркер с иконкой
             val placemark = mapView?.map?.mapObjects?.addPlacemark(point, imageProvider)
             placemark?.setOpacity(1.0f)
-
 
         } catch (e: Exception) {
             Log.e(TAG, "Error creating marker from vector", e)
@@ -194,6 +326,7 @@ class PostDetailFragment : Fragment() {
     override fun onStop() {
         mapView?.onStop()
         MapKitFactory.getInstance().onStop()
+        releaseAudioPlayer()
         super.onStop()
     }
 
@@ -220,7 +353,6 @@ class PostDetailFragment : Fragment() {
         val countMarginEnd = resources.getDimensionPixelSize(R.dimen.carousel_count_margin_end)
         val firstAvatarMarginStart = resources.getDimensionPixelSize(R.dimen.carousel_avatar_first_margin_start)
 
-        // Иконка
         val iconView = ImageView(requireContext()).apply {
             setImageResource(iconResId)
             layoutParams = ViewGroup.MarginLayoutParams(avatarSize, avatarSize).apply {
@@ -230,7 +362,6 @@ class PostDetailFragment : Fragment() {
         }
         container.addView(iconView)
 
-        // Счётчик количества
         val countView = TextView(requireContext()).apply {
             text = users.size.toString()
             layoutParams = LinearLayout.LayoutParams(
@@ -360,6 +491,7 @@ class PostDetailFragment : Fragment() {
                 .placeholder(R.drawable.ic_account_circle)
                 .error(R.drawable.ic_account_circle)
                 .circleCrop()
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(imageView)
         } else {
             val firstLetter = userName.firstOrNull()?.toString() ?: "?"
@@ -373,12 +505,6 @@ class PostDetailFragment : Fragment() {
 
     private fun openUserSelection() {
         Toast.makeText(requireContext(), "Открыть выбор пользователей", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun formatDate(timestamp: Long): String {
-        val date = Date(timestamp)
-        val format = SimpleDateFormat("dd.MM.yy HH:mm", Locale.getDefault())
-        return format.format(date)
     }
 
     private fun updateMediaPreview(attachment: ru.netology.nework.model.Attachment?) {
@@ -398,16 +524,62 @@ class PostDetailFragment : Fragment() {
                 Glide.with(this)
                     .load(attachment.url)
                     .centerCrop()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(binding.imagePreview)
             }
+
             AttachmentType.VIDEO -> {
                 binding.videoContainer.visibility = View.VISIBLE
-                binding.videoPreview.setImageResource(R.drawable.ic_play_circle_filled)
-                // TODO: воспроизведение
+
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        val bitmap = ThumbnailUtils.createVideoThumbnail(
+                            attachment.url,
+                            MediaStore.Video.Thumbnails.MINI_KIND
+                        )
+
+                        withContext(Dispatchers.Main) {
+                            if (bitmap != null) {
+                                binding.videoPreview.setImageBitmap(bitmap)
+                                binding.ivPlay.visibility = View.VISIBLE
+                            } else {
+                                Glide.with(this@PostDetailFragment)
+                                    .load(attachment.url)
+                                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                    .frame(1000000)
+                                    .centerCrop()
+                                    .placeholder(R.drawable.ic_play_circle_filled)
+                                    .error(R.drawable.ic_play_circle_filled)
+                                    .into(binding.videoPreview)
+                                binding.ivPlay.visibility = View.VISIBLE
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error loading video thumbnail", e)
+                        withContext(Dispatchers.Main) {
+                            binding.videoPreview.setImageResource(R.drawable.ic_play_circle_filled)
+                            binding.ivPlay.visibility = View.VISIBLE
+                        }
+                    }
+                }
+
+                binding.videoContainer.setOnClickListener {
+                    // TODO: Implement video playback
+                    Toast.makeText(requireContext(), "Видео пока не поддерживается", Toast.LENGTH_SHORT).show()
+                }
             }
+
             AttachmentType.AUDIO -> {
                 binding.audioPlayer.visibility = View.VISIBLE
-                // TODO: аудиоплеер
+                currentAudioUrl = attachment.url
+
+                // Reset audio state
+                if (isAudioPlaying) {
+                    stopAudioPlayback()
+                }
+                binding.btnPlayPause.setImageResource(R.drawable.ic_audio_play)
+                binding.tvAudioDuration.text = formatDuration(0) + " / " + formatDuration(0)
+                binding.seekBar.progress = 0
             }
         }
     }
@@ -415,6 +587,7 @@ class PostDetailFragment : Fragment() {
     override fun onDestroyView() {
         mapView?.onStop()
         mapView = null
+        releaseAudioPlayer()
         super.onDestroyView()
         _binding = null
     }
