@@ -54,7 +54,6 @@ class UsersFragment : Fragment() {
             }
         }
 
-        // Можно добавить ProgressBar и слушать isLoading
     }
 
     override fun onDestroyView() {

@@ -50,7 +50,7 @@ class LoginFragment : Fragment() {
             viewModel.loginResult.collectLatest { result ->
                 result.onSuccess { user ->
                     Toast.makeText(requireContext(), "Добро пожаловать, ${user.name}", Toast.LENGTH_LONG).show()
-                    // Переход на главный экран (FeedFragment)
+                    // Переход на главный экран FeedFragment
                     findNavController().navigate(R.id.action_loginFragment_to_feedFragment)
                 }.onFailure { error ->
                     Toast.makeText(requireContext(), error.message ?: "Ошибка", Toast.LENGTH_LONG).show()

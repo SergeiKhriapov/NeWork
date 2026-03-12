@@ -68,12 +68,11 @@ class TokenManager @Inject constructor(
 
     suspend fun saveUser(user: User) {
         context.dataStore.edit { preferences ->
-            // Убедимся, что id — Long, и сохраняем как строку
             preferences[USER_ID_KEY] = user.id.toString()
             preferences[USER_NAME_KEY] = user.name
             preferences[USER_AVATAR_KEY] = user.avatar ?: ""
         }
-        _currentUserId.value = user.id  // user.id должен быть Long
+        _currentUserId.value = user.id
         _currentUser.value = user
     }
 

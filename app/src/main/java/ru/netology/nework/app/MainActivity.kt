@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.bumptech.glide.Glide
@@ -55,7 +56,16 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
-        setupActionBarWithNavController(navController)
+
+        val appBarConfiguration = AppBarConfiguration(
+            setOf(
+                R.id.feedFragment,
+                R.id.usersFragment,
+                R.id.eventsFragment,
+                R.id.postDetailFragment
+            )
+        )
+        setupActionBarWithNavController(navController, appBarConfiguration)
 
         bottomNav = findViewById(R.id.bottom_nav)
         NavigationUI.setupWithNavController(bottomNav, navController)
@@ -102,7 +112,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                     currentFragment.onPostAction()
                     true
                 } else {
-                    // Передаём обработку MenuProvider во фрагменте
                     false
                 }
             }
@@ -154,7 +163,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 bottomNav.visibility = View.GONE
             }
 
-            // 👇 Добавлено для PostDetailFragment
             R.id.postDetailFragment -> {
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false

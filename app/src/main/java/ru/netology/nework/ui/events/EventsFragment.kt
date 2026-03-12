@@ -23,7 +23,7 @@ class EventsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // Здесь позже будет логика загрузки событий
+        // Здесь будет логика загрузки событий
     }
 
     override fun onDestroyView() {

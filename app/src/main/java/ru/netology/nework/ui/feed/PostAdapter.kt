@@ -277,7 +277,6 @@ class PostAdapter(
                 Log.d(TAG, "Post ${post.id}: no attachment")
             }
 
-            // Управление видимостью кнопки "ещё" в зависимости от владельца поста
             if (isOwnedByUser(post)) {
                 btnMore.visibility = View.VISIBLE
                 btnMore.setOnClickListener { onMenu(post, btnMore) }

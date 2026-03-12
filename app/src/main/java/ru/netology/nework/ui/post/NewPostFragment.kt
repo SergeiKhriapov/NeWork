@@ -403,7 +403,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         }
     }
 
-    // ========== Обновлённый метод для карусели аватарок ==========
+    // Обновлённый метод для карусели аватарок
     private fun updateSelectedUsers() {
         val allUsers = usersViewModel.users.value ?: emptyList()
         val selectedIds = viewModel.mentionIds.value ?: emptySet()
@@ -481,9 +481,9 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         }
     }
 
-    /**
-     * Создаёт элемент с белой круглой обводкой и аватаркой внутри.
-     */
+
+     // Создаёт элемент с белой круглой обводкой и аватаркой внутри.
+
     private fun createAvatarView(user: User): View {
         val strokeWidth = resources.getDimensionPixelSize(R.dimen.avatar_stroke_width)
         val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)
@@ -548,9 +548,9 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         return container
     }
 
-    /**
-     * Создаёт кнопку с плюсиком (без счётчика), которая поддерживает нахлёст.
-     */
+
+     // Создаёт кнопку с плюс
+
     private fun createPlusButton(onClick: () -> Unit): View {
         val strokeWidth = resources.getDimensionPixelSize(R.dimen.avatar_stroke_width)
         val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)

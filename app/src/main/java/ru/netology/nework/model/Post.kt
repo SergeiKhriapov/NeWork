@@ -9,7 +9,7 @@ data class Post(
     val published: Long,
     val likedByMe: Boolean = false,
     val likes: Int = 0,
-    val likeOwnerIds: Set<Long> = emptySet(),   // добавлено
+    val likeOwnerIds: Set<Long> = emptySet(),
     val mentionIds: Set<Long> = emptySet(),
     val mentionedMe: Boolean = false,
     val attachment: Attachment? = null,

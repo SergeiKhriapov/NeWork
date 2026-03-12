@@ -59,7 +59,6 @@ class UserSelectionFragment : Fragment() {
 
         requireActivity().addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                // меню уже загружено Activity, ничего не делаем
             }
 
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {

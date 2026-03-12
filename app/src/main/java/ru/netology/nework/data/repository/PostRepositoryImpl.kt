@@ -74,7 +74,6 @@ class PostRepositoryImpl @Inject constructor(
         }
     }
 
-    // 👇 Новый метод для получения одного поста по ID
     override suspend fun getPostById(id: Long): Result<Post> = try {
         Log.d(TAG, "Fetching post $id from network")
         val response = apiService.getPostById(id)

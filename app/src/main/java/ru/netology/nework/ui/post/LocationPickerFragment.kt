@@ -47,7 +47,6 @@ class LocationPickerFragment : Fragment() {
         }
 
         override fun onLocationStatusUpdated(status: LocationStatus) {
-            // можно обработать статус при необходимости
         }
     }
 

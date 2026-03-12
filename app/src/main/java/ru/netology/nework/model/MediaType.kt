@@ -5,6 +5,6 @@ enum class MediaType {
 }
 
 data class MediaAttachment(
-    val uri: String,      // строковое представление URI (можно хранить как String)
+    val uri: String,
     val type: MediaType
 )

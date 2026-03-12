@@ -39,7 +39,6 @@ interface ApiService {
     @GET("api/posts")
     suspend fun getPosts(): Response<List<PostDto>>
 
-    // 👇 Новый метод для получения одного поста по ID
     @GET("api/posts/{id}")
     suspend fun getPostById(@Path("id") id: Long): Response<PostDto>
 

@@ -27,7 +27,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "nework_database"
                 )
-                    .fallbackToDestructiveMigration() // для разработки, потом убрать
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance

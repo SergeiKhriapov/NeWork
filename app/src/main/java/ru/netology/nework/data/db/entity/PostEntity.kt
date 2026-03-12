@@ -19,8 +19,8 @@ data class PostEntity(
     val link: String?,
     val lat: Double?,
     val lng: Double?,
-    val likeOwnerIds: String?,   // например "1,2,3"
-    val mentionIds: String?,     // например "4,5,6"
+    val likeOwnerIds: String?,
+    val mentionIds: String?,
     val mentionedMe: Boolean,
-    val users: String?            // JSON строка вида {"1":{"name":"...","avatar":"..."}, ...}
+    val users: String?
 )
