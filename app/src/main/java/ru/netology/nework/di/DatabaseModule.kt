@@ -8,6 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import ru.netology.nework.data.db.AppDatabase
+import ru.netology.nework.data.db.dao.EventDao
 import ru.netology.nework.data.db.dao.PostDao
 import javax.inject.Singleton
 
@@ -18,9 +19,14 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
-        Room.databaseBuilder(context, AppDatabase::class.java, "nework_database").build()
+        Room.databaseBuilder(context, AppDatabase::class.java, "nework_database")
+            .build()
 
     @Provides
     @Singleton
     fun providePostDao(database: AppDatabase): PostDao = database.postDao()
+
+    @Provides
+    @Singleton
+    fun provideEventDao(database: AppDatabase): EventDao = database.eventDao()
 }

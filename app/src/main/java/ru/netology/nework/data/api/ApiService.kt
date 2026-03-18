@@ -4,6 +4,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.*
+import ru.netology.nework.api.dto.EventDto
 import ru.netology.nework.data.api.dto.*
 
 interface ApiService {
@@ -60,4 +61,23 @@ interface ApiService {
 
     @PUT("api/posts/{id}")
     suspend fun updatePost(@Path("id") id: Long, @Body request: CreatePostRequest): Response<PostDto>
+
+    // Events - ИСПРАВЛЕНО: добавлен префикс "api/"
+    @GET("api/events")
+    suspend fun getEvents(): Response<List<EventDto>>
+
+    @GET("api/events/{id}")
+    suspend fun getEventById(@Path("id") id: Long): Response<EventDto>
+
+    @POST("api/events/{id}/likes")
+    suspend fun likeEvent(@Path("id") id: Long): Response<EventDto>
+
+    @DELETE("api/events/{id}/likes")
+    suspend fun unlikeEvent(@Path("id") id: Long): Response<EventDto>
+
+    @POST("api/events/{id}/participants")
+    suspend fun participateEvent(@Path("id") id: Long): Response<EventDto>
+
+    @DELETE("api/events/{id}/participants")
+    suspend fun unparticipateEvent(@Path("id") id: Long): Response<EventDto>
 }

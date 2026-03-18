@@ -133,4 +133,9 @@ dependencies {
 
         //Gson
     implementation("com.google.code.gson:gson:2.10.1")
+
+    //лайк как в инстаграм
+    implementation("com.airbnb.android:lottie:6.0.0")
+
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
 }

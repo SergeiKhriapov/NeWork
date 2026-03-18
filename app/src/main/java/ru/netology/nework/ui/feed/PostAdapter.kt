@@ -1,11 +1,14 @@
 package ru.netology.nework.ui.feed
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.OvershootInterpolator
 import android.widget.SeekBar
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
@@ -21,7 +24,7 @@ import ru.netology.nework.R
 import ru.netology.nework.databinding.ItemPostBinding
 import ru.netology.nework.model.AttachmentType
 import ru.netology.nework.model.Post
-import ru.netology.nework.utils.DateUtils.formatForDisplay  // Добавьте этот класс
+import ru.netology.nework.utils.DateUtils.formatForDisplay
 import ru.netology.nework.utils.LetterAvatarDrawable
 
 private const val TAG = "PostAdapter"
@@ -57,11 +60,8 @@ class PostAdapter(
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             currentAudioHolder?.updateAudioPlaybackState()
-            if (isPlaying) {
-                startProgressUpdates()
-            } else {
-                stopProgressUpdates()
-            }
+            if (isPlaying) startProgressUpdates()
+            else stopProgressUpdates()
         }
 
         override fun onPlayerError(error: PlaybackException) {
@@ -72,7 +72,8 @@ class PostAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
         Log.d(TAG, "onCreateViewHolder")
-        val binding = ItemPostBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding =
+            ItemPostBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return PostViewHolder(binding)
     }
 
@@ -119,7 +120,8 @@ class PostAdapter(
         currentAudioHolder = null
     }
 
-    inner class PostViewHolder(private val b: ItemPostBinding) : RecyclerView.ViewHolder(b.root) {
+    inner class PostViewHolder(private val b: ItemPostBinding) :
+        RecyclerView.ViewHolder(b.root) {
 
         private var currentPostId: Long? = null
         private var isAudioPlayingForThisPost = false
@@ -131,38 +133,55 @@ class PostAdapter(
             }
 
         init {
-            b.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+
+            b.seekBar.setOnSeekBarChangeListener(object :
+                SeekBar.OnSeekBarChangeListener {
+
+                override fun onProgressChanged(
+                    seekBar: SeekBar?,
+                    progress: Int,
+                    fromUser: Boolean
+                ) {
                     if (fromUser && audioPlayer != null && currentlyPlayingPostId == currentPostId) {
+
                         val duration = audioPlayer?.duration ?: 0
                         val seekPosition = ((progress / 100f) * duration).toLong()
                         audioPlayer?.seekTo(seekPosition)
+
                     }
                 }
+
                 override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
 
             b.btnPlayPause.setOnClickListener {
+
                 val post = getItem(absoluteAdapterPosition)
+
                 if (post.attachment?.type == AttachmentType.AUDIO) {
                     toggleAudioPlayback(post)
                 }
+
             }
 
             b.btnShare.setOnClickListener {
+
                 val post = getItem(absoluteAdapterPosition)
                 onShare(post)
+
             }
         }
 
         fun bind(post: Post) = with(b) {
-            Log.d(TAG, "bind post id=${post.id}, type=${post.attachment?.type}")
+
             currentPostId = post.id
 
             tvAuthor.text = post.author
 
             if (!post.authorAvatar.isNullOrBlank()) {
+
                 Glide.with(itemView)
                     .load(post.authorAvatar)
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
@@ -170,175 +189,248 @@ class PostAdapter(
                     .error(R.drawable.ic_account_circle)
                     .circleCrop()
                     .into(ivAvatar)
+
             } else {
+
                 val name = post.author
+
                 val firstLetter = name.firstOrNull()?.toString() ?: "?"
+
                 val letterDrawable = LetterAvatarDrawable(
                     letter = firstLetter,
-                    backgroundColor = ContextCompat.getColor(itemView.context, R.color.purple_primary)
-                ).apply {
-                    setBounds(0, 0, 100, 100)
-                }
+                    backgroundColor = ContextCompat.getColor(
+                        itemView.context,
+                        R.color.purple_primary
+                    )
+                ).apply { setBounds(0, 0, 100, 100) }
+
                 ivAvatar.setImageDrawable(letterDrawable)
             }
 
-            // ИСПРАВЛЕНО: используем formatForDisplay для OffsetDateTime
             tvDate.text = post.published.formatForDisplay()
 
-            if (post.content.isBlank()) tvContent.visibility = View.GONE
-            else {
+            if (post.content.isBlank()) {
+
+                tvContent.visibility = View.GONE
+
+            } else {
+
                 tvContent.visibility = View.VISIBLE
                 tvContent.text = post.content
+
             }
 
-            // ИСПРАВЛЕНО: используем likeOwnerIds.size вместо likes
             tvLikes.text = post.likeOwnerIds.size.toString()
-            ivLike.setImageResource(if (post.likedByMe) R.drawable.ic_liked else R.drawable.ic_like)
-            btnLike.setOnClickListener { onLike(post) }
+
+            ivLike.setImageResource(
+                if (post.likedByMe) R.drawable.ic_liked
+                else R.drawable.ic_like
+            )
+
+            btnLike.setOnClickListener {
+
+                animateLike()
+                onLike(post)
+
+            }
 
             mediaContainer.visibility = View.GONE
             ivImage.visibility = View.GONE
             ivVideoPreview.visibility = View.GONE
             ivPlay?.visibility = View.GONE
             audioPlayer.visibility = View.GONE
+
             Glide.with(itemView).clear(ivImage)
             ivVideoPreview.let { Glide.with(itemView).clear(it) }
 
             val attachment = post.attachment
+
             if (attachment != null) {
+
                 mediaContainer.visibility = View.VISIBLE
 
                 when (attachment.type) {
+
                     AttachmentType.IMAGE -> {
-                        Log.d(TAG, "Post ${post.id}: IMAGE attachment")
+
                         ivImage.visibility = View.VISIBLE
+
                         Glide.with(itemView)
                             .load(attachment.url)
                             .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .centerCrop()
                             .into(ivImage)
+
                         ivImage.setOnClickListener { onOpen(post) }
+
                     }
 
                     AttachmentType.VIDEO -> {
-                        Log.d(TAG, "Post ${post.id}: VIDEO attachment")
+
                         val videoUrl = attachment.url
-                        if (!post.link.isNullOrBlank() && post.link != videoUrl) {
-                            ivVideoPreview.visibility = View.VISIBLE
-                            ivPlay?.visibility = View.VISIBLE
-                            Glide.with(itemView)
-                                .load(post.link)
-                                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                .centerCrop()
-                                .into(ivVideoPreview)
-                        } else {
-                            ivVideoPreview.visibility = View.VISIBLE
-                            ivPlay?.visibility = View.VISIBLE
-                            Glide.with(itemView)
-                                .load(videoUrl)
-                                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                .frame(1000000)
-                                .centerCrop()
-                                .placeholder(R.drawable.ic_play_circle_filled)
-                                .error(R.drawable.ic_play_circle_filled)
-                                .into(ivVideoPreview)
+
+                        ivVideoPreview.visibility = View.VISIBLE
+                        ivPlay?.visibility = View.VISIBLE
+
+                        Glide.with(itemView)
+                            .load(videoUrl)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .frame(1000000)
+                            .centerCrop()
+                            .into(ivVideoPreview)
+
+                        ivVideoPreview.setOnClickListener {
+                            onPlayMedia(videoUrl, true)
                         }
-                        if (!videoUrl.isNullOrBlank()) {
-                            ivVideoPreview.setOnClickListener { onPlayMedia(videoUrl, true) }
-                            ivPlay?.setOnClickListener { onPlayMedia(videoUrl, true) }
+
+                        ivPlay?.setOnClickListener {
+                            onPlayMedia(videoUrl, true)
                         }
+
                     }
 
                     AttachmentType.AUDIO -> {
-                        Log.d(TAG, "Post ${post.id}: AUDIO attachment")
+
                         audioPlayer.visibility = View.VISIBLE
                         mediaContainer.visibility = View.GONE
-                        ivImage.visibility = View.GONE
-                        ivVideoPreview.visibility = View.GONE
-                        ivPlay?.visibility = View.GONE
 
-                        isAudioPlayingForThisPost = (currentlyPlayingPostId == post.id)
+                        isAudioPlayingForThisPost =
+                            (currentlyPlayingPostId == post.id)
 
                         if (isAudioPlayingForThisPost) {
+
                             currentAudioHolder = this@PostViewHolder
                             updateAudioPlaybackState()
+
                         } else {
+
                             btnPlayPause.setImageResource(R.drawable.ic_audio_play)
-                            tvAudioDuration.text = formatDuration(0) + " / " + formatDuration(0)
+                            tvAudioDuration.text = "00:00 / 00:00"
                             seekBar.progress = 0
+
                         }
+
                     }
 
-                    else -> {
-                        Log.w(TAG, "Unknown attachment type: ${attachment.type}")
-                        mediaContainer.visibility = View.GONE
-                    }
+                    else -> mediaContainer.visibility = View.GONE
                 }
-            } else {
-                Log.d(TAG, "Post ${post.id}: no attachment")
+
             }
 
             if (isOwnedByUser(post)) {
+
                 btnMore.visibility = View.VISIBLE
                 btnMore.setOnClickListener { onMenu(post, btnMore) }
+
             } else {
+
                 btnMore.visibility = View.GONE
+
             }
 
             root.setOnClickListener { onOpen(post) }
         }
 
+        private fun animateLike() {
+
+            val scaleX = ObjectAnimator.ofFloat(b.ivLike, "scaleX", 1f, 1.4f, 1f)
+            val scaleY = ObjectAnimator.ofFloat(b.ivLike, "scaleY", 1f, 1.4f, 1f)
+
+            val rotation =
+                ObjectAnimator.ofFloat(b.ivLike, "rotation", 0f, -8f, 8f, 0f)
+
+            scaleX.interpolator = OvershootInterpolator()
+            scaleY.interpolator = OvershootInterpolator()
+
+            AnimatorSet().apply {
+
+                playTogether(scaleX, scaleY, rotation)
+                duration = 300
+                start()
+
+            }
+        }
+
         fun toggleAudioPlayback(post: Post) {
+
             if (currentlyPlayingPostId == post.id) {
+
                 audioPlayer?.pause()
                 currentlyPlayingPostId = null
                 currentAudioHolder = null
                 isAudioPlayingForThisPost = false
                 stopProgressUpdates()
+
             } else {
+
                 if (audioPlayer == null) {
-                    audioPlayer = ExoPlayer.Builder(itemView.context).build().also {
-                        it.addListener(playerListener)
-                    }
+
+                    audioPlayer =
+                        ExoPlayer.Builder(itemView.context).build().also {
+
+                            it.addListener(playerListener)
+
+                        }
                 }
-                if (currentlyPlayingPostId != null) {
-                    currentAudioHolder?.isAudioPlayingForThisPost = false
-                    currentAudioHolder = null
-                }
-                val mediaItem = MediaItem.fromUri(android.net.Uri.parse(post.attachment?.url ?: return))
+
+                val mediaItem =
+                    MediaItem.fromUri(android.net.Uri.parse(post.attachment?.url ?: return))
+
                 audioPlayer?.setMediaItem(mediaItem)
                 audioPlayer?.prepare()
                 audioPlayer?.play()
+
                 currentlyPlayingPostId = post.id
                 currentAudioHolder = this
                 isAudioPlayingForThisPost = true
+
                 startProgressUpdates()
             }
         }
 
         fun updateAudioPlaybackState() {
+
             if (currentlyPlayingPostId != currentPostId) return
+
             val player = audioPlayer ?: return
+
             val isPlaying = player.isPlaying
-            b.btnPlayPause.setImageResource(if (isPlaying) R.drawable.ic_audio_pause_24 else R.drawable.ic_audio_play)
+
+            b.btnPlayPause.setImageResource(
+                if (isPlaying) R.drawable.ic_audio_pause_24
+                else R.drawable.ic_audio_play
+            )
+
             val current = player.currentPosition
             val total = player.duration
+
             if (total > 0) {
+
                 b.seekBar.progress = ((current.toFloat() / total) * 100).toInt()
-                b.tvAudioDuration.text = formatDuration(current) + " / " + formatDuration(total)
+
+                b.tvAudioDuration.text =
+                    formatDuration(current) + " / " + formatDuration(total)
+
             }
         }
 
         private fun formatDuration(durationMs: Long): String {
+
             val totalSeconds = durationMs / 1000
             val minutes = totalSeconds / 60
             val seconds = totalSeconds % 60
+
             return String.format("%02d:%02d", minutes, seconds)
+
         }
     }
 
     object DiffCallback : DiffUtil.ItemCallback<Post>() {
-        override fun areItemsTheSame(oldItem: Post, newItem: Post) = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: Post, newItem: Post) = oldItem == newItem
+
+        override fun areItemsTheSame(oldItem: Post, newItem: Post) =
+            oldItem.id == newItem.id
+
+        override fun areContentsTheSame(oldItem: Post, newItem: Post) =
+            oldItem == newItem
     }
 }

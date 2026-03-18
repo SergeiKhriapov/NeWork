@@ -10,6 +10,8 @@ import ru.netology.nework.data.repository.AuthRepositoryImpl
 import ru.netology.nework.data.repository.PostRepositoryImpl
 import ru.netology.nework.data.repository.UserRepositoryImpl
 import ru.netology.nework.domain.repository.UserRepository
+import ru.netology.nework.domain.repository.EventRepository
+import ru.netology.nework.data.repository.EventRepositoryImpl
 import javax.inject.Singleton
 
 @Module
@@ -27,4 +29,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindUserRepository(impl: UserRepositoryImpl): UserRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindEventRepository(impl: EventRepositoryImpl): EventRepository
 }
