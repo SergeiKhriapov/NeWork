@@ -91,7 +91,12 @@ class EventRepositoryImpl @Inject constructor(
             eventDao.insert(listOf(eventDto.toEntity()))
             Result.success(eventDto.toDomain())
         } else {
-            Result.failure(Exception("Ошибка при лайке"))
+            val errorMsg = when (response.code()) {
+                403 -> "Нужно авторизоваться"
+                404 -> "Событие не найдено"
+                else -> "Ошибка при лайке: ${response.code()}"
+            }
+            Result.failure(Exception(errorMsg))
         }
     } catch (e: Exception) {
         Result.failure(e)
@@ -104,7 +109,12 @@ class EventRepositoryImpl @Inject constructor(
             eventDao.insert(listOf(eventDto.toEntity()))
             Result.success(eventDto.toDomain())
         } else {
-            Result.failure(Exception("Ошибка при снятии лайка"))
+            val errorMsg = when (response.code()) {
+                403 -> "Нужно авторизоваться"
+                404 -> "Событие не найдено"
+                else -> "Ошибка при снятии лайка: ${response.code()}"
+            }
+            Result.failure(Exception(errorMsg))
         }
     } catch (e: Exception) {
         Result.failure(e)
@@ -117,7 +127,12 @@ class EventRepositoryImpl @Inject constructor(
             eventDao.insert(listOf(eventDto.toEntity()))
             Result.success(eventDto.toDomain())
         } else {
-            Result.failure(Exception("Ошибка при участии"))
+            val errorMsg = when (response.code()) {
+                403 -> "Нужно авторизоваться"
+                404 -> "Событие не найдено"
+                else -> "Ошибка при участии: ${response.code()}"
+            }
+            Result.failure(Exception(errorMsg))
         }
     } catch (e: Exception) {
         Result.failure(e)
@@ -130,9 +145,35 @@ class EventRepositoryImpl @Inject constructor(
             eventDao.insert(listOf(eventDto.toEntity()))
             Result.success(eventDto.toDomain())
         } else {
-            Result.failure(Exception("Ошибка при отказе от участия"))
+            val errorMsg = when (response.code()) {
+                403 -> "Нужно авторизоваться"
+                404 -> "Событие не найдено"
+                else -> "Ошибка при отказе от участия: ${response.code()}"
+            }
+            Result.failure(Exception(errorMsg))
         }
     } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun deleteEvent(id: Long): Result<Unit> = try {
+        Log.d(TAG, "Deleting event $id")
+        val response = apiService.deleteEvent(id)
+        if (response.isSuccessful) {
+            eventDao.deleteById(id)
+            Log.d(TAG, "Deleted event $id")
+            Result.success(Unit)
+        } else {
+            Log.e(TAG, "Error deleting event: ${response.code()}")
+            val errorMsg = when (response.code()) {
+                403 -> "Нужно авторизоваться"
+                404 -> "Событие не найдено"
+                else -> "Ошибка удаления: ${response.code()}"
+            }
+            Result.failure(Exception(errorMsg))
+        }
+    } catch (e: Exception) {
+        Log.e(TAG, "Exception in deleteEvent", e)
         Result.failure(e)
     }
 }

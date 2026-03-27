@@ -62,7 +62,7 @@ interface ApiService {
     @PUT("api/posts/{id}")
     suspend fun updatePost(@Path("id") id: Long, @Body request: CreatePostRequest): Response<PostDto>
 
-    // Events - ИСПРАВЛЕНО: добавлен префикс "api/"
+    // Events
     @GET("api/events")
     suspend fun getEvents(): Response<List<EventDto>>
 
@@ -80,4 +80,7 @@ interface ApiService {
 
     @DELETE("api/events/{id}/participants")
     suspend fun unparticipateEvent(@Path("id") id: Long): Response<EventDto>
+
+    @DELETE("api/events/{id}")
+    suspend fun deleteEvent(@Path("id") id: Long): Response<Unit>  // Добавлен метод удаления события
 }

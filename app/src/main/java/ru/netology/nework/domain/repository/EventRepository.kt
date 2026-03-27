@@ -11,4 +11,5 @@ interface EventRepository {
     suspend fun unlikeEvent(id: Long): Result<Event>
     suspend fun participateEvent(id: Long): Result<Event>
     suspend fun unparticipateEvent(id: Long): Result<Event>
+    suspend fun deleteEvent(id: Long): Result<Unit>  // Добавлен метод удаления
 }

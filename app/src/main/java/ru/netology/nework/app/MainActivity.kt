@@ -175,7 +175,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             }
         }
     }
-
     private fun handlePostAction() {
         val currentFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment)
