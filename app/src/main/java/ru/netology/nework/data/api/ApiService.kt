@@ -37,8 +37,23 @@ interface ApiService {
     @GET("api/users/{id}")
     suspend fun getUser(@Path("id") id: Long): Response<UserDto>
 
-    @GET("api/posts")
-    suspend fun getPosts(): Response<List<PostDto>>
+    // Posts with pagination
+    @GET("api/posts/latest")
+    suspend fun getLatestPosts(
+        @Query("count") count: Int = 20
+    ): Response<List<PostDto>>
+
+    @GET("api/posts/{id}/before")
+    suspend fun getPostsBefore(
+        @Path("id") id: Long,
+        @Query("count") count: Int = 20
+    ): Response<List<PostDto>>
+
+    @GET("api/posts/{id}/after")
+    suspend fun getPostsAfter(
+        @Path("id") id: Long,
+        @Query("count") count: Int = 20
+    ): Response<List<PostDto>>
 
     @GET("api/posts/{id}")
     suspend fun getPostById(@Path("id") id: Long): Response<PostDto>
@@ -82,5 +97,5 @@ interface ApiService {
     suspend fun unparticipateEvent(@Path("id") id: Long): Response<EventDto>
 
     @DELETE("api/events/{id}")
-    suspend fun deleteEvent(@Path("id") id: Long): Response<Unit>  // Добавлен метод удаления события
+    suspend fun deleteEvent(@Path("id") id: Long): Response<Unit>
 }

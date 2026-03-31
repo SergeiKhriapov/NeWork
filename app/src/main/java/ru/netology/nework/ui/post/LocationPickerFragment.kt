@@ -2,12 +2,18 @@ package ru.netology.nework.ui.post
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.findNavController
@@ -19,6 +25,10 @@ import com.yandex.mapkit.location.LocationListener
 import com.yandex.mapkit.location.LocationManager
 import com.yandex.mapkit.location.LocationStatus
 import com.yandex.mapkit.map.CameraPosition
+import com.yandex.mapkit.map.MapObjectCollection
+import com.yandex.mapkit.map.PlacemarkMapObject
+import com.yandex.runtime.image.ImageProvider
+import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentLocationPickerBinding
 
 private const val LOCATION_REQUEST_KEY = "location_request"
@@ -31,13 +41,19 @@ class LocationPickerFragment : Fragment() {
         get() = _binding ?: error("Binding accessed after view destroyed")
 
     private var locationManager: LocationManager? = null
+    private var centerMarker: PlacemarkMapObject? = null
+    private var userLocationMarker: PlacemarkMapObject? = null
+    private var mapObjects: MapObjectCollection? = null
+    private var currentUserLocation: Point? = null
 
     private val locationListener = object : LocationListener {
         override fun onLocationUpdated(location: Location) {
-            val currentBinding = _binding ?: return
-
             val point = location.position
-            currentBinding.mapView.map.move(
+            currentUserLocation = point
+
+            addUserLocationMarker(point)
+
+            binding.mapView.map.move(
                 CameraPosition(point, 16.0f, 0.0f, 0.0f),
                 Animation(Animation.Type.SMOOTH, 1f),
                 null
@@ -47,6 +63,14 @@ class LocationPickerFragment : Fragment() {
         }
 
         override fun onLocationStatusUpdated(status: LocationStatus) {
+            when (status) {
+                LocationStatus.AVAILABLE -> {
+                    Log.d("LocationPicker", "Location available")
+                }
+                LocationStatus.NOT_AVAILABLE -> {
+                    Toast.makeText(requireContext(), "Местоположение недоступно", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
@@ -62,6 +86,14 @@ class LocationPickerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupMapObjects()
+        setupZoomButtons()
+        setupCameraListener()
+
+        binding.btnCancel.setOnClickListener {
+            findNavController().navigateUp()
+        }
+
         binding.btnConfirm.setOnClickListener {
             val target = binding.mapView.mapWindow.map.cameraPosition.target
             val bundle = Bundle().apply {
@@ -72,11 +104,128 @@ class LocationPickerFragment : Fragment() {
             findNavController().navigateUp()
         }
 
-        binding.btnCancel.setOnClickListener {
-            findNavController().navigateUp()
+        binding.btnMyLocation.setOnClickListener {
+            moveToCurrentLocation()
         }
 
         checkLocationPermission()
+    }
+
+    private fun setupMapObjects() {
+        mapObjects = binding.mapView.map.mapObjects.addCollection()
+    }
+
+    private fun setupZoomButtons() {
+        binding.btnZoomIn.setOnClickListener {
+            val currentZoom = binding.mapView.map.cameraPosition.zoom
+            binding.mapView.map.move(
+                CameraPosition(
+                    binding.mapView.map.cameraPosition.target,
+                    currentZoom + 1,
+                    0f,
+                    0f
+                ),
+                Animation(Animation.Type.SMOOTH, 0.3f),
+                null
+            )
+        }
+
+        binding.btnZoomOut.setOnClickListener {
+            val currentZoom = binding.mapView.map.cameraPosition.zoom
+            binding.mapView.map.move(
+                CameraPosition(
+                    binding.mapView.map.cameraPosition.target,
+                    currentZoom - 1,
+                    0f,
+                    0f
+                ),
+                Animation(Animation.Type.SMOOTH, 0.3f),
+                null
+            )
+        }
+    }
+
+
+    private fun setupCameraListener() {
+        binding.mapView.map.addCameraListener(object : com.yandex.mapkit.map.CameraListener {
+            override fun onCameraPositionChanged(
+                map: com.yandex.mapkit.map.Map,
+                cameraPosition: CameraPosition,
+                cameraUpdateReason: com.yandex.mapkit.map.CameraUpdateReason,
+                finished: Boolean
+            ) {
+                if (finished) {
+                    centerMarker?.geometry = cameraPosition.target
+                }
+            }
+        })
+    }
+
+    private fun addUserLocationMarker(point: Point) {
+        userLocationMarker?.let { mapObjects?.remove(it) }
+
+        userLocationMarker = mapObjects?.addPlacemark(point)
+
+        val userMarkerBitmap = createUserLocationBitmap()
+        val imageProvider = ImageProvider.fromBitmap(userMarkerBitmap)
+
+        userLocationMarker?.setIcon(imageProvider)
+    }
+
+    private fun createMarkerBitmap(): Bitmap {
+        val size = 56
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        paint.color = ContextCompat.getColor(requireContext(), R.color.purple_primary)
+        paint.style = Paint.Style.FILL
+        canvas.drawCircle((size / 2).toFloat(), (size / 2).toFloat(), (size / 2 - 4).toFloat(), paint)
+
+        paint.color = Color.WHITE
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 4f
+        paint.strokeCap = Paint.Cap.ROUND
+        paint.strokeJoin = Paint.Join.ROUND
+
+        val startX = size / 2 - 10f
+        val startY = size / 2 + 4f
+        val midX = size / 2f
+        val midY = size / 2 + 12f
+        val endX = size / 2 + 12f
+        val endY = size / 2 - 6f
+
+        val path = android.graphics.Path()
+        path.moveTo(startX, startY)
+        path.lineTo(midX, midY)
+        path.lineTo(endX, endY)
+        canvas.drawPath(path, paint)
+
+        paint.color = Color.WHITE
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 2f
+        canvas.drawCircle((size / 2).toFloat(), (size / 2).toFloat(), (size / 2 - 4).toFloat(), paint)
+
+        return bitmap
+    }
+
+    private fun createUserLocationBitmap(): Bitmap {
+        val size = 40
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        paint.color = Color.parseColor("#2196F3")
+        paint.style = Paint.Style.FILL
+        canvas.drawCircle((size / 2).toFloat(), (size / 2).toFloat(), (size / 2 - 2).toFloat(), paint)
+
+        paint.color = Color.WHITE
+        canvas.drawCircle((size / 2).toFloat(), (size / 2).toFloat(), (size / 2 - 6).toFloat(), paint)
+
+        paint.color = Color.parseColor("#2196F3")
+        canvas.drawCircle((size / 2).toFloat(), (size / 2).toFloat(), (size / 2 - 10).toFloat(), paint)
+
+        return bitmap
     }
 
     private fun checkLocationPermission() {
@@ -95,8 +244,17 @@ class LocationPickerFragment : Fragment() {
     }
 
     private fun moveToCurrentLocation() {
-        locationManager = MapKitFactory.getInstance().createLocationManager()
-        locationManager?.requestSingleUpdate(locationListener)
+        if (currentUserLocation != null) {
+            binding.mapView.map.move(
+                CameraPosition(currentUserLocation!!, 16.0f, 0.0f, 0.0f),
+                Animation(Animation.Type.SMOOTH, 0.5f),
+                null
+            )
+        } else {
+            locationManager = MapKitFactory.getInstance().createLocationManager()
+            locationManager?.requestSingleUpdate(locationListener)
+            Toast.makeText(requireContext(), "Определяем местоположение...", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -142,6 +300,10 @@ class LocationPickerFragment : Fragment() {
     override fun onDestroyView() {
         locationManager?.unsubscribe(locationListener)
         locationManager = null
+        mapObjects?.clear()
+        mapObjects = null
+        centerMarker = null
+        userLocationMarker = null
         _binding = null
         super.onDestroyView()
     }

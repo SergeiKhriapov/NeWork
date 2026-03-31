@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import ru.netology.nework.domain.repository.PostRepository
 import ru.netology.nework.model.Post
+import ru.netology.nework.model.User
 import ru.netology.nework.model.UserPreview
 import javax.inject.Inject
 
@@ -22,12 +23,19 @@ class PostDetailViewModel @Inject constructor(
     private val _post = MutableLiveData<Post?>()
     val post: LiveData<Post?> = _post
 
-    // Используем UserPreview вместо User
-    private val _likers = MutableLiveData<List<UserPreview>>(emptyList())
-    val likers: LiveData<List<UserPreview>> = _likers
+    // Используем User с реальными ID
+    private val _likers = MutableLiveData<List<User>>(emptyList())
+    val likers: LiveData<List<User>> = _likers
 
-    private val _mentioned = MutableLiveData<List<UserPreview>>(emptyList())
-    val mentioned: LiveData<List<UserPreview>> = _mentioned
+    private val _mentioned = MutableLiveData<List<User>>(emptyList())
+    val mentioned: LiveData<List<User>> = _mentioned
+
+    // Для карусели может понадобиться UserPreview (если нужно отдельно)
+    private val _likersPreview = MutableLiveData<List<UserPreview>>(emptyList())
+    val likersPreview: LiveData<List<UserPreview>> = _likersPreview
+
+    private val _mentionedPreview = MutableLiveData<List<UserPreview>>(emptyList())
+    val mentionedPreview: LiveData<List<UserPreview>> = _mentionedPreview
 
     fun loadPost(postId: Long) {
         Log.d(TAG, "loadPost($postId) called")
@@ -37,7 +45,7 @@ class PostDetailViewModel @Inject constructor(
             result.onSuccess { post ->
                 Log.d(TAG, "Post loaded successfully: id=${post.id}, author=${post.author}")
                 _post.value = post
-                combineData()
+                combineData(post)
             }.onFailure { error ->
                 Log.e(TAG, "Error loading post: ${error.message}")
                 _post.value = null
@@ -45,20 +53,43 @@ class PostDetailViewModel @Inject constructor(
         }
     }
 
-    private fun combineData() {
-        val post = _post.value ?: run {
-            Log.d(TAG, "combineData: post is null")
-            return
-        }
+    private fun combineData(post: Post) {
         val usersMap = post.users ?: emptyMap()
         Log.d(TAG, "combineData: likeOwnerIds=${post.likeOwnerIds}, mentionIds=${post.mentionIds}")
         Log.d(TAG, "usersMap size = ${usersMap.size}")
 
-        val likersList = post.likeOwnerIds.mapNotNull { usersMap[it] }
-        val mentionedList = post.mentionIds.mapNotNull { usersMap[it] }
+        // Конвертируем UserPreview в User с реальными ID
+        val likersList = post.likeOwnerIds.mapNotNull { id ->
+            usersMap[id]?.let { preview ->
+                User(
+                    id = id,
+                    login = "", // login нет в UserPreview, можно оставить пустым
+                    name = preview.name,
+                    avatar = preview.avatar
+                )
+            }
+        }
+
+        val mentionedList = post.mentionIds.mapNotNull { id ->
+            usersMap[id]?.let { preview ->
+                User(
+                    id = id,
+                    login = "",
+                    name = preview.name,
+                    avatar = preview.avatar
+                )
+            }
+        }
+
+        // Для карусели (только имена и аватары)
+        val likersPreviewList = post.likeOwnerIds.mapNotNull { usersMap[it] }
+        val mentionedPreviewList = post.mentionIds.mapNotNull { usersMap[it] }
 
         Log.d(TAG, "likers count = ${likersList.size}, mentioned count = ${mentionedList.size}")
+
         _likers.value = likersList
         _mentioned.value = mentionedList
+        _likersPreview.value = likersPreviewList
+        _mentionedPreview.value = mentionedPreviewList
     }
 }

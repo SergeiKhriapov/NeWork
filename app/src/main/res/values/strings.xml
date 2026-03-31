@@ -28,4 +28,6 @@
     <string name="users">users</string>
     <string name="location">location</string>
     <string name="post">post</string>
+    <string name="zoom_out">zoom_out</string>
+    <string name="zoom_in">zoom_in</string>
 </resources>

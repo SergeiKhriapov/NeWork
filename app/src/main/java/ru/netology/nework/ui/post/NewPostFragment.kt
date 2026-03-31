@@ -215,7 +215,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         setFragmentResultListener(LOCATION_REQUEST_KEY) { _, bundle ->
             val lat = bundle.getDouble("lat")
             val lng = bundle.getDouble("lng")
-            viewModel.setCoordinates(Coordinates(lat, lng))  // Убедитесь, что в Coordinates используется long или lng
+            viewModel.setCoordinates(Coordinates(lat, lng))
             Toast.makeText(requireContext(), "Местоположение выбрано", Toast.LENGTH_SHORT).show()
         }
 

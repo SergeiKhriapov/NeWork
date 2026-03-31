@@ -14,6 +14,7 @@ import ru.netology.nework.data.api.ApiKeyInterceptor
 import ru.netology.nework.data.api.ApiService
 import ru.netology.nework.data.api.AuthInterceptor
 import ru.netology.nework.data.datastore.TokenManager
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -28,8 +29,14 @@ object NetworkModule {
         apiKeyInterceptor: ApiKeyInterceptor,
         authInterceptor: AuthInterceptor
     ): OkHttpClient {
-        val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
+        val logging = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
         return OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)      // Увеличен с 10 до 30 секунд
+            .writeTimeout(30, TimeUnit.SECONDS)        // Добавлен таймаут на запись
+            .readTimeout(30, TimeUnit.SECONDS)         // Добавлен таймаут на чтение
             .addInterceptor(logging)
             .addInterceptor(apiKeyInterceptor)
             .addInterceptor(authInterceptor)

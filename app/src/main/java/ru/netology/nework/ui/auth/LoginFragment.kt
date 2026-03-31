@@ -7,10 +7,13 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentLoginBinding
 
@@ -19,48 +22,73 @@ class LoginFragment : Fragment() {
 
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
+
     private val viewModel: LoginViewModel by viewModels()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentLoginBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return FragmentLoginBinding.inflate(inflater, container, false).also {
+            _binding = it
+        }.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+        setupListeners()
+        observeLoginResult()
+    }
 
-        // Кнопка входа
+    private fun setupListeners() {
         binding.btnLogin.setOnClickListener {
-            val login = binding.etLogin.text.toString().trim()
-            val password = binding.etPassword.text.toString().trim()
-            if (login.isNotBlank() && password.isNotBlank()) {
-                viewModel.login(login, password)
-            } else {
-                Toast.makeText(requireContext(), "Заполните все поля", Toast.LENGTH_SHORT).show()
-            }
+            handleLoginClick()
         }
 
-        // Ссылка на регистрацию (добавлено из второго варианта)
         binding.tvRegisterLink.setOnClickListener {
             findNavController().navigate(R.id.registerFragment)
         }
+    }
 
-        // Наблюдаем за результатом входа
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            viewModel.loginResult.collectLatest { result ->
-                result.onSuccess { user ->
-                    Toast.makeText(requireContext(), "Добро пожаловать, ${user.name}", Toast.LENGTH_LONG).show()
-                    // Переход на главный экран FeedFragment
-                    findNavController().navigate(R.id.action_loginFragment_to_feedFragment)
-                }.onFailure { error ->
-                    Toast.makeText(requireContext(), error.message ?: "Ошибка", Toast.LENGTH_LONG).show()
+    private fun handleLoginClick() {
+        val login = binding.etLogin.text.toString().trim()
+        val password = binding.etPassword.text.toString().trim()
+
+        if (login.isBlank() || password.isBlank()) {
+            showToast("Please fill in all fields")
+            return
+        }
+
+        viewModel.login(login, password)
+    }
+
+    private fun observeLoginResult() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.loginResult.collectLatest { result ->
+                    result
+                        .onSuccess { user ->
+                            showToast("Welcome, ${user.name}")
+                            navigateToFeed()
+                        }
+                        .onFailure { error ->
+                            showToast(error.message ?: "Something went wrong")
+                        }
                 }
             }
         }
     }
 
+    private fun navigateToFeed() {
+        findNavController().navigate(R.id.action_loginFragment_to_feedFragment)
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+    }
+
     override fun onDestroyView() {
-        super.onDestroyView()
         _binding = null
+        super.onDestroyView()
     }
 }

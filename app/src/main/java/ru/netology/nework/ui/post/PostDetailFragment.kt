@@ -21,6 +21,7 @@ import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -44,6 +45,7 @@ import kotlinx.coroutines.withContext
 import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentPostDetailBinding
 import ru.netology.nework.model.AttachmentType
+import ru.netology.nework.model.User
 import ru.netology.nework.model.UserPreview
 import ru.netology.nework.utils.DateUtils.formatForDisplay
 import ru.netology.nework.utils.LetterAvatarDrawable
@@ -155,27 +157,47 @@ class PostDetailFragment : Fragment() {
             }
         }
 
-        viewModel.likers.observe(viewLifecycleOwner) { users ->
-            Log.d(TAG, "likers observed: size=${users.size}")
+        // Для карусели используем Preview (только имя и аватар)
+        viewModel.likersPreview.observe(viewLifecycleOwner) { usersPreview ->
+            Log.d(TAG, "likersPreview observed: size=${usersPreview.size}")
             buildCarousel(
                 container = binding.llLikers,
                 parentLayout = binding.likersLayout,
-                users = users,
+                users = usersPreview,
                 iconResId = R.drawable.ic_liked,
-                onPlusClick = null
+                onPlusClick = if (usersPreview.size > 5) {
+                    { openUsersList(viewModel.likers.value ?: emptyList(), "Лайкнувшие") }
+                } else {
+                    null
+                }
             )
         }
 
-        viewModel.mentioned.observe(viewLifecycleOwner) { users ->
-            Log.d(TAG, "mentioned observed: size=${users.size}")
+        viewModel.mentionedPreview.observe(viewLifecycleOwner) { usersPreview ->
+            Log.d(TAG, "mentionedPreview observed: size=${usersPreview.size}")
             buildCarousel(
                 container = binding.llMentioned,
                 parentLayout = binding.mentionedLayout,
-                users = users,
+                users = usersPreview,
                 iconResId = R.drawable.ic_mentioned,
-                onPlusClick = { openUserSelection() }
+                onPlusClick = if (usersPreview.size > 5) {
+                    { openUsersList(viewModel.mentioned.value ?: emptyList(), "Упомянутые") }
+                } else {
+                    null
+                }
             )
         }
+    }
+
+    /**
+     * Открывает фрагмент со списком пользователей (с реальными ID)
+     */
+    private fun openUsersList(users: List<User>, title: String) {
+        val bundle = Bundle().apply {
+            putParcelableArrayList("users", ArrayList(users))  // putParcelableArrayList
+            putString("title", title)
+        }
+        findNavController().navigate(R.id.usersListFragment, bundle)
     }
 
     private fun setupSeekBar() {
@@ -503,10 +525,6 @@ class PostDetailFragment : Fragment() {
         }
     }
 
-    private fun openUserSelection() {
-        Toast.makeText(requireContext(), "Открыть выбор пользователей", Toast.LENGTH_SHORT).show()
-    }
-
     private fun updateMediaPreview(attachment: ru.netology.nework.model.Attachment?) {
         if (attachment == null) {
             binding.mediaContainer.visibility = View.GONE
@@ -564,7 +582,6 @@ class PostDetailFragment : Fragment() {
                 }
 
                 binding.videoContainer.setOnClickListener {
-                    // TODO: Implement video playback
                     Toast.makeText(requireContext(), "Видео пока не поддерживается", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -573,7 +590,6 @@ class PostDetailFragment : Fragment() {
                 binding.audioPlayer.visibility = View.VISIBLE
                 currentAudioUrl = attachment.url
 
-                // Reset audio state
                 if (isAudioPlaying) {
                     stopAudioPlayback()
                 }

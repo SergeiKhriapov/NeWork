@@ -72,4 +72,10 @@
         android:label="Choose users"
         tools:layout="@layout/fragment_user_selection" />
 
+    <fragment
+        android:id="@+id/usersListFragment"
+        android:name="ru.netology.nework.ui.users.UsersListFragment"
+        android:label="UsersListFragment"
+        tools:layout="@layout/fragment_users" />
+
 </navigation>

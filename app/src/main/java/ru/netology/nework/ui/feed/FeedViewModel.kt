@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import ru.netology.nework.data.datastore.TokenManager
 import ru.netology.nework.domain.repository.PostRepository
-import ru.netology.nework.model.Attachment  // Изменён импорт
+import ru.netology.nework.model.Attachment
 import ru.netology.nework.model.Post
 import javax.inject.Inject
 
@@ -25,6 +25,9 @@ class FeedViewModel @Inject constructor(
     private val _isLoading = MutableLiveData(false)
     val isLoading: LiveData<Boolean> = _isLoading
 
+    private val _isLoadingMore = MutableLiveData(false)
+    val isLoadingMore: LiveData<Boolean> = _isLoadingMore
+
     private val _error = MutableLiveData<String?>(null)
     val error: LiveData<String?> = _error
 
@@ -34,18 +37,33 @@ class FeedViewModel @Inject constructor(
     val currentUserId: StateFlow<Long?> = tokenManager.currentUserId
 
     init {
-        loadPosts()
+        loadLatestPosts()
     }
 
-    fun loadPosts() {
+    fun loadLatestPosts() {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
-            Log.d("FeedViewModel", "Loading posts from network...")
-            val result = postRepository.getPosts()
+            Log.d("FeedViewModel", "Loading latest posts...")
+            val result = postRepository.getLatestPosts(20)
             _isLoading.value = false
             result.onFailure { exception ->
                 Log.e("FeedViewModel", "Error loading posts", exception)
+                _error.value = exception.message ?: "Ошибка загрузки"
+            }
+        }
+    }
+
+    fun loadMorePosts() {
+        val currentList = posts.value ?: return
+        if (currentList.isEmpty()) return
+
+        val oldestId = currentList.last().id
+        viewModelScope.launch {
+            _isLoadingMore.value = true
+            val result = postRepository.getPostsBefore(oldestId, 15)
+            _isLoadingMore.value = false
+            result.onFailure { exception ->
                 _error.value = exception.message ?: "Ошибка загрузки"
             }
         }
@@ -81,7 +99,6 @@ class FeedViewModel @Inject constructor(
         }
     }
 
-    // Изменён тип attachment с MediaAttachment? на Attachment?
     fun updatePost(postId: Long, content: String?, attachment: Attachment?) {
         viewModelScope.launch {
             val result = postRepository.updatePost(postId, content, attachment, null, null)

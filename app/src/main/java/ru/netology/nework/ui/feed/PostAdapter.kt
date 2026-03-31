@@ -28,7 +28,8 @@ import ru.netology.nework.utils.DateUtils.formatForDisplay
 import ru.netology.nework.utils.LetterAvatarDrawable
 
 private const val TAG = "PostAdapter"
-private const val PROGRESS_UPDATE_INTERVAL_MS = 200L
+private const val PROGRESS_UPDATE_INTERVAL_MS = 500L // Увеличил интервал с 200ms до 500ms
+private const val SEEK_BAR_UPDATE_THRESHOLD = 2 // Обновляем только при изменении прогресса >= 2%
 
 class PostAdapter(
     private val onLike: (Post) -> Unit,
@@ -45,6 +46,12 @@ class PostAdapter(
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private var progressUpdateRunnable: Runnable? = null
+
+    // Кэш для последних значений, чтобы избежать лишних обновлений UI
+    private var lastCurrentPosition: Long = 0
+    private var lastTotalDuration: Long = 0
+    private var lastProgress: Int = -1
+    private var lastDurationText: String = ""
 
     private val playerListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
@@ -79,6 +86,14 @@ class PostAdapter(
 
     override fun onBindViewHolder(holder: PostViewHolder, position: Int) {
         Log.d(TAG, "onBindViewHolder position=$position")
+
+        // Очищаем Glide запросы перед привязкой
+        Glide.with(holder.itemView).clear(holder.binding.ivImage)
+        Glide.with(holder.itemView).clear(holder.binding.ivVideoPreview)
+
+        // Сбрасываем состояние аудио для этого холдера
+        holder.resetAudioState()
+
         holder.bind(getItem(position))
     }
 
@@ -91,7 +106,10 @@ class PostAdapter(
         stopProgressUpdates()
         progressUpdateRunnable = object : Runnable {
             override fun run() {
-                currentAudioHolder?.updateAudioPlaybackState()
+                // Обновляем состояние только если есть активный аудио плеер
+                if (currentlyPlayingPostId != null && currentAudioHolder != null) {
+                    currentAudioHolder?.updateAudioPlaybackState()
+                }
                 mainHandler.postDelayed(this, PROGRESS_UPDATE_INTERVAL_MS)
             }
         }.also { mainHandler.post(it) }
@@ -106,6 +124,13 @@ class PostAdapter(
         stopProgressUpdates()
         audioPlayer?.stop()
         audioPlayer?.clearMediaItems()
+
+        // Сбрасываем кэшированные значения
+        lastCurrentPosition = 0
+        lastTotalDuration = 0
+        lastProgress = -1
+        lastDurationText = ""
+
         currentlyPlayingPostId = null
         currentAudioHolder?.updateAudioPlaybackState()
         currentAudioHolder = null
@@ -120,8 +145,8 @@ class PostAdapter(
         currentAudioHolder = null
     }
 
-    inner class PostViewHolder(private val b: ItemPostBinding) :
-        RecyclerView.ViewHolder(b.root) {
+    inner class PostViewHolder(val binding: ItemPostBinding) :
+        RecyclerView.ViewHolder(binding.root) {
 
         private var currentPostId: Long? = null
         private var isAudioPlayingForThisPost = false
@@ -132,9 +157,12 @@ class PostAdapter(
                 }
             }
 
-        init {
+        // Кэш для оптимизации обновлений UI
+        private var lastCachedProgress: Int = -1
+        private var lastCachedDurationText: String = ""
 
-            b.seekBar.setOnSeekBarChangeListener(object :
+        init {
+            binding.seekBar.setOnSeekBarChangeListener(object :
                 SeekBar.OnSeekBarChangeListener {
 
                 override fun onProgressChanged(
@@ -143,59 +171,59 @@ class PostAdapter(
                     fromUser: Boolean
                 ) {
                     if (fromUser && audioPlayer != null && currentlyPlayingPostId == currentPostId) {
-
                         val duration = audioPlayer?.duration ?: 0
-                        val seekPosition = ((progress / 100f) * duration).toLong()
-                        audioPlayer?.seekTo(seekPosition)
-
+                        if (duration > 0) {
+                            val seekPosition = ((progress / 100f) * duration).toLong()
+                            audioPlayer?.seekTo(seekPosition)
+                        }
                     }
                 }
 
                 override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
 
-            b.btnPlayPause.setOnClickListener {
-
-                val post = getItem(absoluteAdapterPosition)
-
-                if (post.attachment?.type == AttachmentType.AUDIO) {
-                    toggleAudioPlayback(post)
+            binding.btnPlayPause.setOnClickListener {
+                val position = absoluteAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    val post = getItem(position)
+                    if (post.attachment?.type == AttachmentType.AUDIO) {
+                        toggleAudioPlayback(post)
+                    }
                 }
-
             }
 
-            b.btnShare.setOnClickListener {
-
-                val post = getItem(absoluteAdapterPosition)
-                onShare(post)
-
+            binding.btnShare.setOnClickListener {
+                val position = absoluteAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    val post = getItem(position)
+                    onShare(post)
+                }
             }
         }
 
-        fun bind(post: Post) = with(b) {
+        fun resetAudioState() {
+            lastCachedProgress = -1
+            lastCachedDurationText = ""
+        }
 
+        fun bind(post: Post) = with(binding) {
             currentPostId = post.id
 
-            tvAuthor.text = post.author
-
+            // --- Аватар ---
             if (!post.authorAvatar.isNullOrBlank()) {
-
                 Glide.with(itemView)
                     .load(post.authorAvatar)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                    .override(80, 80)
                     .placeholder(R.drawable.ic_account_circle)
                     .error(R.drawable.ic_account_circle)
                     .circleCrop()
                     .into(ivAvatar)
-
             } else {
-
+                // Создаем LetterAvatarDrawable только если нет аватара
                 val name = post.author
-
                 val firstLetter = name.firstOrNull()?.toString() ?: "?"
-
                 val letterDrawable = LetterAvatarDrawable(
                     letter = firstLetter,
                     backgroundColor = ContextCompat.getColor(
@@ -203,178 +231,166 @@ class PostAdapter(
                         R.color.purple_primary
                     )
                 ).apply { setBounds(0, 0, 100, 100) }
-
                 ivAvatar.setImageDrawable(letterDrawable)
             }
 
+            // --- Дата ---
             tvDate.text = post.published.formatForDisplay()
 
+            // --- Контент ---
             if (post.content.isBlank()) {
-
                 tvContent.visibility = View.GONE
-
             } else {
-
                 tvContent.visibility = View.VISIBLE
                 tvContent.text = post.content
-
             }
 
-            tvLikes.text = post.likeOwnerIds.size.toString()
+            // --- Лайки ---
+            val likesCount = post.likeOwnerIds.size.toString()
+            if (tvLikes.text != likesCount) {
+                tvLikes.text = likesCount
+            }
 
-            ivLike.setImageResource(
-                if (post.likedByMe) R.drawable.ic_liked
-                else R.drawable.ic_like
-            )
+            val likeIcon = if (post.likedByMe) R.drawable.ic_liked else R.drawable.ic_like
+            if (ivLike.tag != likeIcon) {
+                ivLike.setImageResource(likeIcon)
+                ivLike.tag = likeIcon
+            }
 
             btnLike.setOnClickListener {
-
                 animateLike()
                 onLike(post)
-
             }
 
+            // --- Медиа контент ---
             mediaContainer.visibility = View.GONE
             ivImage.visibility = View.GONE
             ivVideoPreview.visibility = View.GONE
             ivPlay?.visibility = View.GONE
             audioPlayer.visibility = View.GONE
 
-            Glide.with(itemView).clear(ivImage)
-            ivVideoPreview.let { Glide.with(itemView).clear(it) }
-
             val attachment = post.attachment
 
             if (attachment != null) {
-
                 mediaContainer.visibility = View.VISIBLE
 
                 when (attachment.type) {
-
                     AttachmentType.IMAGE -> {
-
                         ivImage.visibility = View.VISIBLE
-
                         Glide.with(itemView)
                             .load(attachment.url)
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                            .override(400, 400)
                             .centerCrop()
                             .into(ivImage)
-
                         ivImage.setOnClickListener { onOpen(post) }
-
                     }
 
                     AttachmentType.VIDEO -> {
-
                         val videoUrl = attachment.url
-
                         ivVideoPreview.visibility = View.VISIBLE
                         ivPlay?.visibility = View.VISIBLE
 
+                        // Загружаем превью видео асинхронно
                         Glide.with(itemView)
                             .load(videoUrl)
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
-                            .frame(1000000)
+                            .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                            .override(400, 400)
+                            .frame(1000000) // Один кадр на 1 секунде
                             .centerCrop()
                             .into(ivVideoPreview)
 
                         ivVideoPreview.setOnClickListener {
                             onPlayMedia(videoUrl, true)
                         }
-
                         ivPlay?.setOnClickListener {
                             onPlayMedia(videoUrl, true)
                         }
-
                     }
 
                     AttachmentType.AUDIO -> {
-
                         audioPlayer.visibility = View.VISIBLE
                         mediaContainer.visibility = View.GONE
 
-                        isAudioPlayingForThisPost =
-                            (currentlyPlayingPostId == post.id)
+                        val isCurrentlyPlaying = (currentlyPlayingPostId == post.id)
 
-                        if (isAudioPlayingForThisPost) {
-
-                            currentAudioHolder = this@PostViewHolder
-                            updateAudioPlaybackState()
-
-                        } else {
-
-                            btnPlayPause.setImageResource(R.drawable.ic_audio_play)
-                            tvAudioDuration.text = "00:00 / 00:00"
-                            seekBar.progress = 0
-
+                        // Обновляем состояние только если изменилось
+                        if (isAudioPlayingForThisPost != isCurrentlyPlaying) {
+                            isAudioPlayingForThisPost = isCurrentlyPlaying
                         }
 
+                        // Если это текущий воспроизводящийся пост, обновляем UI
+                        if (isCurrentlyPlaying) {
+                            if (currentAudioHolder != this@PostViewHolder) {
+                                currentAudioHolder = this@PostViewHolder
+                            }
+                            updateAudioPlaybackState()
+                        } else {
+                            // Сбрасываем UI только если нужно
+                            if (btnPlayPause.drawable?.constantState !=
+                                ContextCompat.getDrawable(itemView.context, R.drawable.ic_audio_play)?.constantState) {
+                                btnPlayPause.setImageResource(R.drawable.ic_audio_play)
+                            }
+
+                            val defaultDurationText = "00:00 / 00:00"
+                            if (tvAudioDuration.text != defaultDurationText) {
+                                tvAudioDuration.text = defaultDurationText
+                            }
+
+                            if (seekBar.progress != 0) {
+                                seekBar.progress = 0
+                            }
+                        }
                     }
 
                     else -> mediaContainer.visibility = View.GONE
                 }
-
             }
 
+            // --- Меню ---
             if (isOwnedByUser(post)) {
-
                 btnMore.visibility = View.VISIBLE
                 btnMore.setOnClickListener { onMenu(post, btnMore) }
-
             } else {
-
                 btnMore.visibility = View.GONE
-
             }
 
             root.setOnClickListener { onOpen(post) }
         }
 
         private fun animateLike() {
-
-            val scaleX = ObjectAnimator.ofFloat(b.ivLike, "scaleX", 1f, 1.4f, 1f)
-            val scaleY = ObjectAnimator.ofFloat(b.ivLike, "scaleY", 1f, 1.4f, 1f)
-
-            val rotation =
-                ObjectAnimator.ofFloat(b.ivLike, "rotation", 0f, -8f, 8f, 0f)
+            val scaleX = ObjectAnimator.ofFloat(binding.ivLike, "scaleX", 1f, 1.4f, 1f)
+            val scaleY = ObjectAnimator.ofFloat(binding.ivLike, "scaleY", 1f, 1.4f, 1f)
+            val rotation = ObjectAnimator.ofFloat(binding.ivLike, "rotation", 0f, -8f, 8f, 0f)
 
             scaleX.interpolator = OvershootInterpolator()
             scaleY.interpolator = OvershootInterpolator()
 
             AnimatorSet().apply {
-
                 playTogether(scaleX, scaleY, rotation)
                 duration = 300
                 start()
-
             }
         }
 
         fun toggleAudioPlayback(post: Post) {
-
             if (currentlyPlayingPostId == post.id) {
-
                 audioPlayer?.pause()
                 currentlyPlayingPostId = null
                 currentAudioHolder = null
                 isAudioPlayingForThisPost = false
                 stopProgressUpdates()
-
             } else {
-
                 if (audioPlayer == null) {
-
-                    audioPlayer =
-                        ExoPlayer.Builder(itemView.context).build().also {
-
-                            it.addListener(playerListener)
-
-                        }
+                    audioPlayer = ExoPlayer.Builder(itemView.context).build().also {
+                        it.addListener(playerListener)
+                    }
                 }
 
-                val mediaItem =
-                    MediaItem.fromUri(android.net.Uri.parse(post.attachment?.url ?: return))
+                val audioUrl = post.attachment?.url
+                if (audioUrl.isNullOrBlank()) return
+
+                val mediaItem = MediaItem.fromUri(android.net.Uri.parse(audioUrl))
 
                 audioPlayer?.setMediaItem(mediaItem)
                 audioPlayer?.prepare()
@@ -389,48 +405,67 @@ class PostAdapter(
         }
 
         fun updateAudioPlaybackState() {
-
+            // Быстрая проверка - если это не текущий пост, выходим
             if (currentlyPlayingPostId != currentPostId) return
 
             val player = audioPlayer ?: return
 
-            val isPlaying = player.isPlaying
+            try {
+                val isPlaying = player.isPlaying
 
-            b.btnPlayPause.setImageResource(
-                if (isPlaying) R.drawable.ic_audio_pause_24
-                else R.drawable.ic_audio_play
-            )
+                // Обновляем иконку только если изменилось состояние
+                val expectedIcon = if (isPlaying) R.drawable.ic_audio_pause_24 else R.drawable.ic_audio_play
+                if (binding.btnPlayPause.tag != expectedIcon) {
+                    binding.btnPlayPause.setImageResource(expectedIcon)
+                    binding.btnPlayPause.tag = expectedIcon
+                }
 
-            val current = player.currentPosition
-            val total = player.duration
+                val total = player.duration
+                if (total <= 0) return
 
-            if (total > 0) {
+                val current = player.currentPosition
 
-                b.seekBar.progress = ((current.toFloat() / total) * 100).toInt()
+                // Вычисляем прогресс (0-100)
+                val progress = ((current.toFloat() / total) * 100).toInt()
 
-                b.tvAudioDuration.text =
-                    formatDuration(current) + " / " + formatDuration(total)
+                // Обновляем SeekBar только если прогресс изменился значимо
+                if (kotlin.math.abs(progress - lastCachedProgress) >= SEEK_BAR_UPDATE_THRESHOLD) {
+                    if (binding.seekBar.progress != progress) {
+                        binding.seekBar.progress = progress
+                    }
+                    lastCachedProgress = progress
+                }
 
+                // Обновляем текст длительности
+                val durationText = formatDuration(current) + " / " + formatDuration(total)
+                if (durationText != lastCachedDurationText) {
+                    if (binding.tvAudioDuration.text != durationText) {
+                        binding.tvAudioDuration.text = durationText
+                    }
+                    lastCachedDurationText = durationText
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error updating audio state: ${e.message}")
             }
         }
 
         private fun formatDuration(durationMs: Long): String {
-
             val totalSeconds = durationMs / 1000
             val minutes = totalSeconds / 60
             val seconds = totalSeconds % 60
-
             return String.format("%02d:%02d", minutes, seconds)
-
         }
     }
 
     object DiffCallback : DiffUtil.ItemCallback<Post>() {
+        override fun areItemsTheSame(oldItem: Post, newItem: Post) = oldItem.id == newItem.id
+        override fun areContentsTheSame(oldItem: Post, newItem: Post) = oldItem == newItem
 
-        override fun areItemsTheSame(oldItem: Post, newItem: Post) =
-            oldItem.id == newItem.id
-
-        override fun areContentsTheSame(oldItem: Post, newItem: Post) =
-            oldItem == newItem
+        // Добавляем быструю проверку для ускорения DiffUtil
+        override fun getChangePayload(oldItem: Post, newItem: Post): Any? {
+            if (oldItem.likedByMe != newItem.likedByMe) return "like_changed"
+            if (oldItem.likeOwnerIds.size != newItem.likeOwnerIds.size) return "likes_count_changed"
+            return super.getChangePayload(oldItem, newItem)
+        }
     }
 }
