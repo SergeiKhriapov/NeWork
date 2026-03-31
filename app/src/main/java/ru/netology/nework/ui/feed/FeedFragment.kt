@@ -73,7 +73,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
-        // Бесконечная прокрутка
+        // Бесконечная прокрутка с защитой от множественных вызовов
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
@@ -82,7 +82,8 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
                 val totalItemCount = adapter.itemCount
 
-                if (!isLoadingMore && lastVisibleItemPosition >= totalItemCount - 3) {
+                // Загружаем новые посты, когда осталось 2 элемента до конца
+                if (!isLoadingMore && lastVisibleItemPosition >= totalItemCount - 2 && totalItemCount > 0) {
                     isLoadingMore = true
                     viewModel.loadMorePosts()
                 }
@@ -96,6 +97,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
 
             if (posts.isNotEmpty()) {
                 Log.d("FeedFragment", "First post: ${posts[0].content.take(50)}")
+                // Скрываем TextView только если есть посты
                 debugTextView?.visibility = View.GONE
             } else {
                 Log.d("FeedFragment", "Posts list is empty")
@@ -156,21 +158,23 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         super.onResume()
         Log.d("FeedFragment", "onResume")
 
-        val fab = requireActivity().findViewById<FloatingActionButton>(R.id.fab_create)
-        Log.d("FeedFragment", "FAB found: ${fab != null}")
+        try {
+            val fab = requireActivity().findViewById<FloatingActionButton>(R.id.fab_create)
+            Log.d("FeedFragment", "FAB found: ${fab != null}")
 
-        if (fab != null) {
-            fab.show()
-            fab.setOnClickListener {
-                Log.d("FeedFragment", "FAB clicked, isLoggedIn: ${viewModel.isLoggedIn()}")
-                if (viewModel.isLoggedIn()) {
-                    findNavController().navigate(R.id.newPostFragment)
-                } else {
-                    Toast.makeText(requireContext(), "Необходимо авторизоваться", Toast.LENGTH_SHORT).show()
+            fab?.let {
+                it.show()
+                it.setOnClickListener {
+                    Log.d("FeedFragment", "FAB clicked, isLoggedIn: ${viewModel.isLoggedIn()}")
+                    if (viewModel.isLoggedIn()) {
+                        findNavController().navigate(R.id.newPostFragment)
+                    } else {
+                        Toast.makeText(requireContext(), "Необходимо авторизоваться", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
-        } else {
-            Log.e("FeedFragment", "FAB is NULL!")
+        } catch (e: Exception) {
+            Log.e("FeedFragment", "Error setting up FAB: ${e.message}")
         }
     }
 
@@ -192,30 +196,34 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
 
     private fun showPopupMenu(post: Post, anchor: View) {
         Log.d("FeedFragment", "Showing popup menu for post: ${post.id}")
-        val popup = android.widget.PopupMenu(requireContext(), anchor)
-        popup.menuInflater.inflate(R.menu.menu_post_actions, popup.menu)
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.action_edit -> {
-                    Log.d("FeedFragment", "Edit post: ${post.id}")
-                    val bundle = bundleOf(
-                        "postId" to post.id,
-                        "content" to post.content,
-                        "attachmentUrl" to post.attachment?.url,
-                        "attachmentType" to post.attachment?.type?.name
-                    )
-                    findNavController().navigate(R.id.newPostFragment, bundle)
-                    true
+        try {
+            val popup = android.widget.PopupMenu(requireContext(), anchor)
+            popup.menuInflater.inflate(R.menu.menu_post_actions, popup.menu)
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.action_edit -> {
+                        Log.d("FeedFragment", "Edit post: ${post.id}")
+                        val bundle = bundleOf(
+                            "postId" to post.id,
+                            "content" to post.content,
+                            "attachmentUrl" to post.attachment?.url,
+                            "attachmentType" to post.attachment?.type?.name
+                        )
+                        findNavController().navigate(R.id.newPostFragment, bundle)
+                        true
+                    }
+                    R.id.action_delete -> {
+                        Log.d("FeedFragment", "Delete post: ${post.id}")
+                        showDeleteConfirmation(post.id)
+                        true
+                    }
+                    else -> false
                 }
-                R.id.action_delete -> {
-                    Log.d("FeedFragment", "Delete post: ${post.id}")
-                    showDeleteConfirmation(post.id)
-                    true
-                }
-                else -> false
             }
+            popup.show()
+        } catch (e: Exception) {
+            Log.e("FeedFragment", "Error showing popup menu: ${e.message}")
         }
-        popup.show()
     }
 
     private fun showDeleteConfirmation(postId: Long) {

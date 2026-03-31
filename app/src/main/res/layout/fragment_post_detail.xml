@@ -8,37 +8,30 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/white"
-            app:navigationIcon="@drawable/ic_arrow_back"
-            app:title="Post"
-            app:titleTextColor="@color/black" />
+        android:layout_height="wrap_content">/>
 
     </com.google.android.material.appbar.AppBarLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/white"
             android:orientation="vertical"
-            android:padding="16dp"
-            android:background="@color/white">
+            android:padding="16dp">
 
             <!-- Блок автора -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <FrameLayout
                     android:id="@+id/iv_avatar_container"
@@ -59,26 +52,25 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginStart="12dp"
+                    android:layout_weight="1"
                     android:orientation="vertical">
 
                     <TextView
                         android:id="@+id/tv_author_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:textColor="@color/textColor"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="@color/textColor"
                         tools:text="Leo Lipshutz" />
 
-                    <!-- Заменили профессию на login -->
                     <TextView
                         android:id="@+id/tv_author_login"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="14sp"
                         android:textColor="@color/textColor"
+                        android:textSize="14sp"
                         tools:text="lwestervelt" />
                 </LinearLayout>
             </LinearLayout>
@@ -89,8 +81,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:textSize="16sp"
                 android:textColor="@color/textColor"
+                android:textSize="16sp"
                 tools:text="Шляпа — это головной убор, который носили в Древней Греции." />
 
             <!-- Медиа-вложение -->
@@ -138,8 +130,8 @@
                     android:id="@+id/audio_player"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:gravity="center_vertical"
+                    android:orientation="horizontal"
                     android:visibility="gone"
                     tools:visibility="gone">
 
@@ -148,8 +140,8 @@
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:background="?attr/selectableItemBackgroundBorderless"
-                        android:src="@drawable/ic_audio_play"
-                        android:contentDescription="Play" />
+                        android:contentDescription="Play"
+                        android:src="@drawable/ic_audio_play" />
 
                     <SeekBar
                         android:id="@+id/seek_bar"
@@ -162,21 +154,21 @@
                         android:id="@+id/tv_audio_duration"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="00:00 / 00:00"
-                        android:textSize="12sp"
                         android:paddingStart="8dp"
-                        android:paddingEnd="8dp" />
+                        android:paddingEnd="8dp"
+                        android:text="00:00 / 00:00"
+                        android:textSize="12sp" />
                 </LinearLayout>
             </FrameLayout>
 
-            <!-- Дата (перенесена под текст и медиа) -->
+            <!-- Дата -->
             <TextView
                 android:id="@+id/tv_post_date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:textSize="14sp"
                 android:textColor="@color/textColor"
+                android:textSize="14sp"
                 tools:text="28.08.22 19:00" />
 
             <!-- Блок лайков -->
@@ -193,9 +185,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Likers"
+                    android:textColor="@color/textColor"
                     android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/textColor" />
+                    android:textStyle="bold" />
 
                 <HorizontalScrollView
                     android:id="@+id/hsv_likers"
@@ -227,9 +219,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Mentioned"
+                    android:textColor="@color/textColor"
                     android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/textColor" />
+                    android:textStyle="bold" />
 
                 <HorizontalScrollView
                     android:id="@+id/hsv_mentioned"
@@ -254,7 +246,17 @@
                 android:layout_height="200dp"
                 android:layout_marginTop="20dp"
                 android:visibility="gone"
-                tools:visibility="visible" />
+                tools:visibility="visible">
+
+                <com.yandex.mapkit.mapview.MapView
+                    android:id="@+id/mapView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="false"
+                    android:enabled="false"
+                    android:focusable="false" />
+
+            </FrameLayout>
 
         </LinearLayout>
     </ScrollView>

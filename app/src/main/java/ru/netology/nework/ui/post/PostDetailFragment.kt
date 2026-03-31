@@ -120,9 +120,8 @@ class PostDetailFragment : Fragment() {
         setupSeekBar()
         setupAudioButton()
 
-        binding.toolbar.setNavigationOnClickListener {
-            findNavController().navigateUp()
-        }
+        // Убираем навигацию, так как она уже есть в системе
+        // binding.toolbar.setNavigationOnClickListener { ... } - удалено
 
         viewModel.loadPost(postId)
 
@@ -194,7 +193,7 @@ class PostDetailFragment : Fragment() {
      */
     private fun openUsersList(users: List<User>, title: String) {
         val bundle = Bundle().apply {
-            putParcelableArrayList("users", ArrayList(users))  // putParcelableArrayList
+            putParcelableArrayList("users", ArrayList(users))
             putString("title", title)
         }
         findNavController().navigate(R.id.usersListFragment, bundle)
@@ -305,6 +304,10 @@ class PostDetailFragment : Fragment() {
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
+            // Отключаем взаимодействие с картой (нельзя тапать, перемещать)
+            isClickable = false
+            isFocusable = false
+            isEnabled = false
         }
 
         binding.mapContainer.addView(mapView)
