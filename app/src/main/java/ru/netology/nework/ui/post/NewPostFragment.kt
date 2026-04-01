@@ -41,8 +41,8 @@ import ru.netology.nework.R
 import ru.netology.nework.app.OnPostActionListener
 import ru.netology.nework.databinding.FragmentNewPostBinding
 import ru.netology.nework.model.Coordinates
-import ru.netology.nework.model.Attachment  // Изменено с MediaAttachment
-import ru.netology.nework.model.AttachmentType  // Новый импорт
+import ru.netology.nework.model.Attachment
+import ru.netology.nework.model.AttachmentType
 import ru.netology.nework.model.User
 import ru.netology.nework.ui.users.REQUEST_KEY
 import ru.netology.nework.ui.users.SELECTED_USERS_KEY
@@ -80,7 +80,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                     "${requireContext().packageName}.fileprovider",
                     file
                 )
-                handleMediaResult(uri, AttachmentType.IMAGE)  // Изменено
+                handleMediaResult(uri, AttachmentType.IMAGE)
             } else {
                 Toast.makeText(requireContext(), "Не удалось сделать фото", Toast.LENGTH_SHORT).show()
             }
@@ -89,19 +89,19 @@ class NewPostFragment : Fragment(), OnPostActionListener {
     private val galleryImageLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             Log.d(TAG, "galleryImageLauncher uri=$uri")
-            uri?.let { handleMediaResult(it, AttachmentType.IMAGE) }  // Изменено
+            uri?.let { handleMediaResult(it, AttachmentType.IMAGE) }
         }
 
     private val galleryVideoLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             Log.d(TAG, "galleryVideoLauncher uri=$uri")
-            uri?.let { handleMediaResult(it, AttachmentType.VIDEO) }  // Изменено
+            uri?.let { handleMediaResult(it, AttachmentType.VIDEO) }
         }
 
     private val audioLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             Log.d(TAG, "audioLauncher uri=$uri")
-            uri?.let { handleMediaResult(it, AttachmentType.AUDIO) }  // Изменено
+            uri?.let { handleMediaResult(it, AttachmentType.AUDIO) }
         }
 
     private val requestPermissionLauncher =
@@ -126,6 +126,9 @@ class NewPostFragment : Fragment(), OnPostActionListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Скрываем FAB при создании фрагмента
+        hideFab()
+
         arguments?.let { args ->
             editingPostId = args.getLong("postId")
             isEditing = editingPostId != null
@@ -134,7 +137,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 binding.editTextPost.setText(content)
                 val attachmentUrl = args.getString("attachmentUrl")
                 val attachmentType = args.getString("attachmentType")?.let {
-                    AttachmentType.valueOf(it)  // Изменено
+                    AttachmentType.valueOf(it)
                 }
                 if (attachmentUrl != null && attachmentType != null) {
                     // Показываем превью существующего вложения (можно доработать)
@@ -233,6 +236,34 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // При возвращении на фрагмент снова скрываем FAB
+        hideFab()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // При уходе с фрагмента показываем FAB обратно
+        showFab()
+    }
+
+    private fun hideFab() {
+        try {
+            requireActivity().findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab_create)?.hide()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error hiding FAB: ${e.message}")
+        }
+    }
+
+    private fun showFab() {
+        try {
+            requireActivity().findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab_create)?.show()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error showing FAB: ${e.message}")
+        }
+    }
+
     private fun openLocationPicker() {
         findNavController().navigate(R.id.locationPickerFragment)
     }
@@ -315,7 +346,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             .show()
     }
 
-    private fun handleMediaResult(uri: Uri, type: AttachmentType) {  // Изменено
+    private fun handleMediaResult(uri: Uri, type: AttachmentType) {
         Log.d(TAG, "handleMediaResult uri=$uri type=$type")
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val internalPath = copyFileToInternalStorage(uri)
@@ -325,7 +356,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                     return@withContext
                 }
                 Log.d(TAG, "File copied to $internalPath")
-                val attachment = Attachment(internalPath, type)  // Изменено
+                val attachment = Attachment(internalPath, type)
                 viewModel.setAttachment(attachment)
             }
         }
@@ -345,7 +376,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         }
     }
 
-    private fun updateMediaPreview(attachment: Attachment?) {  // Изменено
+    private fun updateMediaPreview(attachment: Attachment?) {
         Log.d(TAG, "updateMediaPreview attachment=$attachment")
         Glide.with(this).clear(binding.imagePreview)
         Glide.with(this).clear(binding.videoPreview)
@@ -361,7 +392,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         binding.videoContainer.visibility = View.GONE
         binding.audioPlayer.visibility = View.GONE
 
-        val file = File(attachment.url)  // Изменено: uri → url
+        val file = File(attachment.url)
         if (!file.exists()) {
             Log.e(TAG, "File not found: ${attachment.url}")
             Toast.makeText(requireContext(), "Файл не найден", Toast.LENGTH_SHORT).show()
@@ -370,7 +401,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         }
 
         when (attachment.type) {
-            AttachmentType.IMAGE -> {  // Изменено
+            AttachmentType.IMAGE -> {
                 binding.imagePreview.visibility = View.VISIBLE
                 Glide.with(this)
                     .load(file)
@@ -379,7 +410,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                     .skipMemoryCache(true)
                     .into(binding.imagePreview)
             }
-            AttachmentType.VIDEO -> {  // Изменено
+            AttachmentType.VIDEO -> {
                 binding.videoContainer.visibility = View.VISIBLE
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                     val bitmap = ThumbnailUtils.createVideoThumbnail(
@@ -395,7 +426,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                     }
                 }
             }
-            AttachmentType.AUDIO -> {  // Изменено
+            AttachmentType.AUDIO -> {
                 binding.audioPlayer.visibility = View.VISIBLE
                 binding.btnPlayPause.setOnClickListener {
                     Toast.makeText(requireContext(), "Воспроизведение аудио", Toast.LENGTH_SHORT).show()
@@ -487,11 +518,8 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         val strokeWidth = resources.getDimensionPixelSize(R.dimen.avatar_stroke_width)
         val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)
 
-        // Внешний контейнер с белой обводкой
         val container = FrameLayout(requireContext()).apply {
             layoutParams = ViewGroup.MarginLayoutParams(avatarSize, avatarSize)
-
-            // Фон – круг с белой обводкой
             background = ContextCompat.getDrawable(requireContext(), R.drawable.circle_white_stroke)
             outlineProvider = object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline) {
@@ -499,13 +527,11 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 }
             }
             clipToOutline = true
-
             setOnClickListener {
                 showRemoveUserDialog(user)
             }
         }
 
-        // Внутренний ImageView с аватаркой, с отступом, чтобы не перекрывать обводку
         val imageView = ImageView(requireContext()).apply {
             layoutParams = FrameLayout.LayoutParams(
                 avatarSize - 2 * strokeWidth,
@@ -514,8 +540,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 gravity = android.view.Gravity.CENTER
             }
             scaleType = ImageView.ScaleType.CENTER_CROP
-
-            // Круглая обрезка
             outlineProvider = object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline) {
                     val size = avatarSize - 2 * strokeWidth
@@ -553,7 +577,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)
         val innerSize = avatarSize - 2 * strokeWidth
 
-        // Внешний контейнер с белой обводкой
         val container = FrameLayout(requireContext()).apply {
             layoutParams = ViewGroup.MarginLayoutParams(avatarSize, avatarSize)
             background = ContextCompat.getDrawable(requireContext(), R.drawable.circle_white_stroke)
@@ -566,7 +589,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             setOnClickListener { onClick() }
         }
 
-        // Внутренний фиолетовый круг
         val innerCircle = FrameLayout(requireContext()).apply {
             layoutParams = FrameLayout.LayoutParams(innerSize, innerSize).apply {
                 gravity = android.view.Gravity.CENTER
@@ -580,7 +602,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             clipToOutline = true
         }
 
-        // Иконка плюса
         val plusIcon = ImageView(requireContext()).apply {
             setImageResource(R.drawable.ic_plus)
             layoutParams = FrameLayout.LayoutParams(innerSize / 2, innerSize / 2).apply {
