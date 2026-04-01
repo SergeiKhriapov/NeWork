@@ -203,11 +203,15 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 when (item.itemId) {
                     R.id.action_edit -> {
                         Log.d("FeedFragment", "Edit post: ${post.id}")
+                        // Передаем все данные поста для редактирования
                         val bundle = bundleOf(
                             "postId" to post.id,
                             "content" to post.content,
-                            "attachmentUrl" to post.attachment?.url,
-                            "attachmentType" to post.attachment?.type?.name
+                            "attachmentUrl" to (post.attachment?.url ?: ""),
+                            "attachmentType" to (post.attachment?.type?.name ?: ""),
+                            "lat" to (post.coords?.lat ?: 0.0),
+                            "lng" to (post.coords?.lng ?: 0.0),
+                            "mentionIds" to post.mentionIds.toLongArray()
                         )
                         findNavController().navigate(R.id.newPostFragment, bundle)
                         true

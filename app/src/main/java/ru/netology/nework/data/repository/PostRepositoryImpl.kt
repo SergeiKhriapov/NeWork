@@ -1,5 +1,6 @@
 package ru.netology.nework.data.repository
 
+import CreatePostRequest
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -9,7 +10,6 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import ru.netology.nework.data.api.ApiService
 import ru.netology.nework.data.api.dto.AttachmentDto
 import ru.netology.nework.data.api.dto.CoordinatesDto
-import ru.netology.nework.data.api.dto.CreatePostRequest
 import ru.netology.nework.data.db.dao.PostDao
 import ru.netology.nework.data.mapper.toDomain
 import ru.netology.nework.data.mapper.toEntity
@@ -227,34 +227,14 @@ class PostRepositoryImpl @Inject constructor(
     }
 
     override suspend fun savePost(
-        content: String?,
+        content: String,
         attachment: Attachment?,
         coords: Coordinates?,
         mentionIds: Set<Long>?
-    ): Result<Unit> {
+    ): Result<Post> {
         return try {
-            var mediaUrl: String? = null
-            var attachmentType: AttachmentType? = null
-
-            if (attachment != null) {
-                val file = File(attachment.url)
-                if (!file.exists()) {
-                    return Result.failure(Exception("File not found"))
-                }
-
-                attachmentType = attachment.type
-                val mimeType = attachment.type.toMimeType()
-                val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
-                val part = MultipartBody.Part.createFormData("file", file.name, requestFile)
-
-                val uploadResponse = apiService.uploadMedia(part)
-                if (!uploadResponse.isSuccessful) {
-                    return Result.failure(Exception("Media upload failed"))
-                }
-
-                val mediaResponse = uploadResponse.body()
-                mediaUrl = mediaResponse?.url ?: return Result.failure(Exception("No URL in media response"))
-            }
+            // Загружаем медиа, если есть
+            val (mediaUrl, attachmentType) = uploadMediaIfNeeded(attachment)
 
             val attachmentDto = mediaUrl?.let { url ->
                 AttachmentDto(url, attachmentType?.name ?: return Result.failure(Exception("No attachment type")))
@@ -265,60 +245,41 @@ class PostRepositoryImpl @Inject constructor(
             }
 
             val request = CreatePostRequest(
+                id = 0,  // id = 0 для нового поста
                 content = content,
                 attachment = attachmentDto,
                 coords = coordinatesDto,
-                mentionIds = mentionIds?.toList()
+                mentionIds = mentionIds?.toList() ?: emptyList()
             )
-            val response = apiService.createPost(request)
+
+            val response = apiService.savePost(request)  // Используем savePost, а не createPost
 
             if (response.isSuccessful) {
-                val postDto = response.body()
-                if (postDto != null) {
-                    val newPost = postDto.toDomain()
-                    currentPosts = listOf(newPost) + currentPosts
-                    _allPosts.postValue(currentPosts)
-                    postDao.insert(listOf(postDto.toEntity()))
-                }
-                Result.success(Unit)
+                val postDto = response.body() ?: return Result.failure(Exception("Empty response"))
+                val newPost = postDto.toDomain()
+                currentPosts = listOf(newPost) + currentPosts
+                _allPosts.postValue(currentPosts)
+                postDao.insert(listOf(postDto.toEntity()))
+                Result.success(newPost)
             } else {
                 Result.failure(Exception("Server error: ${response.code()}"))
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Error saving post", e)
             Result.failure(e)
         }
     }
 
     override suspend fun updatePost(
         id: Long,
-        content: String?,
+        content: String,
         attachment: Attachment?,
         coords: Coordinates?,
         mentionIds: Set<Long>?
     ): Result<Post> {
         return try {
-            var mediaUrl: String? = null
-            var attachmentType: AttachmentType? = null
-
-            if (attachment != null) {
-                val file = File(attachment.url)
-                if (!file.exists()) {
-                    return Result.failure(Exception("File not found"))
-                }
-
-                attachmentType = attachment.type
-                val mimeType = attachment.type.toMimeType()
-                val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
-                val part = MultipartBody.Part.createFormData("file", file.name, requestFile)
-
-                val uploadResponse = apiService.uploadMedia(part)
-                if (!uploadResponse.isSuccessful) {
-                    return Result.failure(Exception("Media upload failed"))
-                }
-
-                val mediaResponse = uploadResponse.body()
-                mediaUrl = mediaResponse?.url ?: return Result.failure(Exception("No URL in media response"))
-            }
+            // Загружаем медиа, если есть
+            val (mediaUrl, attachmentType) = uploadMediaIfNeeded(attachment)
 
             val attachmentDto = mediaUrl?.let { url ->
                 AttachmentDto(url, attachmentType?.name ?: return Result.failure(Exception("No attachment type")))
@@ -329,30 +290,53 @@ class PostRepositoryImpl @Inject constructor(
             }
 
             val request = CreatePostRequest(
+                id = id,  // Важно: передаем существующий ID!
                 content = content,
                 attachment = attachmentDto,
                 coords = coordinatesDto,
-                mentionIds = mentionIds?.toList()
+                mentionIds = mentionIds?.toList() ?: emptyList()
             )
-            val response = apiService.updatePost(id, request)
+
+            val response = apiService.savePost(request)  // Используем тот же метод savePost
 
             if (response.isSuccessful) {
-                val postDto = response.body()
-                if (postDto != null) {
-                    val updatedPost = postDto.toDomain()
-                    currentPosts = currentPosts.map { if (it.id == id) updatedPost else it }
-                    _allPosts.postValue(currentPosts)
-                    postDao.insert(listOf(postDto.toEntity()))
-                    Result.success(updatedPost)
-                } else {
-                    Result.failure(Exception("Empty response"))
-                }
+                val postDto = response.body() ?: return Result.failure(Exception("Empty response"))
+                val updatedPost = postDto.toDomain()
+                currentPosts = currentPosts.map { if (it.id == id) updatedPost else it }
+                _allPosts.postValue(currentPosts)
+                postDao.insert(listOf(postDto.toEntity()))
+                Result.success(updatedPost)
             } else {
                 Result.failure(Exception("Server error: ${response.code()}"))
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Error updating post", e)
             Result.failure(e)
         }
+    }
+
+    // Вспомогательный метод для загрузки медиа
+    private suspend fun uploadMediaIfNeeded(attachment: Attachment?): Pair<String?, AttachmentType?> {
+        if (attachment == null) return Pair(null, null)
+
+        val file = File(attachment.url)
+        if (!file.exists()) {
+            throw Exception("File not found")
+        }
+
+        val mimeType = attachment.type.toMimeType()
+        val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
+        val part = MultipartBody.Part.createFormData("file", file.name, requestFile)
+
+        val uploadResponse = apiService.uploadMedia(part)
+        if (!uploadResponse.isSuccessful) {
+            throw Exception("Media upload failed")
+        }
+
+        val mediaResponse = uploadResponse.body()
+        val mediaUrl = mediaResponse?.url ?: throw Exception("No URL in media response")
+
+        return Pair(mediaUrl, attachment.type)
     }
 
     private fun AttachmentType.toMimeType(): String = when (this) {

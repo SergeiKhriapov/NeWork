@@ -99,7 +99,7 @@ class FeedViewModel @Inject constructor(
         }
     }
 
-    fun updatePost(postId: Long, content: String?, attachment: Attachment?) {
+    fun updatePost(postId: Long, content: String, attachment: Attachment?) {
         viewModelScope.launch {
             val result = postRepository.updatePost(postId, content, attachment, null, null)
             if (result.isFailure) {

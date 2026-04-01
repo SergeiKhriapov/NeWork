@@ -6,7 +6,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import ru.netology.nework.data.datastore.TokenManager
 import ru.netology.nework.domain.repository.PostRepository
 import ru.netology.nework.model.Post
 import ru.netology.nework.model.User
@@ -17,11 +19,15 @@ private const val TAG = "PostDetailVM"
 
 @HiltViewModel
 class PostDetailViewModel @Inject constructor(
-    private val postRepository: PostRepository
+    private val postRepository: PostRepository,
+    private val tokenManager: TokenManager  // Добавляем TokenManager
 ) : ViewModel() {
 
     private val _post = MutableLiveData<Post?>()
     val post: LiveData<Post?> = _post
+
+    // Добавляем currentUserId
+    val currentUserId: StateFlow<Long?> = tokenManager.currentUserId
 
     // Используем User с реальными ID
     private val _likers = MutableLiveData<List<User>>(emptyList())
@@ -49,6 +55,16 @@ class PostDetailViewModel @Inject constructor(
             }.onFailure { error ->
                 Log.e(TAG, "Error loading post: ${error.message}")
                 _post.value = null
+            }
+        }
+    }
+
+    fun deletePost() {
+        val currentPost = _post.value ?: return
+        viewModelScope.launch {
+            val result = postRepository.deletePost(currentPost.id)
+            result.onFailure { error ->
+                Log.e(TAG, "Error deleting post: ${error.message}")
             }
         }
     }

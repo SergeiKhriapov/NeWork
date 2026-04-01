@@ -334,4 +334,5 @@ class LocationPickerFragment : Fragment() {
         _binding = null
         super.onDestroyView()
     }
+
 }

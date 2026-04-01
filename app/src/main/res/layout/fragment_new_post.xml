@@ -157,23 +157,52 @@
                 tools:visibility="visible" />
 
             <!-- Блок выбора местоположения -->
-
-            <!-- Карта (как в PostDetailFragment) -->
             <FrameLayout
-                android:id="@+id/map_container"
+                android:id="@+id/locationContainer"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_marginTop="8dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:visibility="gone"
                 tools:visibility="visible">
 
-                <com.yandex.mapkit.mapview.MapView
-                    android:id="@+id/mapView"
+                <!-- Карта -->
+                <FrameLayout
+                    android:id="@+id/map_container"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:enabled="false" />
+                    android:layout_height="200dp">
+
+                    <com.yandex.mapkit.mapview.MapView
+                        android:id="@+id/mapView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:enabled="false" />
+
+                </FrameLayout>
+
+                <!-- Кнопка удаления локации -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRemoveLocation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal|bottom"
+                    android:layout_marginBottom="16dp"
+                    android:backgroundTint="@color/purple_primary"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.01"
+                    android:lineHeight="20sp"
+                    android:paddingStart="24dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="24dp"
+                    android:paddingBottom="10dp"
+                    android:text="Remove location"
+                    android:textAlignment="center"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
 
             </FrameLayout>
 

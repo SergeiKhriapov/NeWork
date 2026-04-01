@@ -11,6 +11,9 @@ import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
@@ -20,8 +23,8 @@ import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -104,6 +107,7 @@ class PostDetailFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentPostDetailBinding.inflate(inflater, container, false)
+        setHasOptionsMenu(true)
         return binding.root
     }
 
@@ -119,9 +123,6 @@ class PostDetailFragment : Fragment() {
 
         setupSeekBar()
         setupAudioButton()
-
-        // Убираем навигацию, так как она уже есть в системе
-        // binding.toolbar.setNavigationOnClickListener { ... } - удалено
 
         viewModel.loadPost(postId)
 
@@ -188,9 +189,62 @@ class PostDetailFragment : Fragment() {
         }
     }
 
-    /**
-     * Открывает фрагмент со списком пользователей (с реальными ID)
-     */
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_post_actions, menu)
+
+        viewModel.post.observe(viewLifecycleOwner) { post ->
+            // Получаем currentUserId из viewModel
+            val currentUserId = viewModel.currentUserId.value
+            val isOwner = post?.authorId == currentUserId
+            menu.findItem(R.id.action_edit).isVisible = isOwner
+            menu.findItem(R.id.action_delete).isVisible = isOwner
+        }
+
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_edit -> {
+                editPost()
+                true
+            }
+            R.id.action_delete -> {
+                deletePost()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun editPost() {
+        val post = viewModel.post.value ?: return
+
+        val args = Bundle().apply {
+            putLong("postId", post.id)
+            putString("content", post.content)
+            putString("attachmentUrl", post.attachment?.url ?: "")
+            putString("attachmentType", post.attachment?.type?.name ?: "")
+            putDouble("lat", post.coords?.lat ?: 0.0)
+            putDouble("lng", post.coords?.lng ?: 0.0)
+            putLongArray("mentionIds", post.mentionIds.toLongArray())
+        }
+
+        findNavController().navigate(R.id.newPostFragment, args)
+    }
+
+    private fun deletePost() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Удалить пост")
+            .setMessage("Вы уверены, что хотите удалить этот пост?")
+            .setPositiveButton("Да") { _, _ ->
+                viewModel.deletePost()
+                findNavController().navigateUp()
+            }
+            .setNegativeButton("Нет", null)
+            .show()
+    }
+
     private fun openUsersList(users: List<User>, title: String) {
         val bundle = Bundle().apply {
             putParcelableArrayList("users", ArrayList(users))
@@ -304,7 +358,6 @@ class PostDetailFragment : Fragment() {
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
-            // Отключаем взаимодействие с картой (нельзя тапать, перемещать)
             isClickable = false
             isFocusable = false
             isEnabled = false

@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.Typeface
 import android.media.ThumbnailUtils
@@ -34,8 +33,13 @@ import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
+import com.yandex.mapkit.geometry.Point
+import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.mapview.MapView
+import com.yandex.runtime.image.ImageProvider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -44,14 +48,13 @@ import kotlinx.coroutines.withContext
 import ru.netology.nework.R
 import ru.netology.nework.app.OnPostActionListener
 import ru.netology.nework.databinding.FragmentNewPostBinding
-import ru.netology.nework.model.Coordinates
 import ru.netology.nework.model.Attachment
 import ru.netology.nework.model.AttachmentType
+import ru.netology.nework.model.Coordinates
 import ru.netology.nework.model.User
 import ru.netology.nework.ui.users.REQUEST_KEY
 import ru.netology.nework.ui.users.SELECTED_USERS_KEY
 import ru.netology.nework.utils.LetterAvatarDrawable
-import ru.netology.nework.utils.MapHelper
 import ru.netology.nework.viewmodel.UsersViewModel
 import java.io.File
 import java.text.SimpleDateFormat
@@ -71,8 +74,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
     private val usersViewModel: UsersViewModel by viewModels()
     private var mapView: MapView? = null
 
-    private var isEditing = false
-    private var editingPostId: Long? = null
     private var currentPhotoPath: String? = null
 
     // Лаунчеры для результатов
@@ -132,27 +133,66 @@ class NewPostFragment : Fragment(), OnPostActionListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Скрываем FAB при создании фрагмента
         hideFab()
 
+        // Загружаем аргументы только один раз
+        if (!viewModel.isArgumentsLoaded()) {
+            loadArguments()
+            viewModel.markArgumentsLoaded()
+        }
+
+        setupObservers()
+        setupListeners()
+        setupResultListeners()
+    }
+
+    private fun loadArguments() {
         arguments?.let { args ->
-            editingPostId = args.getLong("postId")
-            isEditing = editingPostId != null
-            if (isEditing) {
+            val postId = args.getLong("postId", -1)
+
+            if (postId != -1L) {
+                // Режим редактирования
                 val content = args.getString("content", "")
-                binding.editTextPost.setText(content)
-                val attachmentUrl = args.getString("attachmentUrl")
-                val attachmentType = args.getString("attachmentType")?.let {
-                    AttachmentType.valueOf(it)
-                }
-                if (attachmentUrl != null && attachmentType != null) {
-                    // Показываем превью существующего вложения (можно доработать)
-                }
+                val attachmentUrl = args.getString("attachmentUrl", "")
+                val attachmentTypeStr = args.getString("attachmentType", "")
+
+                // Создаем Attachment с URL, НЕ пытаемся проверить существование файла
+                val attachment = if (attachmentUrl.isNotBlank() && attachmentTypeStr.isNotBlank()) {
+                    try {
+                        Attachment(attachmentUrl, AttachmentType.valueOf(attachmentTypeStr))
+                    } catch (e: Exception) {
+                        null
+                    }
+                } else null
+
+                val lat = args.getDouble("lat", 0.0)
+                val lng = args.getDouble("lng", 0.0)
+                val coords = if (lat != 0.0 && lng != 0.0) Coordinates(lat, lng) else null
+
+                val mentionIds = args.getLongArray("mentionIds")?.toSet() ?: emptySet()
+
+                viewModel.initEditing(postId, content, attachment, coords, mentionIds)
+            } else {
+                // Режим создания нового поста
+                viewModel.initNew()
+            }
+        }
+    }
+
+    private fun setupObservers() {
+        // Подписываемся на текст
+        viewModel.postText.observe(viewLifecycleOwner) { text ->
+            if (binding.editTextPost.text.toString() != text) {
+                binding.editTextPost.setText(text)
             }
         }
 
+        // Подписываемся на изменения текста в EditText
         binding.editTextPost.doAfterTextChanged { text ->
-            viewModel.setText(text.toString())
+            val newText = text?.toString() ?: ""
+            if (viewModel.postText.value != newText) {
+                viewModel.setText(newText)
+            }
         }
 
         viewModel.attachment
@@ -163,12 +203,14 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
         viewModel.coordinates.observe(viewLifecycleOwner) { coords ->
             if (coords != null) {
-                binding.mapContainer.visibility = View.VISIBLE
+                binding.locationContainer.visibility = View.VISIBLE
                 binding.tvLocationInfo.visibility = View.VISIBLE
+                binding.btnRemoveLocation.visibility = View.VISIBLE
                 showMap(coords.lat, coords.lng)
             } else {
-                binding.mapContainer.visibility = View.GONE
+                binding.locationContainer.visibility = View.GONE
                 binding.tvLocationInfo.visibility = View.GONE
+                binding.btnRemoveLocation.visibility = View.GONE
                 mapView = null
             }
         }
@@ -181,8 +223,14 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             updateSelectedUsers()
         }
 
+        viewModel.isEditing.observe(viewLifecycleOwner) { isEditing ->
+            val title = if (isEditing) "Edit post" else "New post"
+            (requireActivity() as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.title = title
+        }
+
         viewModel.saveCompleted.observe(viewLifecycleOwner) { success ->
             if (success != null && isAdded) {
+                val isEditing = viewModel.isEditing.value == true
                 when (success) {
                     true -> {
                         Toast.makeText(
@@ -202,7 +250,9 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 viewModel.resetSaveCompleted()
             }
         }
+    }
 
+    private fun setupListeners() {
         binding.bottomAppBar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.action_camera -> {
@@ -229,11 +279,33 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             viewModel.setAttachment(null)
         }
 
+        binding.btnRemoveLocation.setOnClickListener {
+            viewModel.setCoordinates(null)
+            Toast.makeText(requireContext(), "Местоположение удалено", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun setupResultListeners() {
         setFragmentResultListener(LOCATION_REQUEST_KEY) { _, bundle ->
-            val lat = bundle.getDouble("lat")
-            val lng = bundle.getDouble("lng")
-            viewModel.setCoordinates(Coordinates(lat, lng))
-            Toast.makeText(requireContext(), "Местоположение выбрано", Toast.LENGTH_SHORT).show()
+            // Проверяем, есть ли результат с координатами
+            if (bundle.containsKey("lat") && bundle.containsKey("lng")) {
+                val lat = bundle.getDouble("lat")
+                val lng = bundle.getDouble("lng")
+
+                if (lat != 0.0 && lng != 0.0) {
+                    // Пользователь выбрал новую локацию
+                    viewModel.setCoordinates(Coordinates(lat, lng))
+                    Toast.makeText(requireContext(), "Местоположение выбрано", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Пользователь нажал Cancel - удаляем координаты
+                    viewModel.setCoordinates(null)
+                    Toast.makeText(requireContext(), "Местоположение удалено", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                // Нет данных - удаляем координаты
+                viewModel.setCoordinates(null)
+                Toast.makeText(requireContext(), "Местоположение удалено", Toast.LENGTH_SHORT).show()
+            }
         }
 
         setFragmentResultListener(REQUEST_KEY) { _, bundle ->
@@ -416,42 +488,85 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         binding.videoContainer.visibility = View.GONE
         binding.audioPlayer.visibility = View.GONE
 
-        val file = File(attachment.url)
-        if (!file.exists()) {
-            Log.e(TAG, "File not found: ${attachment.url}")
-            Toast.makeText(requireContext(), "Файл не найден", Toast.LENGTH_SHORT).show()
-            viewModel.setAttachment(null)
-            return
-        }
+        val url = attachment.url
+
+        // Проверяем, является ли URL локальным файлом или удаленным
+        val isLocalFile = !url.startsWith("http://") && !url.startsWith("https://")
 
         when (attachment.type) {
             AttachmentType.IMAGE -> {
                 binding.imagePreview.visibility = View.VISIBLE
-                Glide.with(this)
-                    .load(file)
-                    .centerCrop()
-                    .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
-                    .skipMemoryCache(true)
-                    .into(binding.imagePreview)
-            }
-            AttachmentType.VIDEO -> {
-                binding.videoContainer.visibility = View.VISIBLE
-                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                    val bitmap = ThumbnailUtils.createVideoThumbnail(
-                        file.absolutePath,
-                        MediaStore.Video.Thumbnails.MINI_KIND
-                    )
-                    withContext(Dispatchers.Main) {
-                        if (bitmap != null) {
-                            binding.videoPreview.setImageBitmap(bitmap)
-                        } else {
-                            binding.videoPreview.setImageResource(android.R.drawable.ic_menu_gallery)
-                        }
+
+                if (isLocalFile) {
+                    // Локальный файл - проверяем существование
+                    val file = File(url)
+                    if (!file.exists()) {
+                        Log.e(TAG, "File not found: $url")
+                        Toast.makeText(requireContext(), "Файл не найден", Toast.LENGTH_SHORT).show()
+                        viewModel.setAttachment(null)
+                        return
                     }
+                    Glide.with(this)
+                        .load(file)
+                        .centerCrop()
+                        .into(binding.imagePreview)
+                } else {
+                    // Удаленный URL - загружаем через Glide
+                    Glide.with(this)
+                        .load(url)
+                        .centerCrop()
+                        .placeholder(R.drawable.ic_image_placeholder)
+                        .error(R.drawable.ic_image_error)
+                        .into(binding.imagePreview)
                 }
             }
+
+            AttachmentType.VIDEO -> {
+                binding.videoContainer.visibility = View.VISIBLE
+
+                if (isLocalFile) {
+                    // Локальное видео - создаем превью
+                    val file = File(url)
+                    if (!file.exists()) {
+                        Log.e(TAG, "Video file not found: $url")
+                        Toast.makeText(requireContext(), "Видео не найдено", Toast.LENGTH_SHORT).show()
+                        viewModel.setAttachment(null)
+                        return
+                    }
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        val bitmap = ThumbnailUtils.createVideoThumbnail(
+                            file.absolutePath,
+                            MediaStore.Video.Thumbnails.MINI_KIND
+                        )
+                        withContext(Dispatchers.Main) {
+                            if (bitmap != null) {
+                                binding.videoPreview.setImageBitmap(bitmap)
+                            } else {
+                                binding.videoPreview.setImageResource(R.drawable.ic_play_circle_filled)
+                            }
+                        }
+                    }
+                } else {
+                    // Удаленное видео - используем Glide для превью
+                    Glide.with(this)
+                        .load(url)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .frame(1000000)
+                        .centerCrop()
+                        .placeholder(R.drawable.ic_play_circle_filled)
+                        .error(R.drawable.ic_play_circle_filled)
+                        .into(binding.videoPreview)
+                }
+
+                binding.ivPlay.visibility = View.VISIBLE
+                binding.videoContainer.setOnClickListener {
+                    Toast.makeText(requireContext(), "Видео пока не поддерживается", Toast.LENGTH_SHORT).show()
+                }
+            }
+
             AttachmentType.AUDIO -> {
                 binding.audioPlayer.visibility = View.VISIBLE
+                // Для аудио не нужно проверять существование файла
                 binding.btnPlayPause.setOnClickListener {
                     Toast.makeText(requireContext(), "Воспроизведение аудио", Toast.LENGTH_SHORT).show()
                 }
@@ -460,17 +575,53 @@ class NewPostFragment : Fragment(), OnPostActionListener {
     }
 
     private fun showMap(lat: Double, lng: Double) {
-        mapView = MapHelper.createStaticMap(
-            context = requireContext(),
-            mapContainer = binding.mapContainer,
-            lat = lat,
-            lng = lng
+        binding.mapContainer.visibility = View.VISIBLE
+        binding.mapContainer.removeAllViews()
+
+        mapView = MapView(requireContext()).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            isClickable = false
+            isFocusable = false
+            isEnabled = false
+        }
+
+        binding.mapContainer.addView(mapView)
+
+        val point = Point(lat, lng)
+
+        mapView?.map?.move(
+            CameraPosition(point, 16f, 0f, 0f),
+            Animation(Animation.Type.SMOOTH, 0.5f),
+            null
         )
+
+        try {
+            val drawable = ContextCompat.getDrawable(requireContext(), R.drawable.ic_map_pin)
+            val bitmap = Bitmap.createBitmap(
+                drawable?.intrinsicWidth ?: 48,
+                drawable?.intrinsicHeight ?: 48,
+                Bitmap.Config.ARGB_8888
+            )
+            val canvas = Canvas(bitmap)
+            drawable?.setBounds(0, 0, canvas.width, canvas.height)
+            drawable?.draw(canvas)
+
+            val imageProvider = ImageProvider.fromBitmap(bitmap)
+            val placemark = mapView?.map?.mapObjects?.addPlacemark(point, imageProvider)
+            placemark?.setOpacity(1.0f)
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating marker from vector", e)
+            val fallbackPlacemark = mapView?.map?.mapObjects?.addPlacemark(point)
+            fallbackPlacemark?.setOpacity(1.0f)
+        }
     }
 
-    // Обновлённый метод для карусели аватарок
     private fun updateSelectedUsers() {
-        val allUsers = usersViewModel.users.value ?: emptyList()
+        val allUsers = usersViewModel.users.value ?: return
         val selectedIds = viewModel.mentionIds.value ?: emptySet()
         val selectedUsers = allUsers.filter { it.id in selectedIds }
 
@@ -489,7 +640,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         val iconMarginEnd = resources.getDimensionPixelSize(R.dimen.mention_icon_margin)
         val countMarginEnd = resources.getDimensionPixelSize(R.dimen.mention_count_margin)
 
-        // Иконка упоминания
         val iconView = ImageView(requireContext()).apply {
             setImageResource(R.drawable.ic_mentioned)
             layoutParams = ViewGroup.MarginLayoutParams(avatarSize, avatarSize).apply {
@@ -499,7 +649,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         }
         binding.llSelectedUsers.addView(iconView)
 
-        // Счётчик количества
         val countView = TextView(requireContext()).apply {
             text = selectedUsers.size.toString()
             layoutParams = LinearLayout.LayoutParams(
@@ -546,7 +695,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         }
     }
 
-    // Создаёт элемент с белой круглой обводкой и аватаркой внутри.
     private fun createAvatarView(user: User): View {
         val strokeWidth = resources.getDimensionPixelSize(R.dimen.avatar_stroke_width)
         val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)
@@ -604,7 +752,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         return container
     }
 
-    // Создаёт кнопку с плюс
     private fun createPlusButton(onClick: () -> Unit): View {
         val strokeWidth = resources.getDimensionPixelSize(R.dimen.avatar_stroke_width)
         val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)
@@ -670,7 +817,10 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         val coordinates = viewModel.coordinates.value
         val mentionIds = viewModel.mentionIds.value
         Log.d(TAG, "onPostAction: mentionIds = ${mentionIds?.joinToString()}")
+
+        val isEditing = viewModel.isEditing.value == true
         if (isEditing) {
+            val editingPostId = viewModel.editingPostId.value
             editingPostId?.let { postId ->
                 viewModel.updatePost(postId, text, attachment, coordinates, mentionIds)
             }

@@ -13,18 +13,23 @@ interface PostRepository {
     suspend fun getPostById(id: Long): Result<Post>
     suspend fun likePost(id: Long): Result<Post>
     suspend fun unlikePost(id: Long): Result<Post>
+
+    // Создание нового поста (id = 0)
     suspend fun savePost(
-        content: String?,
+        content: String,  // убрал nullable
         attachment: Attachment?,
         coords: Coordinates?,
         mentionIds: Set<Long>?
-    ): Result<Unit>
-    suspend fun deletePost(id: Long): Result<Unit>
+    ): Result<Post>  // Возвращаем созданный пост
+
+    // Обновление существующего поста
     suspend fun updatePost(
         id: Long,
-        content: String?,
+        content: String,  // убрал nullable
         attachment: Attachment?,
         coords: Coordinates?,
         mentionIds: Set<Long>?
-    ): Result<Post>
+    ): Result<Post>  // Возвращаем обновленный пост
+
+    suspend fun deletePost(id: Long): Result<Unit>
 }

@@ -1,5 +1,6 @@
 package ru.netology.nework.data.api
 
+import CreatePostRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -8,6 +9,8 @@ import ru.netology.nework.api.dto.EventDto
 import ru.netology.nework.data.api.dto.*
 
 interface ApiService {
+
+    // Auth
     @POST("api/users/authentication")
     suspend fun login(
         @Query("login") login: String,
@@ -31,6 +34,7 @@ interface ApiService {
         @Part file: MultipartBody.Part
     ): Response<AuthResponse>
 
+    // Users
     @GET("api/users")
     suspend fun getUsers(): Response<List<UserDto>>
 
@@ -58,24 +62,27 @@ interface ApiService {
     @GET("api/posts/{id}")
     suspend fun getPostById(@Path("id") id: Long): Response<PostDto>
 
+    // Likes
     @POST("api/posts/{id}/likes")
     suspend fun likePost(@Path("id") id: Long): Response<PostDto>
 
     @DELETE("api/posts/{id}/likes")
     suspend fun unlikePost(@Path("id") id: Long): Response<PostDto>
 
+    // Создание и обновление поста - ОДИНАКОВЫЙ МЕТОД POST
+    // Для создания нового поста: id = 0 в теле запроса
+    // Для обновления: id = существующий ID поста
     @POST("api/posts")
-    suspend fun createPost(@Body request: CreatePostRequest): Response<PostDto>
+    suspend fun savePost(@Body request: CreatePostRequest): Response<PostDto>
 
-    @Multipart
-    @POST("api/media")
-    suspend fun uploadMedia(@Part file: MultipartBody.Part): Response<MediaResponse>
-
+    // Удаление поста
     @DELETE("api/posts/{id}")
     suspend fun deletePost(@Path("id") id: Long): Response<Unit>
 
-    @PUT("api/posts/{id}")
-    suspend fun updatePost(@Path("id") id: Long, @Body request: CreatePostRequest): Response<PostDto>
+    // Media
+    @Multipart
+    @POST("api/media")
+    suspend fun uploadMedia(@Part file: MultipartBody.Part): Response<MediaResponse>
 
     // Events
     @GET("api/events")

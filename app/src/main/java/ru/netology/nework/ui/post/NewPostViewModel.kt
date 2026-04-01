@@ -7,8 +7,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import ru.netology.nework.domain.repository.PostRepository
+import ru.netology.nework.model.Attachment
 import ru.netology.nework.model.Coordinates
-import ru.netology.nework.model.Attachment  // Изменён импорт
 import javax.inject.Inject
 
 @HiltViewModel
@@ -16,10 +16,10 @@ class NewPostViewModel @Inject constructor(
     private val repository: PostRepository
 ) : ViewModel() {
 
-    private val _postText = MutableLiveData<String>()
+    // Основные поля состояния
+    private val _postText = MutableLiveData("")
     val postText: LiveData<String> = _postText
 
-    // Изменено с AttachmentType? на Attachment?
     private val _attachment = MutableLiveData<Attachment?>(null)
     val attachment: LiveData<Attachment?> = _attachment
 
@@ -29,17 +29,51 @@ class NewPostViewModel @Inject constructor(
     private val _mentionIds = MutableLiveData<Set<Long>>(emptySet())
     val mentionIds: LiveData<Set<Long>> = _mentionIds
 
+    // Режим редактирования
+    private val _isEditing = MutableLiveData(false)
+    val isEditing: LiveData<Boolean> = _isEditing
+
+    private val _editingPostId = MutableLiveData<Long?>(null)
+    val editingPostId: LiveData<Long?> = _editingPostId
+
+    // Состояние сохранения
     private val _isSaving = MutableLiveData(false)
     val isSaving: LiveData<Boolean> = _isSaving
 
     private val _saveCompleted = MutableLiveData<Boolean?>(null)
     val saveCompleted: LiveData<Boolean?> = _saveCompleted
 
+    // Флаг для предотвращения повторной загрузки аргументов
+    private var argumentsLoaded = false
+
+    fun markArgumentsLoaded() {
+        argumentsLoaded = true
+    }
+
+    fun isArgumentsLoaded(): Boolean = argumentsLoaded
+
+    fun initEditing(postId: Long, content: String, attachment: Attachment?, coords: Coordinates?, mentionIds: Set<Long>) {
+        _isEditing.value = true
+        _editingPostId.value = postId
+        _postText.value = content
+        _attachment.value = attachment
+        _coordinates.value = coords
+        _mentionIds.value = mentionIds
+    }
+
+    fun initNew() {
+        _isEditing.value = false
+        _editingPostId.value = null
+        _postText.value = ""
+        _attachment.value = null
+        _coordinates.value = null
+        _mentionIds.value = emptySet()
+    }
+
     fun setText(text: String) {
         _postText.value = text
     }
 
-    // Изменён тип параметра
     fun setAttachment(attachment: Attachment?) {
         _attachment.value = attachment
     }
@@ -52,9 +86,8 @@ class NewPostViewModel @Inject constructor(
         _mentionIds.value = ids
     }
 
-    // Изменён тип параметра attachment
-    fun savePost(text: String?, attachment: Attachment?, coords: Coordinates?, mentionIds: Set<Long>?) {
-        if (text.isNullOrBlank() && attachment == null) {
+    fun savePost(text: String, attachment: Attachment?, coords: Coordinates?, mentionIds: Set<Long>?) {
+        if (text.isBlank() && attachment == null) {
             _saveCompleted.value = false
             return
         }
@@ -72,9 +105,8 @@ class NewPostViewModel @Inject constructor(
         }
     }
 
-    // Изменён тип параметра attachment
-    fun updatePost(id: Long, content: String?, attachment: Attachment?, coords: Coordinates?, mentionIds: Set<Long>?) {
-        if (content.isNullOrBlank() && attachment == null) {
+    fun updatePost(id: Long, content: String, attachment: Attachment?, coords: Coordinates?, mentionIds: Set<Long>?) {
+        if (content.isBlank() && attachment == null) {
             _saveCompleted.value = false
             return
         }
