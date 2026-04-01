@@ -52,9 +52,18 @@ class UserSelectionFragment : Fragment() {
         setupRecyclerView()
         observeViewModel()
 
-        arguments?.getLongArray("selected_ids")?.let { ids ->
-            Log.d(TAG, "Received selected_ids: ${ids.joinToString()}")
-            adapter.setSelectedIds(ids.toSet())
+        // Восстанавливаем выбранных пользователей из ViewModel
+        val savedSelectedIds = viewModel.getSelectedUserIds()
+        if (savedSelectedIds.isNotEmpty()) {
+            Log.d(TAG, "Restoring selected users from ViewModel: ${savedSelectedIds.joinToString()}")
+            adapter.setSelectedIds(savedSelectedIds)
+        } else {
+            // Если в ViewModel нет, пробуем из аргументов
+            arguments?.getLongArray("selected_ids")?.let { ids ->
+                Log.d(TAG, "Restoring selected users from arguments: ${ids.joinToString()}")
+                adapter.setSelectedIds(ids.toSet())
+                viewModel.updateSelectedUsers(ids.toSet())
+            }
         }
 
         requireActivity().addMenuProvider(object : MenuProvider {
@@ -75,6 +84,16 @@ class UserSelectionFragment : Fragment() {
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
+    override fun onResume() {
+        super.onResume()
+        // При возврате на фрагмент обновляем выбранных пользователей из ViewModel
+        val savedSelectedIds = viewModel.getSelectedUserIds()
+        if (savedSelectedIds.isNotEmpty() && ::adapter.isInitialized) {
+            Log.d(TAG, "onResume: restoring selected users: ${savedSelectedIds.joinToString()}")
+            adapter.setSelectedIds(savedSelectedIds)
+        }
+    }
+
     private fun confirmSelection() {
         val selectedIds = adapter.getSelectedIds().toList().toLongArray()
         Log.d(TAG, "confirmSelection: selectedIds = ${selectedIds.joinToString()}")
@@ -86,7 +105,17 @@ class UserSelectionFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = UserSelectionAdapter { _, _ -> }
+        adapter = UserSelectionAdapter { user, isChecked ->
+            // При каждом нажатии сохраняем в ViewModel
+            val currentIds = viewModel.getSelectedUserIds().toMutableSet()
+            if (isChecked) {
+                currentIds.add(user.id)
+            } else {
+                currentIds.remove(user.id)
+            }
+            viewModel.updateSelectedUsers(currentIds)
+            Log.d(TAG, "User ${user.id} $isChecked, total selected: ${currentIds.size}")
+        }
         binding.rvUsers.layoutManager = LinearLayoutManager(requireContext())
         binding.rvUsers.adapter = adapter
     }

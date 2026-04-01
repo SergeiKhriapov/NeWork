@@ -7,7 +7,6 @@
     android:background="@color/background"
     android:fitsSystemWindows="true">
 
-    <!-- Bottom App Bar -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -15,15 +14,15 @@
         android:clipToPadding="false"
         android:fillViewport="true"
         android:fitsSystemWindows="true"
-        android:paddingBottom="?attr/actionBarSize">
+        android:paddingBottom="?attr/actionBarSize"
+        android:scrollbars="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="?attr/actionBarSize"
             android:background="@color/white"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="8dp">
 
             <!-- Поле ввода -->
             <EditText
@@ -34,11 +33,12 @@
                 android:gravity="top"
                 android:hint="Write something..."
                 android:inputType="textMultiLine"
-                android:maxLines="8"
+                android:minLines="3"
                 android:padding="16dp"
+                android:scrollbars="vertical"
                 android:textColorHint="@color/textColor" />
 
-            <!--Контейнер для медиа -->
+            <!-- Контейнер для медиа (фото/видео/аудио) -->
             <FrameLayout
                 android:id="@+id/imageContainer"
                 android:layout_width="match_parent"
@@ -135,23 +135,12 @@
 
             </FrameLayout>
 
-            <!-- 📍 Индикатор выбранного местоположения -->
-            <TextView
-                android:id="@+id/tv_location_info"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="📍 Location selected"
-                android:textColor="@color/purple_primary"
-                android:visibility="gone"
-                tools:visibility="visible" />
-
-            <!-- Горизонтальный контейнер для аватарок -->
+            <!-- Блок упомянутых пользователей (между медиа и картой) -->
             <TextView
                 android:id="@+id/tv_mentioned_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="16dp"
                 android:text="Mentioned:"
                 android:textColor="@color/textColor"
                 android:textSize="14sp"
@@ -164,6 +153,39 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:paddingEnd="8dp"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <!-- Блок выбора местоположения -->
+
+            <!-- Карта (как в PostDetailFragment) -->
+            <FrameLayout
+                android:id="@+id/map_container"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginTop="8dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <com.yandex.mapkit.mapview.MapView
+                    android:id="@+id/mapView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:enabled="false" />
+
+            </FrameLayout>
+
+            <!-- Индикатор выбранного местоположения (текст) -->
+            <TextView
+                android:id="@+id/tv_location_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="📍 Location selected"
+                android:textColor="@color/purple_primary"
+                android:textSize="14sp"
                 android:visibility="gone"
                 tools:visibility="visible" />
 

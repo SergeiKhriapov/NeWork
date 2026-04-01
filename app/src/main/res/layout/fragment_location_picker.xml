@@ -20,12 +20,14 @@
         android:id="@+id/ivCenterMarker"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:src="@drawable/ic_map_pin"
         android:alpha="0.9"
+        android:src="@drawable/ic_map_pin"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.55"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.45" />
 
     <!-- Нижняя панель с кнопками Отмена и Выбрать -->
     <LinearLayout
@@ -98,12 +100,12 @@
             android:id="@+id/btnMyLocation"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@drawable/ic_my_location"
+            android:padding="0dp"
             android:scaleType="center"
+            android:src="@drawable/ic_my_location"
             app:backgroundTint="@color/white"
-            app:tint="@color/purple_primary"
             app:fabCustomSize="48dp"
-            android:padding="0dp" />
+            app:tint="@color/purple_primary" />
 
         <View
             android:layout_width="0dp"
@@ -124,8 +126,8 @@
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/zoom_in"
-                android:src="@drawable/ic_add"
-                android:scaleType="center" />
+                android:scaleType="center"
+                android:src="@drawable/ic_add" />
 
             <View
                 android:layout_width="match_parent"
@@ -138,8 +140,8 @@
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/zoom_out"
-                android:src="@drawable/ic_remove"
-                android:scaleType="center" />
+                android:scaleType="center"
+                android:src="@drawable/ic_remove" />
         </LinearLayout>
     </LinearLayout>
 

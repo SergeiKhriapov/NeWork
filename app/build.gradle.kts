@@ -124,8 +124,7 @@ dependencies {
     implementation("com.jakewharton.timber:timber:5.0.1")
 
     // Yandex MapKit
-    /*implementation("com.yandex.android:maps.mobile:4.30.0-full")*/
-    implementation("com.yandex.android:maps.mobile:4.0.0-full")
+    implementation("com.yandex.android:maps.mobile:4.6.0-full")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

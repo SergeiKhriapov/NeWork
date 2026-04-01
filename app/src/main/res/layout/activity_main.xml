@@ -64,6 +64,7 @@
         android:backgroundTint="@color/fab"
         android:contentDescription="@string/Create"
         android:elevation="8dp"
+        android:visibility="gone"
         app:shapeAppearanceOverlay="@style/FabRounded16"
         app:srcCompat="@drawable/ic_plus_math"
         app:tint="@color/black" />

@@ -24,6 +24,10 @@ class UsersViewModel @Inject constructor(
     private val _error = MutableLiveData<String?>(null)
     val error: LiveData<String?> = _error
 
+    // Сохраняем выбранных пользователей
+    private val _selectedUserIds = MutableLiveData<Set<Long>>(emptySet())
+    val selectedUserIds: LiveData<Set<Long>> = _selectedUserIds
+
     init {
         loadUsers()
     }
@@ -35,11 +39,16 @@ class UsersViewModel @Inject constructor(
             val result = repository.getUsers()
             _isLoading.value = false
             result.onSuccess { list ->
-                // Сортируем по убыванию id новые пользователи сверху
                 _users.value = list.sortedByDescending { it.id }
             }.onFailure { exception ->
                 _error.value = exception.message ?: "Ошибка загрузки"
             }
         }
     }
+
+    fun updateSelectedUsers(ids: Set<Long>) {
+        _selectedUserIds.value = ids
+    }
+
+    fun getSelectedUserIds(): Set<Long> = _selectedUserIds.value ?: emptySet()
 }

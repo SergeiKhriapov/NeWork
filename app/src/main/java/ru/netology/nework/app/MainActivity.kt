@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.PopupWindow
 import android.widget.TextView
@@ -22,6 +23,7 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
@@ -128,53 +130,107 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
+    private fun hideFab() {
+        findViewById<FloatingActionButton>(R.id.fab_create)?.hide()
+    }
+
+    private fun showFab() {
+        findViewById<FloatingActionButton>(R.id.fab_create)?.show()
+    }
+
+    private fun hideBottomNav() {
+        bottomNav.visibility = View.GONE
+    }
+
+    private fun showBottomNav() {
+        bottomNav.visibility = View.VISIBLE
+    }
+
     private fun updateMenuVisibilityForDestination(destinationId: Int?) {
+        Log.d("MainActivity", "Destination changed to: $destinationId")
         when (destinationId) {
-            R.id.feedFragment,
-            R.id.usersFragment,
-            R.id.eventsFragment -> {
+            R.id.feedFragment -> {
+                Log.d("MainActivity", "Showing FAB for posts")
                 profileMenuItem?.isVisible = true
                 postMenuItem?.isVisible = false
-                bottomNav.visibility = View.VISIBLE
+                showBottomNav()
+                showFab()
+            }
+
+            R.id.eventsFragment -> {
+                Log.d("MainActivity", "Showing FAB for events")
+                profileMenuItem?.isVisible = true
+                postMenuItem?.isVisible = false
+                showBottomNav()
+                showFab()
+            }
+
+            R.id.usersFragment -> {
+                Log.d("MainActivity", "Hiding FAB for users (no create action)")
+                profileMenuItem?.isVisible = true
+                postMenuItem?.isVisible = false
+                showBottomNav()
+                hideFab()
             }
 
             R.id.newPostFragment -> {
+                Log.d("MainActivity", "Hiding FAB and BottomNav (newPostFragment)")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = true
-                bottomNav.visibility = View.GONE
+                hideBottomNav()
+                hideFab()
             }
 
             R.id.loginFragment, R.id.registerFragment -> {
+                Log.d("MainActivity", "Hiding FAB and BottomNav (login/register)")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false
-                bottomNav.visibility = View.GONE
+                hideBottomNav()
+                hideFab()
             }
 
             R.id.locationPickerFragment -> {
+                Log.d("MainActivity", "Hiding FAB and BottomNav (locationPickerFragment)")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false
-                bottomNav.visibility = View.GONE
+                hideBottomNav()
+                hideFab()
             }
 
             R.id.userSelectionFragment -> {
+                Log.d("MainActivity", "Hiding FAB and BottomNav (userSelectionFragment)")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = true
-                bottomNav.visibility = View.GONE
+                hideBottomNav()
+                hideFab()
             }
 
             R.id.postDetailFragment -> {
+                Log.d("MainActivity", "Hiding FAB and BottomNav (postDetailFragment)")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false
-                bottomNav.visibility = View.GONE
+                hideBottomNav()
+                hideFab()
+            }
+
+            R.id.usersListFragment -> {
+                Log.d("MainActivity", "Hiding FAB and BottomNav (usersListFragment)")
+                profileMenuItem?.isVisible = false
+                postMenuItem?.isVisible = false
+                hideBottomNav()
+                hideFab()
             }
 
             else -> {
+                Log.d("MainActivity", "Unknown destination, showing FAB and BottomNav")
                 profileMenuItem?.isVisible = true
                 postMenuItem?.isVisible = false
-                bottomNav.visibility = View.VISIBLE
+                showBottomNav()
+                showFab()
             }
         }
     }
+
     private fun handlePostAction() {
         val currentFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment)

@@ -24,6 +24,7 @@ class UserSelectionAdapter(
     fun getSelectedIds(): Set<Long> = selectedIds.toSet()
 
     fun setSelectedIds(ids: Set<Long>) {
+        Log.d(TAG, "setSelectedIds: $ids")
         selectedIds.clear()
         selectedIds.addAll(ids)
         notifyDataSetChanged()
@@ -48,7 +49,6 @@ class UserSelectionAdapter(
         private var currentUser: User? = null
 
         init {
-            // Слушаем изменения чекбокса
             binding.cbSelected.setOnCheckedChangeListener { _, isChecked ->
                 currentUser?.let { user ->
                     if (selectedIds.contains(user.id) != isChecked) {
@@ -57,7 +57,9 @@ class UserSelectionAdapter(
                         } else {
                             selectedIds.remove(user.id)
                         }
+                        // Уведомляем об изменении при каждом клике
                         onItemClick(user, isChecked)
+                        Log.d(TAG, "Selection changed: user=${user.id}, isChecked=$isChecked, selectedIds=$selectedIds")
                     }
                 }
             }

@@ -53,6 +53,7 @@ class LocationPickerFragment : Fragment() {
 
             addUserLocationMarker(point)
 
+            // Просто центрируем камеру на точке
             binding.mapView.map.move(
                 CameraPosition(point, 16.0f, 0.0f, 0.0f),
                 Animation(Animation.Type.SMOOTH, 1f),
@@ -69,6 +70,10 @@ class LocationPickerFragment : Fragment() {
                 }
                 LocationStatus.NOT_AVAILABLE -> {
                     Toast.makeText(requireContext(), "Местоположение недоступно", Toast.LENGTH_SHORT).show()
+                }
+                else -> {
+                    // RESET или другое состояние
+                    Log.d("LocationPicker", "Other status: $status")
                 }
             }
         }
@@ -111,6 +116,28 @@ class LocationPickerFragment : Fragment() {
         checkLocationPermission()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Скрываем FAB при входе в фрагмент
+        try {
+            requireActivity().findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab_create)?.hide()
+            Log.d("LocationPickerFragment", "FAB hidden")
+        } catch (e: Exception) {
+            Log.e("LocationPickerFragment", "Error hiding FAB: ${e.message}")
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Показываем FAB обратно при выходе
+        try {
+            requireActivity().findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab_create)?.show()
+            Log.d("LocationPickerFragment", "FAB shown")
+        } catch (e: Exception) {
+            Log.e("LocationPickerFragment", "Error showing FAB: ${e.message}")
+        }
+    }
+
     private fun setupMapObjects() {
         mapObjects = binding.mapView.map.mapObjects.addCollection()
     }
@@ -144,7 +171,6 @@ class LocationPickerFragment : Fragment() {
             )
         }
     }
-
 
     private fun setupCameraListener() {
         binding.mapView.map.addCameraListener(object : com.yandex.mapkit.map.CameraListener {
@@ -245,6 +271,7 @@ class LocationPickerFragment : Fragment() {
 
     private fun moveToCurrentLocation() {
         if (currentUserLocation != null) {
+            // Просто центрируем камеру на текущем местоположении
             binding.mapView.map.move(
                 CameraPosition(currentUserLocation!!, 16.0f, 0.0f, 0.0f),
                 Animation(Animation.Type.SMOOTH, 0.5f),

@@ -2,6 +2,7 @@ package ru.netology.nework.ui.events
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,7 +42,21 @@ class EventsFragment : Fragment() {
 
         setupRecyclerView()
         observeViewModel()
+    }
+
+    override fun onResume() {
+        super.onResume()
         setupFab()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Скрываем FAB при уходе
+        try {
+            requireActivity().findViewById<FloatingActionButton>(R.id.fab_create)?.hide()
+        } catch (e: Exception) {
+            Log.e("EventsFragment", "Error hiding FAB: ${e.message}")
+        }
     }
 
     private fun setupRecyclerView() {
@@ -79,11 +94,16 @@ class EventsFragment : Fragment() {
     }
 
     private fun setupFab() {
-        val fab = requireActivity().findViewById<FloatingActionButton>(R.id.fab_create)
-        fab.show()
-        fab.setOnClickListener {
-            // TODO: Navigate to create event fragment
-            Toast.makeText(requireContext(), "Создание события", Toast.LENGTH_SHORT).show()
+        try {
+            val fab = requireActivity().findViewById<FloatingActionButton>(R.id.fab_create)
+            fab?.show()
+            fab?.setOnClickListener {
+                // TODO: Navigate to create event fragment
+                Toast.makeText(requireContext(), "Создание события", Toast.LENGTH_SHORT).show()
+                // findNavController().navigate(R.id.newEventFragment)
+            }
+        } catch (e: Exception) {
+            Log.e("EventsFragment", "Error setting up FAB: ${e.message}")
         }
     }
 
@@ -93,23 +113,27 @@ class EventsFragment : Fragment() {
     }
 
     private fun showPopupMenu(event: Event, anchor: View) {
-        val popup = android.widget.PopupMenu(requireContext(), anchor)
-        popup.menuInflater.inflate(R.menu.menu_post_actions, popup.menu) // Используем то же меню, что и для постов
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.action_edit -> {
-                    // TODO: Navigate to edit event
-                    Toast.makeText(requireContext(), "Редактировать событие", Toast.LENGTH_SHORT).show()
-                    true
+        try {
+            val popup = android.widget.PopupMenu(requireContext(), anchor)
+            popup.menuInflater.inflate(R.menu.menu_post_actions, popup.menu)
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.action_edit -> {
+                        // TODO: Navigate to edit event
+                        Toast.makeText(requireContext(), "Редактировать событие", Toast.LENGTH_SHORT).show()
+                        true
+                    }
+                    R.id.action_delete -> {
+                        showDeleteConfirmation(event.id)
+                        true
+                    }
+                    else -> false
                 }
-                R.id.action_delete -> {
-                    showDeleteConfirmation(event.id)
-                    true
-                }
-                else -> false
             }
+            popup.show()
+        } catch (e: Exception) {
+            Log.e("EventsFragment", "Error showing popup menu: ${e.message}")
         }
-        popup.show()
     }
 
     private fun showDeleteConfirmation(eventId: Long) {
@@ -117,7 +141,7 @@ class EventsFragment : Fragment() {
             .setTitle("Удалить событие")
             .setMessage("Вы уверены, что хотите удалить это событие?")
             .setPositiveButton("Да") { _, _ ->
-                /*viewModel.deleteEvent(eventId)*/
+                viewModel.deleteEvent(eventId)
             }
             .setNegativeButton("Нет", null)
             .show()
@@ -139,10 +163,4 @@ class EventsFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
-}
-
-// Добавьте вспомогательную функцию для форматирования даты, если её нет
-fun String.formatForDisplay(): String {
-    // Используйте вашу существующую логику форматирования
-    return this // Заглушка, замените на реальную
 }

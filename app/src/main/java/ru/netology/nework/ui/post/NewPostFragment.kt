@@ -3,6 +3,8 @@ package ru.netology.nework.ui.post
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.Typeface
@@ -32,6 +34,8 @@ import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.yandex.mapkit.MapKitFactory
+import com.yandex.mapkit.mapview.MapView
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -47,6 +51,7 @@ import ru.netology.nework.model.User
 import ru.netology.nework.ui.users.REQUEST_KEY
 import ru.netology.nework.ui.users.SELECTED_USERS_KEY
 import ru.netology.nework.utils.LetterAvatarDrawable
+import ru.netology.nework.utils.MapHelper
 import ru.netology.nework.viewmodel.UsersViewModel
 import java.io.File
 import java.text.SimpleDateFormat
@@ -64,6 +69,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
     private val viewModel: NewPostViewModel by viewModels()
     private val usersViewModel: UsersViewModel by viewModels()
+    private var mapView: MapView? = null
 
     private var isEditing = false
     private var editingPostId: Long? = null
@@ -156,7 +162,15 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             }
 
         viewModel.coordinates.observe(viewLifecycleOwner) { coords ->
-            binding.tvLocationInfo.visibility = if (coords != null) View.VISIBLE else View.GONE
+            if (coords != null) {
+                binding.mapContainer.visibility = View.VISIBLE
+                binding.tvLocationInfo.visibility = View.VISIBLE
+                showMap(coords.lat, coords.lng)
+            } else {
+                binding.mapContainer.visibility = View.GONE
+                binding.tvLocationInfo.visibility = View.GONE
+                mapView = null
+            }
         }
 
         viewModel.mentionIds.observe(viewLifecycleOwner) {
@@ -238,14 +252,24 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
     override fun onResume() {
         super.onResume()
-        // При возвращении на фрагмент снова скрываем FAB
         hideFab()
     }
 
     override fun onPause() {
         super.onPause()
-        // При уходе с фрагмента показываем FAB обратно
         showFab()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        mapView?.onStart()
+        MapKitFactory.getInstance().onStart()
+    }
+
+    override fun onStop() {
+        mapView?.onStop()
+        MapKitFactory.getInstance().onStop()
+        super.onStop()
     }
 
     private fun hideFab() {
@@ -433,6 +457,15 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 }
             }
         }
+    }
+
+    private fun showMap(lat: Double, lng: Double) {
+        mapView = MapHelper.createStaticMap(
+            context = requireContext(),
+            mapContainer = binding.mapContainer,
+            lat = lat,
+            lng = lng
+        )
     }
 
     // Обновлённый метод для карусели аватарок
@@ -647,6 +680,8 @@ class NewPostFragment : Fragment(), OnPostActionListener {
     }
 
     override fun onDestroyView() {
+        mapView?.onStop()
+        mapView = null
         Glide.with(this).clear(binding.imagePreview)
         Glide.with(this).clear(binding.videoPreview)
         super.onDestroyView()
