@@ -233,7 +233,7 @@ class PostRepositoryImpl @Inject constructor(
         mentionIds: Set<Long>?
     ): Result<Post> {
         return try {
-            // Загружаем медиа, если есть
+            // Загружаем медиа, если есть И если это локальный файл
             val (mediaUrl, attachmentType) = uploadMediaIfNeeded(attachment)
 
             val attachmentDto = mediaUrl?.let { url ->
@@ -245,14 +245,14 @@ class PostRepositoryImpl @Inject constructor(
             }
 
             val request = CreatePostRequest(
-                id = 0,  // id = 0 для нового поста
+                id = 0,
                 content = content,
                 attachment = attachmentDto,
                 coords = coordinatesDto,
                 mentionIds = mentionIds?.toList() ?: emptyList()
             )
 
-            val response = apiService.savePost(request)  // Используем savePost, а не createPost
+            val response = apiService.savePost(request)
 
             if (response.isSuccessful) {
                 val postDto = response.body() ?: return Result.failure(Exception("Empty response"))
@@ -278,8 +278,22 @@ class PostRepositoryImpl @Inject constructor(
         mentionIds: Set<Long>?
     ): Result<Post> {
         return try {
-            // Загружаем медиа, если есть
-            val (mediaUrl, attachmentType) = uploadMediaIfNeeded(attachment)
+            // Проверяем, нужно ли загружать медиа
+            // Загружаем ТОЛЬКО если это новый локальный файл (начинается с file:// или /data)
+            val isNewLocalFile = attachment?.let {
+                !it.url.startsWith("http://") && !it.url.startsWith("https://") && File(it.url).exists()
+            } ?: false
+
+            val (mediaUrl, attachmentType) = if (isNewLocalFile) {
+                uploadMediaIfNeeded(attachment)
+            } else {
+                // Если это URL с сервера или null, просто используем существующий attachment
+                if (attachment != null) {
+                    Pair(attachment.url, attachment.type)
+                } else {
+                    Pair(null, null)
+                }
+            }
 
             val attachmentDto = mediaUrl?.let { url ->
                 AttachmentDto(url, attachmentType?.name ?: return Result.failure(Exception("No attachment type")))
@@ -290,14 +304,14 @@ class PostRepositoryImpl @Inject constructor(
             }
 
             val request = CreatePostRequest(
-                id = id,  // Важно: передаем существующий ID!
+                id = id,
                 content = content,
                 attachment = attachmentDto,
                 coords = coordinatesDto,
                 mentionIds = mentionIds?.toList() ?: emptyList()
             )
 
-            val response = apiService.savePost(request)  // Используем тот же метод savePost
+            val response = apiService.savePost(request)
 
             if (response.isSuccessful) {
                 val postDto = response.body() ?: return Result.failure(Exception("Empty response"))
@@ -319,9 +333,17 @@ class PostRepositoryImpl @Inject constructor(
     private suspend fun uploadMediaIfNeeded(attachment: Attachment?): Pair<String?, AttachmentType?> {
         if (attachment == null) return Pair(null, null)
 
+        // Проверяем, является ли URL локальным файлом
+        val isLocalFile = !attachment.url.startsWith("http://") && !attachment.url.startsWith("https://")
+
+        if (!isLocalFile) {
+            // Это URL с сервера, не нужно загружать
+            return Pair(attachment.url, attachment.type)
+        }
+
         val file = File(attachment.url)
         if (!file.exists()) {
-            throw Exception("File not found")
+            throw Exception("File not found: ${attachment.url}")
         }
 
         val mimeType = attachment.type.toMimeType()

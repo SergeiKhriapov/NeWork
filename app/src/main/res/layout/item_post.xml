@@ -45,9 +45,9 @@
                         android:id="@+id/tv_author"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:textColor="@color/textColor"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="@color/textColor"
                         tools:text="Lydia Westervelt" />
 
                     <TextView
