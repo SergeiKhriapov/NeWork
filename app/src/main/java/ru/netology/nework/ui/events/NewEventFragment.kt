@@ -81,7 +81,6 @@ class NewEventFragment : Fragment(), OnPostActionListener {
 
     private var currentPhotoPath: String? = null
 
-    // Лаунчеры для результатов
     private val cameraLauncher =
         registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
             if (success && currentPhotoPath != null) {
@@ -181,7 +180,6 @@ class NewEventFragment : Fragment(), OnPostActionListener {
                     EventType.OFFLINE
                 }
 
-                // Получаем строку и парсим в OffsetDateTime
                 val eventDateTimeStr = args.getString("eventDateTime")
                 Log.d(TAG, "loadArguments: eventDateTimeStr = $eventDateTimeStr")
 
@@ -322,7 +320,6 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         try {
             val bottomSheet = EventOptionsBottomSheet.newInstance()
 
-            // Если есть уже выбранные дата и тип (при редактировании), передаем их
             val currentEventType = viewModel.eventType.value
             val currentDateTime = viewModel.eventDateTime.value
             if (currentEventType != null && currentDateTime != null) {
@@ -731,16 +728,22 @@ class NewEventFragment : Fragment(), OnPostActionListener {
     }
 
     override fun onPostAction() {
-        Log.d(TAG, "onPostAction CALLED")
+        Log.d(TAG, "=== onPostAction CALLED ===")
+        Log.d(TAG, "viewModel.isSaving.value = ${viewModel.isSaving.value}")
         Log.d(TAG, "viewModel.eventDateTime.value = ${viewModel.eventDateTime.value}")
         Log.d(TAG, "viewModel.isEditing.value = ${viewModel.isEditing.value}")
+        Log.d(TAG, "viewModel.editingEventId.value = ${viewModel.editingEventId.value}")
+
         if (viewModel.isSaving.value == true) {
             Toast.makeText(requireContext(), "Saving in progress", Toast.LENGTH_SHORT).show()
             return
         }
-        val text = binding.editTextEvent.text.toString()
 
-        if (viewModel.eventDateTime.value == null) {
+        val text = binding.editTextEvent.text.toString()
+        val eventDateTime = viewModel.eventDateTime.value
+
+        if (eventDateTime == null) {
+            Log.e(TAG, "eventDateTime is NULL!")
             Toast.makeText(requireContext(), "Сначала выберите дату и время мероприятия!", Toast.LENGTH_LONG).show()
             return
         }
@@ -751,17 +754,25 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         }
 
         if (viewModel.isEditing.value == true) {
-            viewModel.editingEventId.value?.let {
+            val editingEventId = viewModel.editingEventId.value
+            Log.d(TAG, "editingEventId = $editingEventId")
+
+            if (editingEventId != null) {
+                Log.d(TAG, "Calling updateEvent with id=$editingEventId, text=$text, eventDateTime=$eventDateTime")
                 viewModel.updateEvent(
-                    it, text, viewModel.attachment.value, viewModel.coordinates.value,
-                    viewModel.eventType.value ?: EventType.OFFLINE, viewModel.eventDateTime.value,
+                    editingEventId, text, viewModel.attachment.value, viewModel.coordinates.value,
+                    viewModel.eventType.value ?: EventType.OFFLINE, eventDateTime,
                     viewModel.participantIds.value
                 )
+            } else {
+                Log.e(TAG, "editingEventId is NULL!")
+                Toast.makeText(requireContext(), "Ошибка: ID события не найден", Toast.LENGTH_SHORT).show()
             }
         } else {
+            Log.d(TAG, "Creating new event")
             viewModel.saveEvent(
                 text, viewModel.attachment.value, viewModel.coordinates.value,
-                viewModel.eventType.value ?: EventType.OFFLINE, viewModel.eventDateTime.value,
+                viewModel.eventType.value ?: EventType.OFFLINE, eventDateTime,
                 viewModel.participantIds.value
             )
         }

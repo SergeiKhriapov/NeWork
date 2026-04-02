@@ -50,7 +50,6 @@ class EventOptionsBottomSheet : BottomSheetDialogFragment() {
 
     override fun onStop() {
         super.onStop()
-        // При закрытии Bottom Sheet (свайп вниз или нажатие на пустое место) сохраняем значения
         onOptionsSelected?.invoke(selectedType, selectedDateTime)
     }
 
@@ -74,7 +73,6 @@ class EventOptionsBottomSheet : BottomSheetDialogFragment() {
                     { _, hourOfDay, minute ->
                         selectedDateTime = LocalDateTime.of(year, month + 1, dayOfMonth, hourOfDay, minute)
                         updateDateTimeDisplay()
-                        // Не закрываем, только обновляем
                     },
                     calendar.get(Calendar.HOUR_OF_DAY),
                     calendar.get(Calendar.MINUTE),
@@ -97,17 +95,11 @@ class EventOptionsBottomSheet : BottomSheetDialogFragment() {
         binding.rbOnline.isChecked = selectedType == EventType.ONLINE
 
         binding.rbOffline.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                selectedType = EventType.OFFLINE
-                // Не закрываем, только обновляем
-            }
+            if (isChecked) selectedType = EventType.OFFLINE
         }
 
         binding.rbOnline.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                selectedType = EventType.ONLINE
-                // Не закрываем, только обновляем
-            }
+            if (isChecked) selectedType = EventType.ONLINE
         }
     }
 

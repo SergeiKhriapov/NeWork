@@ -23,6 +23,9 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val TAG = "EventRepositoryImpl"
+
+
 @Singleton
 class EventRepositoryImpl @Inject constructor(
     private val apiService: ApiService
@@ -221,13 +224,23 @@ class EventRepositoryImpl @Inject constructor(
         eventDateTime: LocalDateTime,
         participantIds: Set<Long>
     ): Result<Event> {
+        Log.d(TAG, "=== updateEvent IN REPOSITORY ===")
+        Log.d(TAG, "id=$id, content=$content, eventType=${eventType.name}, eventDateTime=$eventDateTime")
+
         return try {
             var mediaUrl: String? = null
             var attachmentType: AttachmentType? = null
 
-            if (attachment != null) {
+            // Проверяем, нужно ли загружать новое медиа
+            val isNewLocalFile = attachment != null &&
+                    !attachment.url.startsWith("http://") &&
+                    !attachment.url.startsWith("https://")
+
+            if (isNewLocalFile) {
+                Log.d(TAG, "Uploading new media...")
                 val file = File(attachment.url)
                 if (!file.exists()) {
+                    Log.e(TAG, "File not found: ${attachment.url}")
                     return Result.failure(Exception("File not found"))
                 }
 
@@ -238,11 +251,18 @@ class EventRepositoryImpl @Inject constructor(
 
                 val uploadResponse = apiService.uploadMedia(part)
                 if (!uploadResponse.isSuccessful) {
+                    Log.e(TAG, "Media upload failed")
                     return Result.failure(Exception("Media upload failed"))
                 }
 
                 val mediaResponse = uploadResponse.body()
                 mediaUrl = mediaResponse?.url ?: return Result.failure(Exception("No URL in media response"))
+                Log.d(TAG, "Media uploaded: $mediaUrl")
+            } else if (attachment != null) {
+                // Существующее вложение с сервера - используем его URL
+                mediaUrl = attachment.url
+                attachmentType = attachment.type
+                Log.d(TAG, "Using existing media: $mediaUrl")
             }
 
             val attachmentDto = mediaUrl?.let { url ->
@@ -257,6 +277,8 @@ class EventRepositoryImpl @Inject constructor(
             val dateTimeStr = eventDateTime.atZone(java.time.ZoneId.systemDefault())
                 .format(formatter)
 
+            Log.d(TAG, "Sending request with datetime=$dateTimeStr")
+
             val request = CreateEventRequest(
                 id = id,
                 content = content,
@@ -267,18 +289,21 @@ class EventRepositoryImpl @Inject constructor(
                 participantsIds = participantIds.toList()
             )
 
-            val response = apiService.updateEvent(request)
+            val response = apiService.createEvent(request)
+            Log.d(TAG, "Response code: ${response.code()}")
+
             if (response.isSuccessful) {
                 val event = response.body()?.toDomain() ?: throw Exception("Empty response")
+                Log.d(TAG, "Event updated successfully: id=${event.id}")
                 updateEventInList(event)
                 Result.success(event)
             } else {
                 val errorBody = response.errorBody()?.string()
-                Log.e("EventRepositoryImpl", "Update error: ${response.code()}, body: $errorBody")
+                Log.e(TAG, "Server error: ${response.code()}, body: $errorBody")
                 Result.failure(Exception("Server error: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Log.e("EventRepositoryImpl", "Exception in updateEvent", e)
+            Log.e(TAG, "updateEvent exception", e)
             Result.failure(e)
         }
     }
