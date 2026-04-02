@@ -59,6 +59,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
+        bottomNav = findViewById(R.id.bottom_nav)
+
         val appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.feedFragment,
@@ -68,7 +70,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        bottomNav = findViewById(R.id.bottom_nav)
         NavigationUI.setupWithNavController(bottomNav, navController)
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
@@ -181,6 +182,14 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 hideFab()
             }
 
+            R.id.newEventFragment, R.id.locationPickerFragment, R.id.userSelectionFragment -> {
+                Log.d("MainActivity", "Hiding FAB for newEventFragment and related fragments")
+                profileMenuItem?.isVisible = false
+                postMenuItem?.isVisible = true
+                hideBottomNav()
+                hideFab()  // Скрываем глобальный FAB во всех этих фрагментах
+            }
+
             R.id.loginFragment, R.id.registerFragment -> {
                 Log.d("MainActivity", "Hiding FAB and BottomNav (login/register)")
                 profileMenuItem?.isVisible = false
@@ -189,24 +198,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 hideFab()
             }
 
-            R.id.locationPickerFragment -> {
-                Log.d("MainActivity", "Hiding FAB and BottomNav (locationPickerFragment)")
-                profileMenuItem?.isVisible = false
-                postMenuItem?.isVisible = false
-                hideBottomNav()
-                hideFab()
-            }
-
-            R.id.userSelectionFragment -> {
-                Log.d("MainActivity", "Hiding FAB and BottomNav (userSelectionFragment)")
-                profileMenuItem?.isVisible = false
-                postMenuItem?.isVisible = true
-                hideBottomNav()
-                hideFab()
-            }
-
-            R.id.postDetailFragment -> {
-                Log.d("MainActivity", "Hiding FAB and BottomNav (postDetailFragment)")
+            R.id.postDetailFragment, R.id.eventDetailFragment -> {
+                Log.d("MainActivity", "Hiding FAB and BottomNav (detail fragments)")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false
                 hideBottomNav()
@@ -228,17 +221,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 showBottomNav()
                 showFab()
             }
-        }
-    }
-
-    private fun handlePostAction() {
-        val currentFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment)
-            ?.childFragmentManager
-            ?.fragments
-            ?.firstOrNull()
-        if (currentFragment is OnPostActionListener) {
-            currentFragment.onPostAction()
         }
     }
 

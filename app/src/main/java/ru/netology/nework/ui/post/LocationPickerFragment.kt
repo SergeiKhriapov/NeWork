@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
@@ -53,7 +54,6 @@ class LocationPickerFragment : Fragment() {
 
             addUserLocationMarker(point)
 
-            // Просто центрируем камеру на точке
             binding.mapView.map.move(
                 CameraPosition(point, 16.0f, 0.0f, 0.0f),
                 Animation(Animation.Type.SMOOTH, 1f),
@@ -72,7 +72,6 @@ class LocationPickerFragment : Fragment() {
                     Toast.makeText(requireContext(), "Местоположение недоступно", Toast.LENGTH_SHORT).show()
                 }
                 else -> {
-                    // RESET или другое состояние
                     Log.d("LocationPicker", "Other status: $status")
                 }
             }
@@ -118,23 +117,22 @@ class LocationPickerFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Скрываем FAB при входе в фрагмент
-        try {
-            requireActivity().findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab_create)?.hide()
-            Log.d("LocationPickerFragment", "FAB hidden")
-        } catch (e: Exception) {
-            Log.e("LocationPickerFragment", "Error hiding FAB: ${e.message}")
-        }
+        hideGlobalFAB()
     }
 
     override fun onPause() {
         super.onPause()
-        // Показываем FAB обратно при выходе
+        // НЕ ПОКАЗЫВАЕМ FAB обратно, чтобы не мешать NewEventFragment
+        // Глобальный FAB должен управляться MainActivity при смене фрагмента
+    }
+
+    private fun hideGlobalFAB() {
         try {
-            requireActivity().findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab_create)?.show()
-            Log.d("LocationPickerFragment", "FAB shown")
+            val fab = requireActivity().findViewById<FloatingActionButton>(R.id.fab_create)
+            fab?.hide()
+            Log.d("LocationPickerFragment", "Global FAB hidden")
         } catch (e: Exception) {
-            Log.e("LocationPickerFragment", "Error showing FAB: ${e.message}")
+            Log.e("LocationPickerFragment", "Error hiding FAB: ${e.message}")
         }
     }
 
@@ -189,12 +187,10 @@ class LocationPickerFragment : Fragment() {
 
     private fun addUserLocationMarker(point: Point) {
         userLocationMarker?.let { mapObjects?.remove(it) }
-
         userLocationMarker = mapObjects?.addPlacemark(point)
 
         val userMarkerBitmap = createUserLocationBitmap()
         val imageProvider = ImageProvider.fromBitmap(userMarkerBitmap)
-
         userLocationMarker?.setIcon(imageProvider)
     }
 
@@ -271,7 +267,6 @@ class LocationPickerFragment : Fragment() {
 
     private fun moveToCurrentLocation() {
         if (currentUserLocation != null) {
-            // Просто центрируем камеру на текущем местоположении
             binding.mapView.map.move(
                 CameraPosition(currentUserLocation!!, 16.0f, 0.0f, 0.0f),
                 Animation(Animation.Type.SMOOTH, 0.5f),
@@ -334,5 +329,4 @@ class LocationPickerFragment : Fragment() {
         _binding = null
         super.onDestroyView()
     }
-
 }

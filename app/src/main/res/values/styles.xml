@@ -32,4 +32,22 @@
         <item name="android:letterSpacing">0.04</item> <!-- ≈0.5px при 12sp -->
     </style>
 
+    <style name="CustomBottomSheet" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.5</item>
+        <item name="bottomSheetStyle">@style/CustomBottomSheetStyle</item>
+    </style>
+
+    <style name="CustomBottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="shapeAppearanceOverlay">@style/BottomSheetShape</item>
+    </style>
+
+    <style name="BottomSheetShape">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopRight">28dp</item>
+        <item name="cornerSizeTopLeft">28dp</item>
+    </style>
+
 </resources>

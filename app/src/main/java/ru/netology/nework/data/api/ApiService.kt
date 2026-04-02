@@ -6,7 +6,7 @@ import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.*
 import ru.netology.nework.api.dto.EventDto
-import ru.netology.nework.data.api.dto.*
+import ru.netology.nework.data.api.dto.*  // ← импортируем все из одного пакета
 
 interface ApiService {
 
@@ -69,9 +69,7 @@ interface ApiService {
     @DELETE("api/posts/{id}/likes")
     suspend fun unlikePost(@Path("id") id: Long): Response<PostDto>
 
-    // Создание и обновление поста - ОДИНАКОВЫЙ МЕТОД POST
-    // Для создания нового поста: id = 0 в теле запроса
-    // Для обновления: id = существующий ID поста
+    // Создание и обновление поста
     @POST("api/posts")
     suspend fun savePost(@Body request: CreatePostRequest): Response<PostDto>
 
@@ -103,6 +101,14 @@ interface ApiService {
     @DELETE("api/events/{id}/participants")
     suspend fun unparticipateEvent(@Path("id") id: Long): Response<EventDto>
 
+    // Создание и обновление события
+    @POST("api/events")
+    suspend fun createEvent(@Body request: CreateEventRequest): Response<EventDto>
+
+    @POST("api/events")
+    suspend fun updateEvent(@Body request: CreateEventRequest): Response<EventDto>
+
+    // Удаление события
     @DELETE("api/events/{id}")
     suspend fun deleteEvent(@Path("id") id: Long): Response<Unit>
 }

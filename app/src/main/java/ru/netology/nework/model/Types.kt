@@ -1,8 +1,17 @@
 package ru.netology.nework.model
 
-import java.time.OffsetDateTime
+enum class AttachmentType {
+    IMAGE,
+    VIDEO,
+    AUDIO;
 
-enum class AttachmentType { IMAGE, VIDEO, AUDIO }
+    fun toMimeType(): String = when (this) {
+        IMAGE -> "image/*"
+        VIDEO -> "video/*"
+        AUDIO -> "audio/*"
+    }
+}
+
 enum class EventType { OFFLINE, ONLINE }
 
 data class Coordinates(

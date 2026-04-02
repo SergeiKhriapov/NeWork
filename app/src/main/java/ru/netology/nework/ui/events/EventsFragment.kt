@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
@@ -42,21 +43,18 @@ class EventsFragment : Fragment() {
 
         setupRecyclerView()
         observeViewModel()
+        setupFab()
     }
 
     override fun onResume() {
         super.onResume()
-        setupFab()
+        showFab()
+        viewModel.loadEvents()  // Перезагружаем события при возврате
     }
 
     override fun onPause() {
         super.onPause()
-        // Скрываем FAB при уходе
-        try {
-            requireActivity().findViewById<FloatingActionButton>(R.id.fab_create)?.hide()
-        } catch (e: Exception) {
-            Log.e("EventsFragment", "Error hiding FAB: ${e.message}")
-        }
+        hideFab()
     }
 
     private fun setupRecyclerView() {
@@ -77,6 +75,34 @@ class EventsFragment : Fragment() {
         binding.rvEvents.adapter = adapter
     }
 
+    private fun setupFab() {
+        try {
+            val fab = requireActivity().findViewById<FloatingActionButton>(R.id.fab_create)
+            fab?.show()
+            fab?.setOnClickListener {
+                findNavController().navigate(R.id.newEventFragment)
+            }
+        } catch (e: Exception) {
+            Log.e("EventsFragment", "Error setting up FAB: ${e.message}")
+        }
+    }
+
+    private fun showFab() {
+        try {
+            requireActivity().findViewById<FloatingActionButton>(R.id.fab_create)?.show()
+        } catch (e: Exception) {
+            Log.e("EventsFragment", "Error showing FAB: ${e.message}")
+        }
+    }
+
+    private fun hideFab() {
+        try {
+            requireActivity().findViewById<FloatingActionButton>(R.id.fab_create)?.hide()
+        } catch (e: Exception) {
+            Log.e("EventsFragment", "Error hiding FAB: ${e.message}")
+        }
+    }
+
     private fun observeViewModel() {
         viewModel.events.observe(viewLifecycleOwner) { events ->
             adapter.submitList(events)
@@ -93,23 +119,11 @@ class EventsFragment : Fragment() {
         }
     }
 
-    private fun setupFab() {
-        try {
-            val fab = requireActivity().findViewById<FloatingActionButton>(R.id.fab_create)
-            fab?.show()
-            fab?.setOnClickListener {
-                // TODO: Navigate to create event fragment
-                Toast.makeText(requireContext(), "Создание события", Toast.LENGTH_SHORT).show()
-                // findNavController().navigate(R.id.newEventFragment)
-            }
-        } catch (e: Exception) {
-            Log.e("EventsFragment", "Error setting up FAB: ${e.message}")
-        }
-    }
-
     private fun openEventDetails(event: Event) {
-        // TODO: Implement navigation to event details fragment
-        Toast.makeText(requireContext(), "Открыть событие: ${event.id}", Toast.LENGTH_SHORT).show()
+        findNavController().navigate(
+            R.id.action_events_to_eventDetail,
+            bundleOf("eventId" to event.id)
+        )
     }
 
     private fun showPopupMenu(event: Event, anchor: View) {
@@ -119,8 +133,7 @@ class EventsFragment : Fragment() {
             popup.setOnMenuItemClickListener { item ->
                 when (item.itemId) {
                     R.id.action_edit -> {
-                        // TODO: Navigate to edit event
-                        Toast.makeText(requireContext(), "Редактировать событие", Toast.LENGTH_SHORT).show()
+                        editEvent(event)
                         true
                     }
                     R.id.action_delete -> {
@@ -134,6 +147,26 @@ class EventsFragment : Fragment() {
         } catch (e: Exception) {
             Log.e("EventsFragment", "Error showing popup menu: ${e.message}")
         }
+    }
+
+    private fun editEvent(event: Event) {
+        Log.d("EventsFragment", "editEvent: event.id = ${event.id}")
+        Log.d("EventsFragment", "editEvent: event.datetime = ${event.datetime}")
+
+        val bundle = Bundle().apply {
+            putLong("eventId", event.id)
+            putString("content", event.content)
+            putString("eventType", event.type.name)
+            putString("eventDateTime", event.datetime.toString())  // Преобразуем OffsetDateTime в строку
+            putString("attachmentUrl", event.attachment?.url ?: "")
+            putString("attachmentType", event.attachment?.type?.name ?: "")
+            putDouble("lat", event.coords?.lat ?: 0.0)
+            putDouble("lng", event.coords?.lng ?: 0.0)
+            putLongArray("participantIds", event.participantsIds.toLongArray())
+        }
+
+        Log.d("EventsFragment", "editEvent: eventDateTime string = ${bundle.getString("eventDateTime")}")
+        findNavController().navigate(R.id.newEventFragment, bundle)
     }
 
     private fun showDeleteConfirmation(eventId: Long) {

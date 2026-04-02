@@ -58,7 +58,29 @@
         android:id="@+id/eventsFragment"
         android:name="ru.netology.nework.ui.events.EventsFragment"
         android:label="Events"
-        tools:layout="@layout/fragment_events" />
+        tools:layout="@layout/fragment_events">
+
+        <action
+            android:id="@+id/action_events_to_newEvent"
+            app:destination="@id/newEventFragment" />
+
+        <action
+            android:id="@+id/action_events_to_eventDetail"
+            app:destination="@id/eventDetailFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/newEventFragment"
+        android:name="ru.netology.nework.ui.events.NewEventFragment"
+        android:label="New Event"
+        tools:layout="@layout/fragment_new_event" />
+
+    <fragment
+        android:id="@+id/eventDetailFragment"
+        android:name="ru.netology.nework.ui.events.EventDetailFragment"
+        android:label="Event Detail"
+        tools:layout="@layout/fragment_event_detail" />
 
     <fragment
         android:id="@+id/locationPickerFragment"
