@@ -89,7 +89,8 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 )
                 handleMediaResult(uri, AttachmentType.IMAGE)
             } else {
-                Toast.makeText(requireContext(), "Не удалось сделать фото", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Не удалось сделать фото", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
 
@@ -117,7 +118,11 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             if (isGranted) {
                 openCamera()
             } else {
-                Toast.makeText(requireContext(), "Необходимо разрешение на камеру", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Необходимо разрешение на камеру",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
 
@@ -225,7 +230,8 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
         viewModel.isEditing.observe(viewLifecycleOwner) { isEditing ->
             val title = if (isEditing) "Edit post" else "New post"
-            (requireActivity() as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.title = title
+            (requireActivity() as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.title =
+                title
         }
 
         viewModel.saveCompleted.observe(viewLifecycleOwner) { success ->
@@ -243,6 +249,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                             if (isAdded) findNavController().navigateUp()
                         }
                     }
+
                     false -> {
                         Toast.makeText(requireContext(), "Ошибка", Toast.LENGTH_SHORT).show()
                     }
@@ -259,18 +266,22 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                     checkCameraPermissionAndOpen()
                     true
                 }
+
                 R.id.action_attach -> {
                     showAttachmentDialog()
                     true
                 }
+
                 R.id.action_users -> {
                     openUserSelection()
                     true
                 }
+
                 R.id.action_location -> {
                     openLocationPicker()
                     true
                 }
+
                 else -> false
             }
         }
@@ -295,16 +306,19 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 if (lat != 0.0 && lng != 0.0) {
                     // Пользователь выбрал новую локацию
                     viewModel.setCoordinates(Coordinates(lat, lng))
-                    Toast.makeText(requireContext(), "Местоположение выбрано", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Местоположение выбрано", Toast.LENGTH_SHORT)
+                        .show()
                 } else {
                     // Пользователь нажал Cancel - удаляем координаты
                     viewModel.setCoordinates(null)
-                    Toast.makeText(requireContext(), "Местоположение удалено", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Местоположение удалено", Toast.LENGTH_SHORT)
+                        .show()
                 }
             } else {
                 // Нет данных - удаляем координаты
                 viewModel.setCoordinates(null)
-                Toast.makeText(requireContext(), "Местоположение удалено", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Местоположение удалено", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
 
@@ -346,7 +360,9 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
     private fun hideFab() {
         try {
-            requireActivity().findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab_create)?.hide()
+            requireActivity().findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(
+                R.id.fab_create
+            )?.hide()
         } catch (e: Exception) {
             Log.e(TAG, "Error hiding FAB: ${e.message}")
         }
@@ -354,7 +370,9 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
     private fun showFab() {
         try {
-            requireActivity().findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab_create)?.show()
+            requireActivity().findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(
+                R.id.fab_create
+            )?.show()
         } catch (e: Exception) {
             Log.e(TAG, "Error showing FAB: ${e.message}")
         }
@@ -369,16 +387,21 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         Log.d(TAG, "openUserSelection with selectedIds: ${selectedIds.joinToString()}")
         val args = Bundle().apply {
             putLongArray("selected_ids", selectedIds)
+            putString("title", "Select mentioned")
         }
         findNavController().navigate(R.id.userSelectionFragment, args)
     }
 
     private fun checkCameraPermissionAndOpen() {
         when {
-            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
                 Log.d(TAG, "Camera permission already granted")
                 openCamera()
             }
+
             else -> {
                 Log.d(TAG, "Requesting camera permission")
                 requestPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -392,7 +415,11 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             val photoFile = createImageFile()
             if (photoFile == null) {
                 Log.e(TAG, "Failed to create image file")
-                Toast.makeText(requireContext(), "Не удалось создать файл для фото", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Не удалось создать файл для фото",
+                    Toast.LENGTH_SHORT
+                ).show()
                 return
             }
             currentPhotoPath = photoFile.absolutePath
@@ -448,7 +475,11 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             val internalPath = copyFileToInternalStorage(uri)
             withContext(Dispatchers.Main) {
                 if (internalPath == null) {
-                    Toast.makeText(requireContext(), "Не удалось скопировать файл", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Не удалось скопировать файл",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     return@withContext
                 }
                 Log.d(TAG, "File copied to $internalPath")
@@ -502,7 +533,8 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                     val file = File(url)
                     if (!file.exists()) {
                         Log.e(TAG, "File not found: $url")
-                        Toast.makeText(requireContext(), "Файл не найден", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Файл не найден", Toast.LENGTH_SHORT)
+                            .show()
                         viewModel.setAttachment(null)
                         return
                     }
@@ -529,7 +561,8 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                     val file = File(url)
                     if (!file.exists()) {
                         Log.e(TAG, "Video file not found: $url")
-                        Toast.makeText(requireContext(), "Видео не найдено", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Видео не найдено", Toast.LENGTH_SHORT)
+                            .show()
                         viewModel.setAttachment(null)
                         return
                     }
@@ -560,7 +593,11 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
                 binding.ivPlay.visibility = View.VISIBLE
                 binding.videoContainer.setOnClickListener {
-                    Toast.makeText(requireContext(), "Видео пока не поддерживается", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Видео пока не поддерживается",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
 
@@ -568,7 +605,8 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 binding.audioPlayer.visibility = View.VISIBLE
                 // Для аудио не нужно проверять существование файла
                 binding.btnPlayPause.setOnClickListener {
-                    Toast.makeText(requireContext(), "Воспроизведение аудио", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Воспроизведение аудио", Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
         }
@@ -740,7 +778,10 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 val firstLetter = user.name.firstOrNull()?.toString() ?: "?"
                 val drawable = LetterAvatarDrawable(
                     letter = firstLetter,
-                    backgroundColor = ContextCompat.getColor(requireContext(), R.color.purple_primary)
+                    backgroundColor = ContextCompat.getColor(
+                        requireContext(),
+                        R.color.purple_primary
+                    )
                 ).apply {
                     setBounds(0, 0, avatarSize - 2 * strokeWidth, avatarSize - 2 * strokeWidth)
                 }
@@ -799,7 +840,8 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             .setTitle("Убрать пользователя")
             .setMessage("Убрать ${user.name} из упомянутых?")
             .setPositiveButton("Да") { _, _ ->
-                val currentIds = viewModel.mentionIds.value?.toMutableSet() ?: return@setPositiveButton
+                val currentIds =
+                    viewModel.mentionIds.value?.toMutableSet() ?: return@setPositiveButton
                 currentIds.remove(user.id)
                 viewModel.setMentionIds(currentIds)
             }
@@ -809,7 +851,8 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
     override fun onPostAction() {
         if (viewModel.isSaving.value == true) {
-            Toast.makeText(requireContext(), "Сохранение уже выполняется", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Сохранение уже выполняется", Toast.LENGTH_SHORT)
+                .show()
             return
         }
         val text = binding.editTextPost.text.toString()

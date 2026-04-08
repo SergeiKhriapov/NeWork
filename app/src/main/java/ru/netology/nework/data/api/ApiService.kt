@@ -111,4 +111,8 @@ interface ApiService {
     // Удаление события
     @DELETE("api/events/{id}")
     suspend fun deleteEvent(@Path("id") id: Long): Response<Unit>
+
+    // В ApiService добавьте:
+    @GET("api/users/{id}")
+    suspend fun getUserById(@Path("id") id: Long): Response<UserDto>
 }

@@ -9,14 +9,20 @@ import java.time.LocalDateTime
 
 interface EventRepository {
 
-    fun getEventsLiveData(): LiveData<List<Event>>  // Добавьте эту строку
+    fun getEventsLiveData(): LiveData<List<Event>>
 
     suspend fun getEvents(): Result<List<Event>>
+
     suspend fun getEventById(id: Long): Result<Event>
+
     suspend fun likeEvent(id: Long): Result<Event>
+
     suspend fun unlikeEvent(id: Long): Result<Event>
+
     suspend fun participateEvent(id: Long): Result<Event>
+
     suspend fun unparticipateEvent(id: Long): Result<Event>
+
     suspend fun deleteEvent(id: Long): Result<Unit>
 
     suspend fun saveEvent(
@@ -25,7 +31,7 @@ interface EventRepository {
         coords: Coordinates?,
         eventType: EventType,
         eventDateTime: LocalDateTime,
-        participantIds: Set<Long>
+        speakerIds: Set<Long>  // Используем speakerIds вместо participantIds
     ): Result<Event>
 
     suspend fun updateEvent(
@@ -35,6 +41,6 @@ interface EventRepository {
         coords: Coordinates?,
         eventType: EventType,
         eventDateTime: LocalDateTime,
-        participantIds: Set<Long>
+        speakerIds: Set<Long>  // Используем speakerIds вместо participantIds
     ): Result<Event>
 }

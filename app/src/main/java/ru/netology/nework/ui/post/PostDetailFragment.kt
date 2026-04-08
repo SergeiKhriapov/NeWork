@@ -1,5 +1,6 @@
 package ru.netology.nework.ui.post
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Outline
@@ -31,10 +32,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.PlaybackException
-import com.google.android.exoplayer2.Player
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
@@ -190,59 +191,44 @@ class PostDetailFragment : Fragment() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.menu_post_actions, menu)
-
-        viewModel.post.observe(viewLifecycleOwner) { post ->
-            // Получаем currentUserId из viewModel
-            val currentUserId = viewModel.currentUserId.value
-            val isOwner = post?.authorId == currentUserId
-            menu.findItem(R.id.action_edit).isVisible = isOwner
-            menu.findItem(R.id.action_delete).isVisible = isOwner
-        }
+        menu.add(Menu.NONE, R.id.action_share, Menu.NONE, "Share")
+            .setIcon(R.drawable.ic_share_bl)
+            .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
 
         super.onCreateOptionsMenu(menu, inflater)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_edit -> {
-                editPost()
-                true
-            }
-            R.id.action_delete -> {
-                deletePost()
+            R.id.action_share -> {
+                sharePost()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
-    private fun editPost() {
+    private fun sharePost() {
         val post = viewModel.post.value ?: return
 
-        val args = Bundle().apply {
-            putLong("postId", post.id)
-            putString("content", post.content)
-            putString("attachmentUrl", post.attachment?.url ?: "")
-            putString("attachmentType", post.attachment?.type?.name ?: "")
-            putDouble("lat", post.coords?.lat ?: 0.0)
-            putDouble("lng", post.coords?.lng ?: 0.0)
-            putLongArray("mentionIds", post.mentionIds.toLongArray())
+        val shareText = buildString {
+            append("${post.author}\n")
+            append(post.content)
+            append("\n\n")
+            append("📅 ${post.published.formatForDisplay()}\n")
+            if (post.coords != null) {
+                append("🗺️ Координаты: ${post.coords.lat}, ${post.coords.lng}\n")
+            }
+            if (post.link != null) {
+                append("🔗 ${post.link}\n")
+            }
         }
 
-        findNavController().navigate(R.id.newPostFragment, args)
-    }
-
-    private fun deletePost() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Удалить пост")
-            .setMessage("Вы уверены, что хотите удалить этот пост?")
-            .setPositiveButton("Да") { _, _ ->
-                viewModel.deletePost()
-                findNavController().navigateUp()
-            }
-            .setNegativeButton("Нет", null)
-            .show()
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
+        startActivity(Intent.createChooser(shareIntent, "Поделиться постом"))
     }
 
     private fun openUsersList(users: List<User>, title: String) {

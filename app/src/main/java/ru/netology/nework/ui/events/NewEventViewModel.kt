@@ -30,8 +30,8 @@ class NewEventViewModel @Inject constructor(
     private val _coordinates = MutableLiveData<Coordinates?>(null)
     val coordinates: LiveData<Coordinates?> = _coordinates
 
-    private val _participantIds = MutableLiveData<Set<Long>>(emptySet())
-    val participantIds: LiveData<Set<Long>> = _participantIds
+    private val _speakerIds = MutableLiveData<Set<Long>>(emptySet())
+    val speakerIds: LiveData<Set<Long>> = _speakerIds
 
     private val _eventType = MutableLiveData(EventType.OFFLINE)
     val eventType: LiveData<EventType> = _eventType
@@ -66,7 +66,7 @@ class NewEventViewModel @Inject constructor(
         coords: Coordinates?,
         eventType: EventType,
         eventDateTime: LocalDateTime?,
-        participantIds: Set<Long>
+        speakerIds: Set<Long>
     ) {
         Log.d(TAG, "initEditing: eventId=$eventId, eventDateTime=$eventDateTime")
         _isEditing.value = true
@@ -76,7 +76,7 @@ class NewEventViewModel @Inject constructor(
         _coordinates.value = coords
         _eventType.value = eventType
         _eventDateTime.value = eventDateTime
-        _participantIds.value = participantIds
+        _speakerIds.value = speakerIds
     }
 
     fun initNew() {
@@ -88,7 +88,7 @@ class NewEventViewModel @Inject constructor(
         _coordinates.value = null
         _eventType.value = EventType.OFFLINE
         _eventDateTime.value = null
-        _participantIds.value = emptySet()
+        _speakerIds.value = emptySet()
     }
 
     fun setText(text: String) {
@@ -103,8 +103,8 @@ class NewEventViewModel @Inject constructor(
         _coordinates.value = coordinates
     }
 
-    fun setParticipantIds(ids: Set<Long>) {
-        _participantIds.value = ids
+    fun setSpeakerIds(ids: Set<Long>) {
+        _speakerIds.value = ids
     }
 
     fun setEventType(type: EventType) {
@@ -121,7 +121,7 @@ class NewEventViewModel @Inject constructor(
         coords: Coordinates?,
         eventType: EventType,
         eventDateTime: LocalDateTime?,
-        participantIds: Set<Long>?
+        speakerIds: Set<Long>?
     ) {
         Log.d(TAG, "saveEvent: text=$text, eventType=${eventType.name}, eventDateTime=$eventDateTime")
 
@@ -140,7 +140,7 @@ class NewEventViewModel @Inject constructor(
             _isSaving.value = true
             try {
                 Log.d(TAG, "Calling repository.saveEvent")
-                val result = repository.saveEvent(text, attachment, coords, eventType, eventDateTime, participantIds ?: emptySet())
+                val result = repository.saveEvent(text, attachment, coords, eventType, eventDateTime, speakerIds ?: emptySet())
                 Log.d(TAG, "repository.saveEvent result.isSuccess = ${result.isSuccess}")
                 _saveCompleted.value = result.isSuccess
             } catch (e: Exception) {
@@ -159,14 +159,14 @@ class NewEventViewModel @Inject constructor(
         coords: Coordinates?,
         eventType: EventType,
         eventDateTime: LocalDateTime?,
-        participantIds: Set<Long>?
+        speakerIds: Set<Long>?
     ) {
         Log.d(TAG, "=== updateEvent IN VIEWMODEL ===")
         Log.d(TAG, "updateEvent: id=$id")
         Log.d(TAG, "updateEvent: content=$content")
         Log.d(TAG, "updateEvent: eventType=${eventType.name}")
         Log.d(TAG, "updateEvent: eventDateTime=$eventDateTime")
-        Log.d(TAG, "updateEvent: participantIds=${participantIds?.joinToString()}")
+        Log.d(TAG, "updateEvent: speakerIds=${speakerIds?.joinToString()}")
 
         if (content.isBlank() && attachment == null) {
             Log.e(TAG, "updateEvent: content is blank and attachment is null")
@@ -183,7 +183,7 @@ class NewEventViewModel @Inject constructor(
             _isSaving.value = true
             try {
                 Log.d(TAG, "Calling repository.updateEvent")
-                val result = repository.updateEvent(id, content, attachment, coords, eventType, eventDateTime, participantIds ?: emptySet())
+                val result = repository.updateEvent(id, content, attachment, coords, eventType, eventDateTime, speakerIds ?: emptySet())
                 Log.d(TAG, "repository.updateEvent result.isSuccess = ${result.isSuccess}")
                 _saveCompleted.value = result.isSuccess
             } catch (e: Exception) {

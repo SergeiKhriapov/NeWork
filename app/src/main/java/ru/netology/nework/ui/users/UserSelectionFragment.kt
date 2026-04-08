@@ -47,7 +47,9 @@ class UserSelectionFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        (requireActivity() as AppCompatActivity).supportActionBar?.title = "Choose users"
+        // Получаем заголовок из аргументов, если нет - используем "Choose users"
+        val title = arguments?.getString("title", "Choose users") ?: "Choose users"
+        (requireActivity() as AppCompatActivity).supportActionBar?.title = title
 
         setupRecyclerView()
         observeViewModel()

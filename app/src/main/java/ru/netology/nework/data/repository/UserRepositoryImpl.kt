@@ -29,4 +29,23 @@ class UserRepositoryImpl @Inject constructor(
         Log.e(TAG, "Exception in getUsers", e)
         Result.failure(e)
     }
+
+    override suspend fun getUserById(id: Long): Result<User> = try {
+        val response = apiService.getUserById(id)
+        if (response.isSuccessful) {
+            val userDto = response.body()
+            if (userDto != null) {
+                Log.d(TAG, "Received user: ${userDto.id}")
+                Result.success(userDto.toDomain())
+            } else {
+                Result.failure(Exception("Пользователь не найден"))
+            }
+        } else {
+            Log.e(TAG, "Error fetching user $id: ${response.code()}")
+            Result.failure(Exception("Ошибка загрузки пользователя"))
+        }
+    } catch (e: Exception) {
+        Log.e(TAG, "Exception in getUserById", e)
+        Result.failure(e)
+    }
 }

@@ -11,5 +11,6 @@ data class CreateEventRequest(
     @Json(name = "type") val type: String,
     @Json(name = "attachment") val attachment: AttachmentDto? = null,
     @Json(name = "coords") val coords: CoordinatesDto? = null,
-    @Json(name = "participantsIds") val participantsIds: List<Long> = emptyList()  // Добавляем
+    @Json(name = "participantsIds") val participantsIds: List<Long> = emptyList(),
+    @Json(name = "speakerIds") val speakerIds: List<Long> = emptyList()
 )

@@ -25,7 +25,6 @@ import javax.inject.Singleton
 
 private const val TAG = "EventRepositoryImpl"
 
-
 @Singleton
 class EventRepositoryImpl @Inject constructor(
     private val apiService: ApiService
@@ -145,7 +144,7 @@ class EventRepositoryImpl @Inject constructor(
         coords: Coordinates?,
         eventType: EventType,
         eventDateTime: LocalDateTime,
-        participantIds: Set<Long>
+        speakerIds: Set<Long>  // ИСПРАВЛЕНО: speakerIds вместо participantIds
     ): Result<Event> {
         return try {
             var mediaUrl: String? = null
@@ -183,7 +182,8 @@ class EventRepositoryImpl @Inject constructor(
             val dateTimeStr = eventDateTime.atZone(java.time.ZoneId.systemDefault())
                 .format(formatter)
 
-            Log.d("EventRepositoryImpl", "Sending event: content=$content, datetime=$dateTimeStr, type=${eventType.name}, participants=${participantIds.size}")
+            // ИСПРАВЛЕНО: используем speakerIds, а не participantsIds
+            Log.d(TAG, "Sending event: content=$content, datetime=$dateTimeStr, type=${eventType.name}, speakers=${speakerIds.size}")
 
             val request = CreateEventRequest(
                 id = 0,
@@ -192,25 +192,25 @@ class EventRepositoryImpl @Inject constructor(
                 type = eventType.name,
                 attachment = attachmentDto,
                 coords = coordinatesDto,
-                participantsIds = participantIds.toList()
+                speakerIds = speakerIds.toList()  // ИСПРАВЛЕНО: speakerIds
             )
 
             val response = apiService.createEvent(request)
 
-            Log.d("EventRepositoryImpl", "Response code: ${response.code()}")
+            Log.d(TAG, "Response code: ${response.code()}")
             if (response.isSuccessful) {
                 val event = response.body()?.toDomain() ?: throw Exception("Empty response")
                 val currentList = _events.value ?: emptyList()
                 _events.postValue(listOf(event) + currentList)
-                Log.d("EventRepositoryImpl", "Event saved successfully, new list size: ${_events.value?.size}")
+                Log.d(TAG, "Event saved successfully, new list size: ${_events.value?.size}")
                 Result.success(event)
             } else {
                 val errorBody = response.errorBody()?.string()
-                Log.e("EventRepositoryImpl", "Server error: ${response.code()}, body: $errorBody")
+                Log.e(TAG, "Server error: ${response.code()}, body: $errorBody")
                 Result.failure(Exception("Server error: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Log.e("EventRepositoryImpl", "Exception in saveEvent", e)
+            Log.e(TAG, "Exception in saveEvent", e)
             Result.failure(e)
         }
     }
@@ -222,10 +222,10 @@ class EventRepositoryImpl @Inject constructor(
         coords: Coordinates?,
         eventType: EventType,
         eventDateTime: LocalDateTime,
-        participantIds: Set<Long>
+        speakerIds: Set<Long>  // ИСПРАВЛЕНО: speakerIds вместо participantIds
     ): Result<Event> {
         Log.d(TAG, "=== updateEvent IN REPOSITORY ===")
-        Log.d(TAG, "id=$id, content=$content, eventType=${eventType.name}, eventDateTime=$eventDateTime")
+        Log.d(TAG, "id=$id, content=$content, eventType=${eventType.name}, eventDateTime=$eventDateTime, speakerIds=${speakerIds.joinToString()}")
 
         return try {
             var mediaUrl: String? = null
@@ -277,8 +277,9 @@ class EventRepositoryImpl @Inject constructor(
             val dateTimeStr = eventDateTime.atZone(java.time.ZoneId.systemDefault())
                 .format(formatter)
 
-            Log.d(TAG, "Sending request with datetime=$dateTimeStr")
+            Log.d(TAG, "Sending request with datetime=$dateTimeStr, speakerIds=${speakerIds.joinToString()}")
 
+            // ИСПРАВЛЕНО: используем speakerIds
             val request = CreateEventRequest(
                 id = id,
                 content = content,
@@ -286,7 +287,7 @@ class EventRepositoryImpl @Inject constructor(
                 type = eventType.name,
                 attachment = attachmentDto,
                 coords = coordinatesDto,
-                participantsIds = participantIds.toList()
+                speakerIds = speakerIds.toList()  // ИСПРАВЛЕНО: speakerIds
             )
 
             val response = apiService.createEvent(request)

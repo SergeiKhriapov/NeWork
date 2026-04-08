@@ -98,7 +98,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.squareup.moshi:moshi:1.15.1")
-    implementation("com.squareup.moshi:moshi-kotlin:1.15.1") // Объединено с предыдущим
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
 
     // Dagger Hilt
     implementation("com.google.dagger:hilt-android:2.55")
@@ -116,9 +116,13 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     kapt("com.github.bumptech.glide:compiler:4.16.0")
 
-    // ExoPlayer (один раз)
-    implementation("com.google.android.exoplayer:exoplayer-core:2.19.1")
-    implementation("com.google.android.exoplayer:exoplayer-ui:2.19.1")
+    // ExoPlayer - СТАРЫЕ ВЕРСИИ
+    // implementation("com.google.android.exoplayer:exoplayer-core:2.19.1")
+    // implementation("com.google.android.exoplayer:exoplayer-ui:2.19.1")
+
+    // ExoPlayer - НОВЫЕ ВЕРСИИ (AndroidX Media3)
+    implementation("androidx.media3:media3-exoplayer:1.9.0")
+    implementation("androidx.media3:media3-ui:1.9.0")
 
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1")
@@ -134,10 +138,6 @@ dependencies {
     //Gson
     implementation("com.google.code.gson:gson:2.10.1")
 
-    //лайк как в инстаграм
-/*
-    implementation("com.airbnb.android:lottie:6.0.0")
-*/
 
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
 }

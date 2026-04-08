@@ -9,10 +9,15 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
-import com.google.android.exoplayer2.ExoPlayer
+/*import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.PlaybackException
-import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.Player*/
+
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
 import ru.netology.nework.databinding.DialogMediaPlayerBinding
 
 private const val TAG = "MediaPlayerDialog"

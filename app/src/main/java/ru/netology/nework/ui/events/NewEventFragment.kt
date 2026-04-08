@@ -194,14 +194,16 @@ class NewEventFragment : Fragment(), OnPostActionListener {
 
                 Log.d(TAG, "loadArguments: parsed eventDateTime = $eventDateTime")
 
-                val participantIds = args.getLongArray("participantIds")?.toSet() ?: emptySet()
+                // ВАЖНО: speakerIds - это спикеры
+                val speakerIds = args.getLongArray("speakerIds")?.toSet() ?: emptySet()
 
                 viewModel.initEditing(
                     eventId, content, attachment, coords,
-                    eventType, eventDateTime, participantIds
+                    eventType, eventDateTime, speakerIds
                 )
 
                 Log.d(TAG, "After initEditing: viewModel.eventDateTime.value = ${viewModel.eventDateTime.value}")
+                Log.d(TAG, "After initEditing: viewModel.speakerIds.value = ${viewModel.speakerIds.value}")
             } else {
                 viewModel.initNew()
             }
@@ -239,12 +241,13 @@ class NewEventFragment : Fragment(), OnPostActionListener {
             }
         }
 
-        viewModel.participantIds.observe(viewLifecycleOwner) {
-            updateSelectedUsers()
+        // Наблюдаем за спикерами
+        viewModel.speakerIds.observe(viewLifecycleOwner) {
+            updateSelectedSpeakersDisplay()
         }
 
         usersViewModel.users.observe(viewLifecycleOwner) {
-            updateSelectedUsers()
+            updateSelectedSpeakersDisplay()
         }
 
         viewModel.eventType.observe(viewLifecycleOwner) { type ->
@@ -283,7 +286,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
                     showAttachmentDialog(); true
                 }
                 R.id.action_users -> {
-                    openUserSelection(); true
+                    openSpeakersSelection(); true
                 }
                 R.id.action_location -> {
                     openLocationPicker(); true
@@ -352,18 +355,12 @@ class NewEventFragment : Fragment(), OnPostActionListener {
             ).show()
         }
 
+        // Получаем выбранных спикеров
         setFragmentResultListener(REQUEST_KEY) { _, bundle ->
             val selectedIds = bundle.getLongArray(SELECTED_USERS_KEY)?.toSet() ?: emptySet()
-            viewModel.setParticipantIds(selectedIds)
+            Log.d(TAG, "Speakers selected: ${selectedIds.joinToString()}")
+            viewModel.setSpeakerIds(selectedIds)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
     }
 
     override fun onStart() {
@@ -382,11 +379,13 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         findNavController().navigate(R.id.locationPickerFragment)
     }
 
-    private fun openUserSelection() {
+    private fun openSpeakersSelection() {
         findNavController().navigate(
             R.id.userSelectionFragment,
             Bundle().apply {
-                putLongArray("selected_ids", viewModel.participantIds.value?.toLongArray() ?: longArrayOf())
+                putLongArray("selected_ids", viewModel.speakerIds.value?.toLongArray() ?: longArrayOf())
+                putString("title", "Select speakers")
+                putString("selection_mode", "speakers") // Указываем, что выбираем спикеров
             }
         )
     }
@@ -540,12 +539,13 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         }
     }
 
-    private fun updateSelectedUsers() {
+    // Обновляем отображение выбранных спикеров
+    private fun updateSelectedSpeakersDisplay() {
         val allUsers = usersViewModel.users.value ?: return
-        val selectedIds = viewModel.participantIds.value ?: emptySet()
-        val selectedUsers = allUsers.filter { it.id in selectedIds }
+        val selectedIds = viewModel.speakerIds.value ?: emptySet()
+        val selectedSpeakers = allUsers.filter { it.id in selectedIds }
 
-        if (selectedUsers.isEmpty()) {
+        if (selectedSpeakers.isEmpty()) {
             binding.llSelectedUsers.visibility = View.GONE
             binding.tvMentionedLabel.visibility = View.GONE
             return
@@ -553,6 +553,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
 
         binding.llSelectedUsers.visibility = View.VISIBLE
         binding.tvMentionedLabel.visibility = View.VISIBLE
+        binding.tvMentionedLabel.text = "Speakers:" // Меняем текст на "Speakers:"
         binding.llSelectedUsers.removeAllViews()
 
         val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)
@@ -561,7 +562,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         val countMarginEnd = resources.getDimensionPixelSize(R.dimen.mention_count_margin)
 
         val iconView = ImageView(requireContext()).apply {
-            setImageResource(R.drawable.ic_mentioned)
+            setImageResource(R.drawable.ic_mentioned) // Иконка для спикеров
             layoutParams = ViewGroup.MarginLayoutParams(avatarSize, avatarSize).apply {
                 marginEnd = iconMarginEnd
             }
@@ -570,7 +571,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         binding.llSelectedUsers.addView(iconView)
 
         val countView = TextView(requireContext()).apply {
-            text = selectedUsers.size.toString()
+            text = selectedSpeakers.size.toString()
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 avatarSize
@@ -588,12 +589,12 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         }
         binding.llSelectedUsers.addView(countView)
 
-        val visibleCount = minOf(selectedUsers.size, 5)
-        val extraCount = selectedUsers.size - 5
+        val visibleCount = minOf(selectedSpeakers.size, 5)
+        val extraCount = selectedSpeakers.size - 5
 
         for (i in 0 until visibleCount) {
-            val user = selectedUsers[i]
-            val avatarView = createAvatarView(user)
+            val user = selectedSpeakers[i]
+            val avatarView = createSpeakerAvatarView(user)
             val layoutParams = avatarView.layoutParams as ViewGroup.MarginLayoutParams
             if (i > 0) {
                 layoutParams.marginStart = overlap
@@ -604,7 +605,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
 
         if (extraCount > 0) {
             val plusButton = createPlusButton {
-                openUserSelection()
+                openSpeakersSelection()
             }
             val layoutParams = plusButton.layoutParams as ViewGroup.MarginLayoutParams
             if (visibleCount > 0) {
@@ -615,7 +616,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         }
     }
 
-    private fun createAvatarView(user: User): View {
+    private fun createSpeakerAvatarView(user: User): View {
         val strokeWidth = resources.getDimensionPixelSize(R.dimen.avatar_stroke_width)
         val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)
 
@@ -629,7 +630,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
             }
             clipToOutline = true
             setOnClickListener {
-                showRemoveUserDialog(user)
+                showRemoveSpeakerDialog(user)
             }
         }
 
@@ -714,14 +715,14 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         return container
     }
 
-    private fun showRemoveUserDialog(user: User) {
+    private fun showRemoveSpeakerDialog(user: User) {
         AlertDialog.Builder(requireContext())
-            .setTitle("Убрать участника")
-            .setMessage("Убрать ${user.name} из участников?")
+            .setTitle("Убрать спикера")
+            .setMessage("Убрать ${user.name} из спикеров?")
             .setPositiveButton("Да") { _, _ ->
-                val currentIds = viewModel.participantIds.value?.toMutableSet() ?: return@setPositiveButton
+                val currentIds = viewModel.speakerIds.value?.toMutableSet() ?: return@setPositiveButton
                 currentIds.remove(user.id)
-                viewModel.setParticipantIds(currentIds)
+                viewModel.setSpeakerIds(currentIds)
             }
             .setNegativeButton("Нет", null)
             .show()
@@ -733,6 +734,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         Log.d(TAG, "viewModel.eventDateTime.value = ${viewModel.eventDateTime.value}")
         Log.d(TAG, "viewModel.isEditing.value = ${viewModel.isEditing.value}")
         Log.d(TAG, "viewModel.editingEventId.value = ${viewModel.editingEventId.value}")
+        Log.d(TAG, "viewModel.speakerIds.value = ${viewModel.speakerIds.value}")
 
         if (viewModel.isSaving.value == true) {
             Toast.makeText(requireContext(), "Saving in progress", Toast.LENGTH_SHORT).show()
@@ -762,7 +764,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
                 viewModel.updateEvent(
                     editingEventId, text, viewModel.attachment.value, viewModel.coordinates.value,
                     viewModel.eventType.value ?: EventType.OFFLINE, eventDateTime,
-                    viewModel.participantIds.value
+                    viewModel.speakerIds.value // Передаем спикеров
                 )
             } else {
                 Log.e(TAG, "editingEventId is NULL!")
@@ -773,7 +775,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
             viewModel.saveEvent(
                 text, viewModel.attachment.value, viewModel.coordinates.value,
                 viewModel.eventType.value ?: EventType.OFFLINE, eventDateTime,
-                viewModel.participantIds.value
+                viewModel.speakerIds.value // Передаем спикеров
             )
         }
     }
