@@ -2,7 +2,6 @@ package ru.netology.nework.ui.users
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -56,7 +55,6 @@ class UserDetailFragment : Fragment() {
 
         setupFragments()
         setupTabs()
-        setupParallaxScroll()
         setupListeners()
 
         viewModel.loadUserDetail(userId, user)
@@ -83,20 +81,6 @@ class UserDetailFragment : Fragment() {
                 else -> ""
             }
         }.attach()
-    }
-
-    private fun setupParallaxScroll() {
-        binding.nestedScrollView.setOnScrollChangeListener {
-                _: View?, _: Int, scrollY: Int, _: Int, _: Int ->
-
-            val maxTranslation = binding.avatarContainer.height / 2f
-            val translationY = (scrollY * 0.5f).coerceAtMost(maxTranslation)
-            binding.avatarContainer.translationY = -translationY
-
-            val scale = (1f - (scrollY / 500f).coerceIn(0f, 0.3f))
-            binding.ivAvatar.scaleX = scale
-            binding.ivAvatar.scaleY = scale
-        }
     }
 
     private fun setupListeners() {
@@ -140,9 +124,7 @@ class UserDetailFragment : Fragment() {
 
     private fun updateUserInfo(user: User) {
         binding.apply {
-            // Загрузка аватара или создание круга с буквой
             if (!user.avatar.isNullOrBlank()) {
-                // Если есть фото - загружаем его
                 Glide.with(requireContext())
                     .load(user.avatar)
                     .placeholder(R.drawable.ic_account_circle)
@@ -150,26 +132,12 @@ class UserDetailFragment : Fragment() {
                     .centerCrop()
                     .into(ivAvatar)
             } else {
-                // Если фото нет - создаем круг с первой буквой имени
                 val firstLetter = user.name.firstOrNull()?.toString() ?: "?"
-
-                // Создаем круг с буквой
                 val letterDrawable = LetterAvatarDrawable(
                     letter = firstLetter,
                     backgroundColor = ContextCompat.getColor(requireContext(), R.color.purple_primary)
                 )
-
-                // Устанавливаем размеры
-                val size = resources.getDimensionPixelSize(R.dimen.avatar_size)
-                letterDrawable.setBounds(0, 0, size, size)
-
-                // Создаем Bitmap из drawable
-                val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-                val canvas = Canvas(bitmap)
-                letterDrawable.draw(canvas)
-
-                // Устанавливаем в ImageView
-                ivAvatar.setImageBitmap(bitmap)
+                ivAvatar.setImageDrawable(letterDrawable)
             }
         }
     }

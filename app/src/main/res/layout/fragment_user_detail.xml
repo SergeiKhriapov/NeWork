@@ -7,70 +7,55 @@
     android:background="@color/white">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/white"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:elevation="0dp">
 
+        <!-- Avatar Container - уходит вверх при скролле -->
+        <FrameLayout
+            android:id="@+id/avatarContainer"
+            android:layout_width="match_parent"
+            android:layout_height="258dp"
+            android:background="@color/white"
+            app:layout_scrollFlags="scroll|enterAlways"
+            android:clipToOutline="true">
+
+            <ImageView
+                android:id="@+id/ivAvatar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"/>
+
+        </FrameLayout>
+
+        <!-- Tabs - ЗАКРЕПЛЕНЫ, не скроллятся, всегда вверху -->
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@color/white"
+            app:layout_scrollFlags="enterAlways"
+            app:tabBackground="@color/background"
+            app:tabGravity="fill"
+            app:tabIndicatorColor="@color/purple_primary"
+            app:tabIndicatorHeight="3dp"
+            app:tabMode="fixed"
+            app:tabSelectedTextColor="@color/purple_primary"
+            app:tabTextColor="@color/textColor"
+            app:tabTextAppearance="@style/CustomTabTextAppearance"
+            app:tabRippleColor="@android:color/transparent" />
+
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/nestedScrollView"
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/white"
-        android:fillViewport="true"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/white"
-            android:orientation="vertical">
-
-            <!-- Avatar Container - размер как в макете 415x258 -->
-            <FrameLayout
-                android:id="@+id/avatarContainer"
-                android:layout_width="match_parent"
-                android:layout_height="258dp"
-                android:background="@color/white"
-                android:clipToOutline="true">
-
-                <ImageView
-                    android:id="@+id/ivAvatar"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:scaleType="centerCrop"/>
-
-            </FrameLayout>
-
-            <!-- Tabs в стиле Material Design 3 -->
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/tabLayout"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:background="@color/white"
-                app:tabBackground="@color/background"
-                app:tabGravity="fill"
-                app:tabIndicatorColor="@color/purple_primary"
-                app:tabIndicatorHeight="3dp"
-                app:tabMode="fixed"
-                app:tabSelectedTextColor="@color/purple_primary"
-                app:tabTextColor="@color/textColor"
-                app:tabTextAppearance="@style/CustomTabTextAppearance"
-                app:tabRippleColor="@android:color/transparent" />
-
-            <!-- ViewPager2 для Wall и Jobs -->
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/viewPager"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/white"
-                android:nestedScrollingEnabled="false" />
-
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <!-- Progress Bar -->
     <ProgressBar
