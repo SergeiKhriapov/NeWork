@@ -52,7 +52,13 @@
         android:id="@+id/usersFragment"
         android:name="ru.netology.nework.ui.users.UsersFragment"
         android:label="Users"
-        tools:layout="@layout/fragment_users" />
+        tools:layout="@layout/fragment_users">
+
+        <action
+            android:id="@+id/action_users_to_userDetail"
+            app:destination="@id/userDetailFragment" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/eventsFragment"
@@ -99,5 +105,22 @@
         android:name="ru.netology.nework.ui.users.UsersListFragment"
         android:label="UsersListFragment"
         tools:layout="@layout/fragment_users" />
+
+    <fragment
+        android:id="@+id/userDetailFragment"
+        android:name="ru.netology.nework.ui.users.UserDetailFragment"
+        android:label="User Detail"
+        tools:layout="@layout/fragment_user_detail">
+
+        <argument
+            android:name="user_id"
+            app:argType="long" />
+
+        <argument
+            android:name="user"
+            app:argType="ru.netology.nework.model.User"
+            android:defaultValue="@null" />
+
+    </fragment>
 
 </navigation>

@@ -174,6 +174,14 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 hideFab()
             }
 
+            R.id.userDetailFragment -> {
+                Log.d("MainActivity", "User detail - hiding FAB and bottom nav")
+                profileMenuItem?.isVisible = false
+                postMenuItem?.isVisible = false
+                hideBottomNav()
+                hideFab()
+            }
+
             R.id.newPostFragment -> {
                 Log.d("MainActivity", "Hiding FAB and BottomNav (newPostFragment)")
                 profileMenuItem?.isVisible = false
@@ -187,7 +195,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = true
                 hideBottomNav()
-                hideFab()  // Скрываем глобальный FAB во всех этих фрагментах
+                hideFab()
             }
 
             R.id.loginFragment, R.id.registerFragment -> {

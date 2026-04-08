@@ -13,6 +13,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 import ru.netology.nework.data.api.ApiKeyInterceptor
 import ru.netology.nework.data.api.ApiService
 import ru.netology.nework.data.api.AuthInterceptor
+import ru.netology.nework.data.api.adapter.OffsetDateTimeAdapter  // ← этот импорт
 import ru.netology.nework.data.datastore.TokenManager
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
@@ -34,9 +35,9 @@ object NetworkModule {
         }
 
         return OkHttpClient.Builder()
-            .connectTimeout(30, TimeUnit.SECONDS)      // Увеличен с 10 до 30 секунд
-            .writeTimeout(30, TimeUnit.SECONDS)        // Добавлен таймаут на запись
-            .readTimeout(30, TimeUnit.SECONDS)         // Добавлен таймаут на чтение
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
             .addInterceptor(logging)
             .addInterceptor(apiKeyInterceptor)
             .addInterceptor(authInterceptor)
@@ -56,6 +57,7 @@ object NetworkModule {
     @Singleton
     fun provideMoshi(): Moshi {
         return Moshi.Builder()
+            .add(OffsetDateTimeAdapter())  // ← теперь не красный
             .add(KotlinJsonAdapterFactory())
             .build()
     }

@@ -4,7 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nework.R
@@ -40,7 +42,18 @@ class UsersListFragment : Fragment() {
     }
 
     private fun setupRecyclerView(users: List<User>) {
-        adapter = UsersAdapter()
+        adapter = UsersAdapter { user ->
+            // Переход на детальный просмотр пользователя
+            try {
+                val bundle = Bundle().apply {
+                    putLong("user_id", user.id)
+                    putParcelable("user", user)
+                }
+                findNavController().navigate(R.id.userDetailFragment, bundle)
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
         binding.rvUsers.layoutManager = LinearLayoutManager(requireContext())
         binding.rvUsers.adapter = adapter
         adapter.submitList(users)

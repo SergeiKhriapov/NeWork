@@ -12,19 +12,23 @@ import ru.netology.nework.databinding.ItemUserBinding
 import ru.netology.nework.model.User
 import ru.netology.nework.utils.LetterAvatarDrawable
 
-class UsersAdapter : ListAdapter<User, UsersAdapter.UserViewHolder>(DiffCallback) {
+class UsersAdapter(
+    private val onUserClickListener: (User) -> Unit
+) : ListAdapter<User, UsersAdapter.UserViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder {
         val binding = ItemUserBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return UserViewHolder(binding)
+        return UserViewHolder(binding, onUserClickListener)
     }
 
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
-    class UserViewHolder(private val binding: ItemUserBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+    class UserViewHolder(
+        private val binding: ItemUserBinding,
+        private val onUserClickListener: (User) -> Unit
+    ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(user: User) {
             binding.apply {
@@ -46,6 +50,11 @@ class UsersAdapter : ListAdapter<User, UsersAdapter.UserViewHolder>(DiffCallback
                         backgroundColor = ContextCompat.getColor(itemView.context, R.color.purple_primary)
                     )
                     ivAvatar.setImageDrawable(drawable)
+                }
+
+                // Обработка клика по элементу
+                root.setOnClickListener {
+                    onUserClickListener(user)
                 }
             }
         }

@@ -6,7 +6,9 @@ import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.*
 import ru.netology.nework.api.dto.EventDto
-import ru.netology.nework.data.api.dto.*  // ← импортируем все из одного пакета
+import ru.netology.nework.data.api.dto.*
+import ru.netology.nework.model.Job
+import ru.netology.nework.model.Post
 
 interface ApiService {
 
@@ -112,7 +114,14 @@ interface ApiService {
     @DELETE("api/events/{id}")
     suspend fun deleteEvent(@Path("id") id: Long): Response<Unit>
 
-    // В ApiService добавьте:
     @GET("api/users/{id}")
     suspend fun getUserById(@Path("id") id: Long): Response<UserDto>
+
+    // Стена пользователя (посты) - ИСПРАВЛЕНО: возвращает Response
+    @GET("api/{authorId}/wall")
+    suspend fun getUserWall(@Path("authorId") authorId: Long): Response<List<PostDto>>
+
+    // Работы пользователя - ИСПРАВЛЕНО: возвращает Response
+    @GET("api/{userId}/jobs")
+    suspend fun getUserJobs(@Path("userId") userId: Long): Response<List<JobDto>>
 }
