@@ -6,7 +6,8 @@
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@color/white">
 
         <!-- Контент под тулбаром -->
         <ScrollView
@@ -16,7 +17,7 @@
             android:layout_marginTop="64dp"
             android:fillViewport="true"
             android:paddingStart="24dp"
-            android:paddingEnd="24dp">  <!-- отступ равен высоте тулбара -->
+            android:paddingEnd="24dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -41,46 +42,56 @@
                         app:shapeAppearanceOverlay="@style/CircleImageStyle"/>
                 </FrameLayout>
 
-                <!-- Поля ввода -->
+                <!-- Поле логина -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/til_login"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    app:boxBackgroundMode="outline">
+                    app:boxBackgroundColor="@color/filled_background"
+                    app:boxStrokeColor="@color/purple_primary"
+                    app:hintTextColor="@color/purple_primary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_login"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/Login"
-                        android:inputType="textEmailAddress" />
+                        android:inputType="textEmailAddress"
+                        android:textColor="@color/black" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <!-- Поле имени -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/til_name"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    app:boxBackgroundMode="outline">
+                    app:boxBackgroundColor="@color/filled_background"
+                    app:boxStrokeColor="@color/purple_primary"
+                    app:hintTextColor="@color/purple_primary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/Name"
-                        android:inputType="textPersonName" />
+                        android:inputType="textPersonName"
+                        android:textColor="@color/black" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <!-- Поле пароля -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/til_password"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    app:boxBackgroundMode="outline"
+                    app:boxBackgroundColor="@color/filled_background"
+                    app:boxStrokeColor="@color/purple_primary"
+                    app:hintTextColor="@color/purple_primary"
                     app:endIconMode="password_toggle">
 
                     <com.google.android.material.textfield.TextInputEditText
@@ -88,16 +99,20 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/Password"
-                        android:inputType="textPassword" />
+                        android:inputType="textPassword"
+                        android:textColor="@color/black" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <!-- Поле подтверждения пароля -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/til_password_confirm"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    app:boxBackgroundMode="outline"
+                    app:boxBackgroundColor="@color/filled_background"
+                    app:boxStrokeColor="@color/purple_primary"
+                    app:hintTextColor="@color/purple_primary"
                     app:endIconMode="password_toggle">
 
                     <com.google.android.material.textfield.TextInputEditText
@@ -105,7 +120,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/Confirm_password"
-                        android:inputType="textPassword" />
+                        android:inputType="textPassword"
+                        android:textColor="@color/black" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Кнопка регистрации -->
@@ -121,6 +137,7 @@
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="16sp"
+                    android:backgroundTint="@color/purple_primary"
                     app:iconGravity="textStart"
                     app:iconPadding="8dp"
                     app:strokeWidth="0dp" />

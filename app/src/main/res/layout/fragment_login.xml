@@ -6,7 +6,8 @@
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@color/white">
 
         <ScrollView
             android:id="@+id/scroll_content"
@@ -26,28 +27,33 @@
                 <!-- Поле логина -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/til_login"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    app:boxBackgroundMode="outline">
+                    app:boxBackgroundColor="@color/filled_background"
+                    app:boxStrokeColor="@color/purple_primary"
+                    app:hintTextColor="@color/purple_primary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_login"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/Login"
-                        android:inputType="textEmailAddress"/>
+                        android:inputType="textEmailAddress"
+                        android:textColor="@color/black" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Поле пароля -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/til_password"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    app:boxBackgroundMode="outline"
+                    app:boxBackgroundColor="@color/filled_background"
+                    app:boxStrokeColor="@color/purple_primary"
+                    app:hintTextColor="@color/purple_primary"
                     app:endIconMode="password_toggle">
 
                     <com.google.android.material.textfield.TextInputEditText
@@ -55,7 +61,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/Password"
-                        android:inputType="textPassword"/>
+                        android:inputType="textPassword"
+                        android:textColor="@color/black" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Кнопка входа -->
@@ -80,7 +87,7 @@
                     android:textColor="@color/purple_primary"
                     android:textSize="14sp"
                     android:fontFamily="sans-serif-medium"
-                    android:gravity="center"/>
+                    android:gravity="center" />
             </LinearLayout>
 
         </ScrollView>

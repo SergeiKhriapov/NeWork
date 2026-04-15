@@ -15,6 +15,6 @@
     <color name="primary">#6750A4</color>
     <color name="gray_200">#EEEEEE</color>
     <color name="textColorSecondary">#666666</color>
-
     <color name="fab">#EADDFF</color>
+    <color name="filled_background">#E6E0E9</color>
 </resources>
