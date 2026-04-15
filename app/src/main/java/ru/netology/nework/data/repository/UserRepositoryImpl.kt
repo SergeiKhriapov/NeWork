@@ -4,6 +4,7 @@ import android.util.Log
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import ru.netology.nework.data.api.ApiService
+import ru.netology.nework.data.api.dto.CreateJobRequest
 import ru.netology.nework.data.mapper.toDomain
 import ru.netology.nework.domain.repository.UserRepository
 import ru.netology.nework.model.Job
@@ -72,52 +73,114 @@ class UserRepositoryImpl @Inject constructor(
         val response = apiService.getUserJobs(userId)
         if (response.isSuccessful) {
             val jobsDto = response.body() ?: emptyList()
-            Log.d(TAG, "Received ${jobsDto.size} jobs for user $userId")
-            // Преобразуем JobDto в Job
+            Log.d(TAG, "=== getUserJobs for userId: $userId ===")
+            Log.d(TAG, "Received ${jobsDto.size} jobs")
+            jobsDto.forEachIndexed { index, jobDto ->
+                Log.d(TAG, "Job $index: id=${jobDto.id}, name=${jobDto.name}")
+            }
             Result.success(jobsDto.map { it.toDomain() })
         } else {
-            Log.e(TAG, "Error fetching jobs for user $userId: ${response.code()}")
-            Result.failure(Exception("Ошибка загрузки мест работы: ${response.code()}"))
+            Log.w(TAG, "Error fetching jobs for user $userId: ${response.code()}, returning empty list")
+            Result.success(emptyList())
         }
     } catch (e: Exception) {
         Log.e(TAG, "Exception in getUserJobs", e)
-        Result.failure(e)
+        Result.success(emptyList())
     }
 
     override suspend fun getUserDetail(userId: Long, user: User?): Result<UserRepository.UserDetailData> = try {
+        Log.d(TAG, "=== getUserDetail START for userId: $userId ===")
+
         coroutineScope {
+            Log.d(TAG, "Starting parallel requests for userId: $userId")
+
             val wallDeferred = async { getUserWall(userId) }
             val jobsDeferred = async { getUserJobs(userId) }
 
             val wallResult = wallDeferred.await()
             val jobsResult = jobsDeferred.await()
 
-            if (wallResult.isSuccess && jobsResult.isSuccess) {
-                val wallPosts = wallResult.getOrNull() ?: emptyList()
-                val jobs = jobsResult.getOrNull() ?: emptyList()
-                val userData = user ?: run {
-                    val userResult = getUserById(userId)
-                    userResult.getOrNull() ?: User(userId, "", "", null)
-                }
+            Log.d(TAG, "wallResult.isSuccess: ${wallResult.isSuccess}, jobsResult.isSuccess: ${jobsResult.isSuccess}")
 
-                Result.success(
-                    UserRepository.UserDetailData(
-                        user = userData,
-                        wallPosts = wallPosts,
-                        jobs = jobs
-                    )
-                )
-            } else {
-                val errorMessage = buildString {
-                    if (wallResult.isFailure) append("Ошибка загрузки постов. ")
-                    if (jobsResult.isFailure) append("Ошибка загрузки работ.")
-                    if (isEmpty()) append("Неизвестная ошибка")
-                }
-                Result.failure(Exception(errorMessage))
+            if (wallResult.isFailure) {
+                Log.e(TAG, "wallResult failed: ${wallResult.exceptionOrNull()?.message}")
             }
+            if (jobsResult.isFailure) {
+                Log.e(TAG, "jobsResult failed: ${jobsResult.exceptionOrNull()?.message}")
+            }
+
+            val wallPosts = wallResult.getOrNull() ?: emptyList()
+            val jobs = jobsResult.getOrNull() ?: emptyList()
+
+            Log.d(TAG, "Final result: wallPosts=${wallPosts.size}, jobs=${jobs.size}")
+            jobs.forEachIndexed { index, job ->
+                Log.d(TAG, "Final Job $index: id=${job.id}, name=${job.name}")
+            }
+
+            val userData = user ?: run {
+                val userResult = getUserById(userId)
+                userResult.getOrNull() ?: User(userId, "", "", null)
+            }
+
+            Result.success(
+                UserRepository.UserDetailData(
+                    user = userData,
+                    wallPosts = wallPosts,
+                    jobs = jobs
+                )
+            )
         }
     } catch (e: Exception) {
         Log.e(TAG, "Exception in getUserDetail", e)
+        Result.failure(e)
+    }
+
+    override suspend fun createJob(job: Job): Result<Job> = try {
+        Log.d(TAG, "Creating job: name=${job.name}, position=${job.position}")
+
+        val request = CreateJobRequest(
+            id = 0,
+            name = job.name,
+            position = job.position,
+            start = job.start.toString(),
+            finish = job.finish?.toString(),
+            link = job.link
+        )
+
+        val response = apiService.createJob(request)
+
+        Log.d(TAG, "Response code: ${response.code()}")
+
+        if (response.isSuccessful) {
+            val jobDto = response.body()
+            if (jobDto != null) {
+                Log.d(TAG, "Job created successfully with id: ${jobDto.id}")
+                Result.success(jobDto.toDomain())
+            } else {
+                Log.e(TAG, "Empty response body")
+                Result.failure(Exception("Пустой ответ от сервера"))
+            }
+        } else {
+            Log.e(TAG, "Error creating job: ${response.code()}, message: ${response.message()}")
+            Result.failure(Exception("Ошибка создания работы: ${response.code()}"))
+        }
+    } catch (e: Exception) {
+        Log.e(TAG, "Exception in createJob", e)
+        Result.failure(e)
+    }
+
+    override suspend fun deleteJob(jobId: Long): Result<Unit> = try {
+        Log.d(TAG, "Deleting job: $jobId")
+        val response = apiService.deleteJob(jobId)
+        if (response.isSuccessful) {
+            Log.d(TAG, "Job deleted successfully")
+            Result.success(Unit)
+        } else {
+            Log.e(TAG, "Error deleting job: ${response.code()}")
+            Result.failure(Exception("Ошибка удаления работы: ${response.code()}"))
+        }
+    } catch (e: Exception) {
+        Log.e(TAG, "Exception in deleteJob", e)
         Result.failure(e)
     }
 }

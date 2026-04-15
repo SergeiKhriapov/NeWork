@@ -17,19 +17,35 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Название компании -->
-            <TextView
-                android:id="@+id/tv_company_name"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/textColor"
-                tools:text="ПАО ПСБ" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-            <!-- Должность -->
+                <TextView
+                    android:id="@+id/tvCompanyName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/textColor"
+                    tools:text="ПАО ПСБ" />
+
+                <ImageButton
+                    android:id="@+id/btnDelete"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_delete_forever"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
             <TextView
-                android:id="@+id/tv_position"
+                android:id="@+id/tvPosition"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
@@ -37,9 +53,8 @@
                 android:layout_marginTop="4dp"
                 tools:text="Главный инженер-программист" />
 
-            <!-- Период работы -->
             <TextView
-                android:id="@+id/tv_period"
+                android:id="@+id/tvPeriod"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="13sp"
@@ -47,9 +62,8 @@
                 android:layout_marginTop="8dp"
                 tools:text="1 августа 2020 – НВ" />
 
-            <!-- Ссылка на сайт компании -->
             <LinearLayout
-                android:id="@+id/ll_link"
+                android:id="@+id/llLink"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -59,9 +73,8 @@
                 android:focusable="true"
                 android:background="?attr/selectableItemBackground">
 
-
                 <TextView
-                    android:id="@+id/tv_link"
+                    android:id="@+id/tvLink"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"

@@ -121,6 +121,11 @@
             app:argType="ru.netology.nework.model.User"
             android:defaultValue="@null" />
 
+        <argument
+            android:name="is_my_profile"
+            app:argType="boolean"
+            android:defaultValue="false" />
+
     </fragment>
 
 </navigation>

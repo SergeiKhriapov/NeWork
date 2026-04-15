@@ -31,4 +31,5 @@
     <string name="zoom_out">zoom_out</string>
     <string name="zoom_in">zoom_in</string>
     <string name="placeholder_login">placeholder_login</string>
+    <string name="logout">logout</string>
 </resources>

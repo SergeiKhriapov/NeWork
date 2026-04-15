@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import ru.netology.nework.R
 import ru.netology.nework.data.datastore.TokenManager
 import ru.netology.nework.model.User
+import ru.netology.nework.ui.users.UserDetailFragment
 import ru.netology.nework.utils.LetterAvatarDrawable
 import javax.inject.Inject
 
@@ -48,6 +49,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     private var profileMenuItem: MenuItem? = null
     private var postMenuItem: MenuItem? = null
+    private var logoutMenuItem: MenuItem? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,6 +83,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             combine(tokenManager.tokenFlow, tokenManager.currentUser) { token, user ->
                 isLoggedIn = token != null
                 currentUser = user
+                Log.d("MainActivity", "Current user: id=${user?.id}, name=${user?.name}, login=${user?.login}")
                 updateProfileIcon()
             }.collect { }
         }
@@ -90,6 +93,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         menuInflater.inflate(R.menu.top_app_bar_menu, menu)
         profileMenuItem = menu?.findItem(R.id.action_profile)
         postMenuItem = menu?.findItem(R.id.action_post)
+        logoutMenuItem = menu?.findItem(R.id.action_logout)
 
         val currentDestinationId = navController.currentDestination?.id
         updateMenuVisibilityForDestination(currentDestinationId)
@@ -118,6 +122,11 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 }
             }
 
+            R.id.action_logout -> {
+                logout()
+                true
+            }
+
             android.R.id.home -> {
                 onBackPressedDispatcher.onBackPressed()
                 true
@@ -129,6 +138,13 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp() || super.onSupportNavigateUp()
+    }
+
+    private fun logout() {
+        lifecycleScope.launch {
+            tokenManager.clearToken()
+            navController.navigate(R.id.feedFragment)
+        }
     }
 
     private fun hideFab() {
@@ -154,38 +170,58 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 Log.d("MainActivity", "Showing FAB for posts")
                 profileMenuItem?.isVisible = true
                 postMenuItem?.isVisible = false
+                logoutMenuItem?.isVisible = false
                 showBottomNav()
                 showFab()
+                setFabAction(R.id.newPostFragment)
             }
 
             R.id.eventsFragment -> {
                 Log.d("MainActivity", "Showing FAB for events")
                 profileMenuItem?.isVisible = true
                 postMenuItem?.isVisible = false
+                logoutMenuItem?.isVisible = false
                 showBottomNav()
                 showFab()
+                setFabAction(R.id.newEventFragment)
             }
 
             R.id.usersFragment -> {
                 Log.d("MainActivity", "Hiding FAB for users (no create action)")
                 profileMenuItem?.isVisible = true
                 postMenuItem?.isVisible = false
+                logoutMenuItem?.isVisible = false
                 showBottomNav()
                 hideFab()
             }
 
             R.id.userDetailFragment -> {
-                Log.d("MainActivity", "User detail - hiding FAB and bottom nav")
+                Log.d("MainActivity", "User detail - hiding global FAB (using local FAB in JobsFragment)")
+                // Скрываем глобальную FAB, так как используем локальную в JobsFragment
+                hideFab()
+                hideBottomNav()
+
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false
-                hideBottomNav()
-                hideFab()
+
+                val navHostFragment = supportFragmentManager
+                    .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+                val currentFragment = navHostFragment.childFragmentManager.fragments.firstOrNull()
+
+                val isMyProfile = (currentFragment as? UserDetailFragment)?.isMyProfile ?: false
+
+                if (isMyProfile && isLoggedIn) {
+                    logoutMenuItem?.isVisible = true
+                } else {
+                    logoutMenuItem?.isVisible = false
+                }
             }
 
             R.id.newPostFragment -> {
                 Log.d("MainActivity", "Hiding FAB and BottomNav (newPostFragment)")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = true
+                logoutMenuItem?.isVisible = false
                 hideBottomNav()
                 hideFab()
             }
@@ -194,6 +230,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 Log.d("MainActivity", "Hiding FAB for newEventFragment and related fragments")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = true
+                logoutMenuItem?.isVisible = false
                 hideBottomNav()
                 hideFab()
             }
@@ -202,6 +239,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 Log.d("MainActivity", "Hiding FAB and BottomNav (login/register)")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false
+                logoutMenuItem?.isVisible = false
                 hideBottomNav()
                 hideFab()
             }
@@ -210,6 +248,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 Log.d("MainActivity", "Hiding FAB and BottomNav (detail fragments)")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false
+                logoutMenuItem?.isVisible = false
                 hideBottomNav()
                 hideFab()
             }
@@ -218,6 +257,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 Log.d("MainActivity", "Hiding FAB and BottomNav (usersListFragment)")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false
+                logoutMenuItem?.isVisible = false
                 hideBottomNav()
                 hideFab()
             }
@@ -226,9 +266,17 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 Log.d("MainActivity", "Unknown destination, showing FAB and BottomNav")
                 profileMenuItem?.isVisible = true
                 postMenuItem?.isVisible = false
+                logoutMenuItem?.isVisible = false
                 showBottomNav()
                 showFab()
             }
+        }
+    }
+
+    private fun setFabAction(destinationId: Int) {
+        val fab = findViewById<FloatingActionButton>(R.id.fab_create)
+        fab?.setOnClickListener {
+            navController.navigate(destinationId)
         }
     }
 
@@ -318,7 +366,14 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             visibility = if (isLoggedIn) View.VISIBLE else View.GONE
             setOnClickListener {
                 popupWindow.dismiss()
-                // переход на профиль
+                currentUser?.let { user ->
+                    val bundle = Bundle().apply {
+                        putLong("user_id", user.id)
+                        putParcelable("user", user)
+                        putBoolean("is_my_profile", true)
+                    }
+                    navController.navigate(R.id.userDetailFragment, bundle)
+                }
             }
         }
 
@@ -326,12 +381,20 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             visibility = if (isLoggedIn) View.VISIBLE else View.GONE
             setOnClickListener {
                 popupWindow.dismiss()
-                lifecycleScope.launch {
-                    tokenManager.clearToken()
-                }
+                logout()
             }
         }
     }
+
+    fun updateLogoutButtonVisibility(isMyProfile: Boolean) {
+        logoutMenuItem?.isVisible = isMyProfile
+        if (isMyProfile) {
+            profileMenuItem?.isVisible = false
+            postMenuItem?.isVisible = false
+        }
+    }
+
+    fun getCurrentUserId(): Long? = currentUser?.id
 }
 
 interface OnPostActionListener {

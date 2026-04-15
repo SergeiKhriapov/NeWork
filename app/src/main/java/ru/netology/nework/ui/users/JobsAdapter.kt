@@ -14,16 +14,27 @@ import java.util.Locale
 class JobsAdapter : ListAdapter<Job, JobsAdapter.JobViewHolder>(JobDiffCallback()) {
 
     private var onLinkClickListener: ((String) -> Unit)? = null
+    private var onJobDeleteClickListener: ((Job) -> Unit)? = null
+    private var showDeleteButton = false
 
     fun setOnLinkClickListener(listener: (String) -> Unit) {
         onLinkClickListener = listener
+    }
+
+    fun setOnJobDeleteClickListener(listener: (Job) -> Unit) {
+        onJobDeleteClickListener = listener
+    }
+
+    fun setShowDeleteButton(show: Boolean) {
+        showDeleteButton = show
+        notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): JobViewHolder {
         val binding = ItemJobBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
         )
-        return JobViewHolder(binding, onLinkClickListener)
+        return JobViewHolder(binding, onLinkClickListener, onJobDeleteClickListener, showDeleteButton)
     }
 
     override fun onBindViewHolder(holder: JobViewHolder, position: Int) {
@@ -32,7 +43,9 @@ class JobsAdapter : ListAdapter<Job, JobsAdapter.JobViewHolder>(JobDiffCallback(
 
     class JobViewHolder(
         private val binding: ItemJobBinding,
-        private val onLinkClickListener: ((String) -> Unit)?
+        private val onLinkClickListener: ((String) -> Unit)?,
+        private val onJobDeleteClickListener: ((Job) -> Unit)?,
+        private val showDeleteButton: Boolean
     ) : RecyclerView.ViewHolder(binding.root) {
 
         private val dateFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault())
@@ -42,12 +55,10 @@ class JobsAdapter : ListAdapter<Job, JobsAdapter.JobViewHolder>(JobDiffCallback(
                 tvCompanyName.text = job.name
                 tvPosition.text = job.position
 
-                // Форматирование периода работы
                 val startDate = formatDate(job.start)
                 val endDate = job.finish?.let { formatDate(it) } ?: "НВ"
                 tvPeriod.text = "$startDate – $endDate"
 
-                // Обработка ссылки
                 if (!job.link.isNullOrBlank()) {
                     tvLink.text = job.link
                     llLink.visibility = android.view.View.VISIBLE
@@ -56,6 +67,11 @@ class JobsAdapter : ListAdapter<Job, JobsAdapter.JobViewHolder>(JobDiffCallback(
                     }
                 } else {
                     llLink.visibility = android.view.View.GONE
+                }
+
+                btnDelete.visibility = if (showDeleteButton) android.view.View.VISIBLE else android.view.View.GONE
+                btnDelete.setOnClickListener {
+                    onJobDeleteClickListener?.invoke(job)
                 }
             }
         }

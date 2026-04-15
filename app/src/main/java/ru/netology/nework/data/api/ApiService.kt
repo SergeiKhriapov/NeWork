@@ -117,11 +117,19 @@ interface ApiService {
     @GET("api/users/{id}")
     suspend fun getUserById(@Path("id") id: Long): Response<UserDto>
 
-    // Стена пользователя (посты) - ИСПРАВЛЕНО: возвращает Response
+    // Стена пользователя (посты)
     @GET("api/{authorId}/wall")
     suspend fun getUserWall(@Path("authorId") authorId: Long): Response<List<PostDto>>
 
-    // Работы пользователя - ИСПРАВЛЕНО: возвращает Response
+    // Работы пользователя - публичный эндпоинт, работает без токена
     @GET("api/{userId}/jobs")
     suspend fun getUserJobs(@Path("userId") userId: Long): Response<List<JobDto>>
+
+    // Создание работы - требует авторизации
+    @POST("api/my/jobs")
+    suspend fun createJob(@Body request: CreateJobRequest): Response<JobDto>
+
+    // Удаление работы - требует авторизации
+    @DELETE("api/my/jobs/{id}")
+    suspend fun deleteJob(@Path("id") id: Long): Response<Unit>
 }

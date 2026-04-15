@@ -1,5 +1,6 @@
 package ru.netology.nework.ui.users
 
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -62,6 +63,40 @@ class UserDetailViewModel @Inject constructor(
             }.onFailure { exception ->
                 _error.value = exception.message ?: "Ошибка при обновлении лайка"
             }
+        }
+    }
+
+    fun createJob(job: Job) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = userRepository.createJob(job)
+            result.onSuccess { newJob ->
+                val currentData = _userDetail.value
+                currentData?.let {
+                    val updatedJobs = it.jobs + newJob
+                    _userDetail.value = it.copy(jobs = updatedJobs)
+                }
+            }.onFailure { exception ->
+                _error.value = exception.message ?: "Ошибка создания работы"
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun deleteJob(job: Job) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = userRepository.deleteJob(job.id)
+            result.onSuccess {
+                val currentData = _userDetail.value
+                currentData?.let {
+                    val updatedJobs = it.jobs.filter { it.id != job.id }
+                    _userDetail.value = it.copy(jobs = updatedJobs)
+                }
+            }.onFailure { exception ->
+                _error.value = exception.message ?: "Ошибка удаления работы"
+            }
+            _isLoading.value = false
         }
     }
 

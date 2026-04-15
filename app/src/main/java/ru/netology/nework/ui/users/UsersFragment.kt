@@ -1,6 +1,7 @@
 package ru.netology.nework.ui.users
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,9 +12,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nework.R
+import ru.netology.nework.app.MainActivity
 import ru.netology.nework.databinding.FragmentUsersBinding
 import ru.netology.nework.model.User
 import ru.netology.nework.viewmodel.UsersViewModel
+
+private const val TAG = "UsersFragment"
 
 @AndroidEntryPoint
 class UsersFragment : Fragment() {
@@ -42,10 +46,19 @@ class UsersFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = UsersAdapter { user ->
-            // Переход на детальный просмотр пользователя через Bundle
+            val currentUserId = (requireActivity() as? MainActivity)?.getCurrentUserId()
+            val isMyProfile = user.id == currentUserId
+
+            Log.d(TAG, "=== User Clicked ===")
+            Log.d(TAG, "user.id = ${user.id}")
+            Log.d(TAG, "user.name = ${user.name}")
+            Log.d(TAG, "currentUserId = $currentUserId")
+            Log.d(TAG, "isMyProfile = $isMyProfile")
+
             val bundle = Bundle().apply {
                 putLong("user_id", user.id)
                 putParcelable("user", user)
+                putBoolean("is_my_profile", isMyProfile)
             }
             findNavController().navigate(R.id.userDetailFragment, bundle)
         }
@@ -55,11 +68,13 @@ class UsersFragment : Fragment() {
 
     private fun observeViewModel() {
         viewModel.users.observe(viewLifecycleOwner) { users ->
+            Log.d(TAG, "Received ${users.size} users")
             adapter.submitList(users)
         }
 
         viewModel.error.observe(viewLifecycleOwner) { errorMsg ->
             errorMsg?.let {
+                Log.e(TAG, "Error: $it")
                 Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
             }
         }

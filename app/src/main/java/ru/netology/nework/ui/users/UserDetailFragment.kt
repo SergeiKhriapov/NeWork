@@ -1,9 +1,10 @@
 package ru.netology.nework.ui.users
 
-import android.graphics.Bitmap
-import android.graphics.Canvas
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,14 +13,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.google.android.material.tabs.TabLayoutMediator
 import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nework.R
+import ru.netology.nework.app.MainActivity
 import ru.netology.nework.databinding.FragmentUserDetailBinding
+import ru.netology.nework.model.Job
 import ru.netology.nework.model.Post
 import ru.netology.nework.model.User
 import ru.netology.nework.utils.LetterAvatarDrawable
+
+private const val TAG = "UserDetailFragment"
 
 @AndroidEntryPoint
 class UserDetailFragment : Fragment() {
@@ -33,6 +39,11 @@ class UserDetailFragment : Fragment() {
     private lateinit var jobsFragment: JobsFragment
     private lateinit var pagerAdapter: UserDetailPagerAdapter
 
+    var isMyProfile = false
+        private set
+
+    private var pendingJobs: List<Job>? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -45,13 +56,17 @@ class UserDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Получаем аргументы из Bundle
         val userId = arguments?.getLong("user_id") ?: return
         val user = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             arguments?.getParcelable("user", User::class.java)
         } else {
             arguments?.getParcelable("user")
         }
+        isMyProfile = arguments?.getBoolean("is_my_profile", false) ?: false
+
+        Log.d(TAG, "isMyProfile = $isMyProfile")
+
+        (requireActivity() as? MainActivity)?.updateLogoutButtonVisibility(isMyProfile)
 
         setupFragments()
         setupTabs()
@@ -71,6 +86,62 @@ class UserDetailFragment : Fragment() {
             jobsFragment
         )
         binding.viewPager.adapter = pagerAdapter
+
+        waitForJobsFragmentAndShowFab(0)
+    }
+
+    private fun waitForJobsFragmentAndShowFab(attempt: Int) {
+        if (!isAdded || _binding == null) {
+            Log.d(TAG, "Fragment not added or binding null, stopping retry")
+            return
+        }
+
+        if (attempt >= 20) {
+            Log.e(TAG, "Failed to initialize JobsFragment after 20 attempts")
+            return
+        }
+
+        binding.viewPager.postDelayed({
+            if (!isAdded || _binding == null) {
+                Log.d(TAG, "Fragment not added or binding null after delay, stopping")
+                return@postDelayed
+            }
+
+            val isJobsFragmentReady = try {
+                jobsFragment.isAdded && jobsFragment.view != null && _binding != null
+            } catch (e: Exception) {
+                false
+            }
+
+            if (isJobsFragmentReady) {
+                Log.d(TAG, "JobsFragment is ready (attempt ${attempt + 1})")
+
+                if (isMyProfile) {
+                    Log.d(TAG, "My profile - showing FAB and delete buttons")
+                    jobsFragment.showAddButton(true)
+                    jobsFragment.showDeleteButton(true)
+                    jobsFragment.setOnAddJobClickListener {
+                        showAddJobDialog()
+                    }
+                    jobsFragment.setOnJobDeleteClickListener { job ->
+                        viewModel.deleteJob(job)
+                    }
+                } else {
+                    Log.d(TAG, "Not my profile - hiding FAB and delete buttons")
+                    jobsFragment.showAddButton(false)
+                    jobsFragment.showDeleteButton(false)
+                }
+
+                pendingJobs?.let { jobs ->
+                    jobsFragment.submitList(jobs)
+                    Log.d(TAG, "Submitted pending ${jobs.size} jobs to JobsFragment")
+                    pendingJobs = null
+                }
+            } else {
+                Log.d(TAG, "JobsFragment not ready yet, retrying (attempt ${attempt + 1})")
+                waitForJobsFragmentAndShowFab(attempt + 1)
+            }
+        }, 200)
     }
 
     private fun setupTabs() {
@@ -81,6 +152,7 @@ class UserDetailFragment : Fragment() {
                 else -> ""
             }
         }.attach()
+        Log.d(TAG, "Tabs setup complete")
     }
 
     private fun setupListeners() {
@@ -104,10 +176,18 @@ class UserDetailFragment : Fragment() {
     private fun observeViewModel() {
         viewModel.userDetail.observe(viewLifecycleOwner) { detail ->
             detail?.let {
+                Log.d(TAG, "User detail loaded: ${it.user.name}, jobs=${it.jobs.size}")
                 updateUserInfo(it.user)
                 updateToolbarTitle(it.user)
                 wallPostsFragment.submitList(it.wallPosts)
-                jobsFragment.submitList(it.jobs)
+
+                if (::jobsFragment.isInitialized && jobsFragment.isAdded && jobsFragment.view != null) {
+                    jobsFragment.submitList(it.jobs)
+                    Log.d(TAG, "Submitted ${it.jobs.size} jobs to JobsFragment directly")
+                } else {
+                    Log.d(TAG, "JobsFragment not ready, saving ${it.jobs.size} jobs for later")
+                    pendingJobs = it.jobs
+                }
             }
         }
 
@@ -117,6 +197,7 @@ class UserDetailFragment : Fragment() {
 
         viewModel.error.observe(viewLifecycleOwner) { error ->
             error?.let {
+                Log.e(TAG, "Error: $it")
                 Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
             }
         }
@@ -148,21 +229,30 @@ class UserDetailFragment : Fragment() {
     }
 
     private fun sharePost(post: Post) {
-        val shareIntent = android.content.Intent().apply {
-            action = android.content.Intent.ACTION_SEND
-            putExtra(android.content.Intent.EXTRA_TEXT, post.content)
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, post.content)
             type = "text/plain"
         }
-        startActivity(android.content.Intent.createChooser(shareIntent, "Share post"))
+        startActivity(Intent.createChooser(shareIntent, "Share post"))
     }
 
     private fun openPost(post: Post) {
-        // Открытие детального просмотра поста
+        // TODO: Открыть детальный просмотр поста
     }
 
     private fun openLink(url: String) {
-        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         startActivity(intent)
+    }
+
+    fun showAddJobDialog() {
+        Log.d(TAG, "showAddJobDialog() called")
+        val dialog = AddJobDialog { job ->
+            Log.d(TAG, "Job created: ${job.name}")
+            viewModel.createJob(job)
+        }
+        dialog.show(childFragmentManager, "AddJobDialog")
     }
 
     override fun onDestroyView() {
@@ -171,13 +261,14 @@ class UserDetailFragment : Fragment() {
     }
 
     companion object {
-        fun newInstance(userId: Long, user: User? = null): UserDetailFragment {
+        fun newInstance(userId: Long, user: User? = null, isMyProfile: Boolean = false): UserDetailFragment {
             return UserDetailFragment().apply {
                 arguments = Bundle().apply {
                     putLong("user_id", userId)
                     if (user != null) {
                         putParcelable("user", user)
                     }
+                    putBoolean("is_my_profile", isMyProfile)
                 }
             }
         }
