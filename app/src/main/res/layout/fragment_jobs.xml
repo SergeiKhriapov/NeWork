@@ -14,16 +14,4 @@
         android:paddingBottom="80dp"
         tools:listitem="@layout/item_job" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_add_job"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:backgroundTint="@color/fab"
-        android:contentDescription="@string/Create"
-        android:elevation="8dp"
-        android:visibility="gone"
-        app:shapeAppearanceOverlay="@style/FabRounded16"
-        app:srcCompat="@drawable/ic_plus_math"
-        app:tint="@color/black" />
-
 </FrameLayout>

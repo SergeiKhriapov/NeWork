@@ -108,7 +108,7 @@ class UserDetailFragment : Fragment() {
             }
 
             val isJobsFragmentReady = try {
-                jobsFragment.isAdded && jobsFragment.view != null && _binding != null
+                jobsFragment.isAdded && jobsFragment.view != null
             } catch (e: Exception) {
                 false
             }
@@ -117,18 +117,18 @@ class UserDetailFragment : Fragment() {
                 Log.d(TAG, "JobsFragment is ready (attempt ${attempt + 1})")
 
                 if (isMyProfile) {
-                    Log.d(TAG, "My profile - showing FAB and delete buttons")
-                    jobsFragment.showAddButton(true)
-                    jobsFragment.showDeleteButton(true)
-                    jobsFragment.setOnAddJobClickListener {
+                    Log.d(TAG, "My profile - showing FAB")
+                    binding.fabAddJob.visibility = View.VISIBLE
+                    binding.fabAddJob.setOnClickListener {
                         showAddJobDialog()
                     }
+                    jobsFragment.showDeleteButton(true)
                     jobsFragment.setOnJobDeleteClickListener { job ->
                         viewModel.deleteJob(job)
                     }
                 } else {
-                    Log.d(TAG, "Not my profile - hiding FAB and delete buttons")
-                    jobsFragment.showAddButton(false)
+                    Log.d(TAG, "Not my profile - hiding FAB")
+                    binding.fabAddJob.visibility = View.GONE
                     jobsFragment.showDeleteButton(false)
                 }
 
@@ -246,7 +246,7 @@ class UserDetailFragment : Fragment() {
         startActivity(intent)
     }
 
-    fun showAddJobDialog() {
+    private fun showAddJobDialog() {
         Log.d(TAG, "showAddJobDialog() called")
         val dialog = AddJobDialog { job ->
             Log.d(TAG, "Job created: ${job.name}")

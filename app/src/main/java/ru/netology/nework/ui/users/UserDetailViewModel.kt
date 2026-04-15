@@ -1,6 +1,5 @@
 package ru.netology.nework.ui.users
 
-import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,6 +12,9 @@ import ru.netology.nework.model.Job
 import ru.netology.nework.model.Post
 import ru.netology.nework.model.User
 import javax.inject.Inject
+import android.util.Log
+
+private const val TAG = "UserDetailViewModel"
 
 @HiltViewModel
 class UserDetailViewModel @Inject constructor(
@@ -28,6 +30,9 @@ class UserDetailViewModel @Inject constructor(
 
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> = _error
+
+    private val _toastMessage = MutableLiveData<String?>()
+    val toastMessage: LiveData<String?> = _toastMessage
 
     fun loadUserDetail(userId: Long, user: User? = null) {
         viewModelScope.launch {
@@ -69,14 +74,19 @@ class UserDetailViewModel @Inject constructor(
     fun createJob(job: Job) {
         viewModelScope.launch {
             _isLoading.value = true
+            Log.d(TAG, "Creating job: ${job.name}")
             val result = userRepository.createJob(job)
             result.onSuccess { newJob ->
+                Log.d(TAG, "Job created successfully with id: ${newJob.id}")
                 val currentData = _userDetail.value
                 currentData?.let {
-                    val updatedJobs = it.jobs + newJob
+                    val updatedJobs = listOf(newJob) + it.jobs
+                    Log.d(TAG, "Jobs count after addition: ${updatedJobs.size}")
                     _userDetail.value = it.copy(jobs = updatedJobs)
                 }
+                _toastMessage.value = "Работа добавлена"
             }.onFailure { exception ->
+                Log.e(TAG, "Error creating job: ${exception.message}")
                 _error.value = exception.message ?: "Ошибка создания работы"
             }
             _isLoading.value = false
@@ -93,11 +103,17 @@ class UserDetailViewModel @Inject constructor(
                     val updatedJobs = it.jobs.filter { it.id != job.id }
                     _userDetail.value = it.copy(jobs = updatedJobs)
                 }
+                _toastMessage.value = "Работа удалена"
             }.onFailure { exception ->
+                Log.e(TAG, "Error deleting job: ${exception.message}")
                 _error.value = exception.message ?: "Ошибка удаления работы"
             }
             _isLoading.value = false
         }
+    }
+
+    fun clearToastMessage() {
+        _toastMessage.value = null
     }
 
     private fun updatePostInWall(updatedPost: Post) {
