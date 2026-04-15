@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:background="@color/white">
 
     <TextView
         android:layout_width="match_parent"
@@ -12,72 +13,84 @@
         android:text="New job"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="@color/textColor"
+        android:textColor="@color/black"
         android:layout_marginBottom="16dp" />
 
     <!-- Поле Name -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_name"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        app:boxBackgroundMode="outline">
+        app:boxBackgroundColor="@color/filled_background"
+        app:boxStrokeColor="@color/purple_primary"
+        app:hintTextColor="@color/purple_primary">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Name"
-            android:inputType="textPersonName" />
+            android:inputType="textPersonName"
+            android:textColor="@color/black" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Поле Position -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_position"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        app:boxBackgroundMode="outline">
+        app:boxBackgroundColor="@color/filled_background"
+        app:boxStrokeColor="@color/purple_primary"
+        app:hintTextColor="@color/purple_primary">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_position"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Position"
-            android:inputType="textPersonName" />
+            android:inputType="textPersonName"
+            android:textColor="@color/black" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Поле Link -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_link"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        app:boxBackgroundMode="outline">
+        app:boxBackgroundColor="@color/filled_background"
+        app:boxStrokeColor="@color/purple_primary"
+        app:hintTextColor="@color/purple_primary">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_link"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Link"
-            android:inputType="textUri" />
+            android:inputType="textUri"
+            android:textColor="@color/black" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Дата -->
-    <TextView
+    <!-- Дата как Assistive Chip -->
+    <com.google.android.material.chip.Chip
         android:id="@+id/tv_start_date"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:background="@drawable/bg_date_picker"
-        android:gravity="center"
-        android:padding="12dp"
+        android:layout_gravity="start"
         android:text="Select date range"
-        android:textColor="@color/textColor"
         android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        app:chipBackgroundColor="@android:color/white"
+        app:chipStrokeColor="@color/gray_light"
+        app:chipStrokeWidth="1dp"
+        app:chipCornerRadius="8dp"
         android:clickable="true"
         android:focusable="true" />
 
@@ -89,7 +102,8 @@
         android:layout_marginTop="24dp"
         android:text="Create"
         android:textAllCaps="false"
-        android:backgroundTint="@color/purple_primary"
-        android:textColor="@android:color/white" />
+        android:textSize="16sp"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@color/purple_primary" />
 
 </LinearLayout>

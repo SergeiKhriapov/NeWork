@@ -17,4 +17,5 @@
     <color name="textColorSecondary">#666666</color>
     <color name="fab">#EADDFF</color>
     <color name="filled_background">#E6E0E9</color>
+    <color name="gray_light">#E0E0E0</color>
 </resources>
