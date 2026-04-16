@@ -126,6 +126,16 @@
             app:argType="boolean"
             android:defaultValue="false" />
 
+        <action
+            android:id="@+id/action_userDetailFragment_to_addJobFragment"
+            app:destination="@id/addJobFragment" />
+
     </fragment>
+
+    <fragment
+        android:id="@+id/addJobFragment"
+        android:name="ru.netology.nework.ui.users.AddJobFragment"
+        android:label="Add Job"
+        tools:layout="@layout/fragment_add_job" />
 
 </navigation>

@@ -3,18 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/white"
     android:orientation="vertical"
-    android:padding="24dp"
-    android:background="@color/white">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="New job"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="@color/black"
-        android:layout_marginBottom="16dp" />
+    android:padding="24dp">
 
     <!-- Поле Name -->
     <com.google.android.material.textfield.TextInputLayout
@@ -81,18 +72,18 @@
         android:id="@+id/tv_start_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
         android:layout_gravity="start"
+        android:layout_marginTop="16dp"
+        android:clickable="true"
+        android:focusable="true"
         android:text="Select date range"
+        android:textColor="@color/black"
         android:textSize="14sp"
         android:textStyle="bold"
-        android:textColor="@color/black"
         app:chipBackgroundColor="@android:color/white"
-        app:chipStrokeColor="@color/gray_light"
-        app:chipStrokeWidth="1dp"
         app:chipCornerRadius="8dp"
-        android:clickable="true"
-        android:focusable="true" />
+        app:chipStrokeColor="@color/gray_light"
+        app:chipStrokeWidth="1dp" />
 
     <!-- Кнопка Create -->
     <com.google.android.material.button.MaterialButton
@@ -100,10 +91,10 @@
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:layout_marginTop="24dp"
+        android:backgroundTint="@color/purple_primary"
         android:text="Create"
         android:textAllCaps="false"
-        android:textSize="16sp"
         android:textColor="@android:color/white"
-        android:backgroundTint="@color/purple_primary" />
+        android:textSize="16sp" />
 
 </LinearLayout>

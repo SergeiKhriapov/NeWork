@@ -217,6 +217,14 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 }
             }
 
+            R.id.addJobFragment -> {
+                profileMenuItem?.isVisible = false
+                postMenuItem?.isVisible = false
+                logoutMenuItem?.isVisible = false
+                hideBottomNav()
+                hideFab()
+            }
+
             R.id.newPostFragment -> {
                 Log.d("MainActivity", "Hiding FAB and BottomNav (newPostFragment)")
                 profileMenuItem?.isVisible = false
