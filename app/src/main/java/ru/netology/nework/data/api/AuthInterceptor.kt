@@ -23,7 +23,7 @@ class AuthInterceptor @Inject constructor(
             !original.url.encodedPath.contains("/authentication") &&
             !original.url.encodedPath.contains("/registration")
         ) {
-            requestBuilder.addHeader("Authorization", token) // просто токен, без Bearer
+            requestBuilder.addHeader("Authorization", token)
             Log.d(TAG, "Added token (no Bearer) for ${original.url}")
         }
 

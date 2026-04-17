@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.google.android.material.tabs.TabLayoutMediator
@@ -79,20 +78,37 @@ class UserDetailFragment : Fragment() {
         )
         binding.viewPager.adapter = pagerAdapter
 
-        if (isMyProfile) {
-            binding.fabAddJob.visibility = View.VISIBLE
-            binding.fabAddJob.setOnClickListener {
-                findNavController().navigate(R.id.addJobFragment)
-            }
+        setupFabForJobsTab()
 
+        if (isMyProfile) {
             jobsFragment.showDeleteButton(true)
             jobsFragment.setOnJobDeleteClickListener { job ->
                 viewModel.deleteJob(job)
             }
         } else {
-            binding.fabAddJob.visibility = View.GONE
             jobsFragment.showDeleteButton(false)
         }
+    }
+
+    private fun setupFabForJobsTab() {
+        // Изначально FAB скрыт (пока не переключились на вкладку Jobs)
+        binding.fabAddJob.visibility = View.GONE
+
+        // Слушаем переключение вкладок
+        binding.viewPager.registerOnPageChangeCallback(object : androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                // Показываем FAB только на вкладке Jobs (позиция 1) и только если это свой профиль
+                if (position == 1 && isMyProfile) {
+                    binding.fabAddJob.visibility = View.VISIBLE
+                    binding.fabAddJob.setOnClickListener {
+                        findNavController().navigate(R.id.addJobFragment)
+                    }
+                } else {
+                    binding.fabAddJob.visibility = View.GONE
+                }
+            }
+        })
     }
 
     private fun setupTabs() {
@@ -178,7 +194,10 @@ class UserDetailFragment : Fragment() {
     }
 
     private fun openPost(post: Post) {
-        // TODO: Open post detail
+        val bundle = Bundle().apply {
+            putLong("postId", post.id)
+        }
+        findNavController().navigate(R.id.postDetailFragment, bundle)
     }
 
     private fun openLink(url: String) {

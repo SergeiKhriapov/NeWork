@@ -7,9 +7,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
+        app:cardBackgroundColor="@color/background"
         app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        app:cardBackgroundColor="@color/background">
+        app:cardElevation="4dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -20,65 +20,66 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/tvCompanyName"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
                     android:textColor="@color/textColor"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
                     tools:text="ПАО ПСБ" />
 
                 <ImageButton
                     android:id="@+id/btnDelete"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:src="@drawable/ic_delete_forever"
                     android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_delete_forever"
                     android:visibility="gone"
                     tools:visibility="visible" />
-
             </LinearLayout>
+
+            <!-- Должность - увеличен отступ -->
+            <TextView
+                android:id="@+id/tvPeriod"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="0dp"
+                android:textColor="@color/textColor"
+                android:textSize="14sp"
+                tools:text="1 августа 2020 – НВ" />
 
             <TextView
                 android:id="@+id/tvPosition"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
+                android:layout_marginTop="12dp"
                 android:textColor="@color/textColor"
-                android:layout_marginTop="4dp"
+                android:textSize="16sp"
                 tools:text="Главный инженер-программист" />
 
-            <TextView
-                android:id="@+id/tvPeriod"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="13sp"
-                android:textColor="@color/textColor"
-                android:layout_marginTop="8dp"
-                tools:text="1 августа 2020 – НВ" />
-
+            <!-- Ссылка - синий цвет и увеличен отступ -->
             <LinearLayout
                 android:id="@+id/llLink"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
+                android:layout_marginTop="12dp"
+                android:background="?attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
-                android:background="?attr/selectableItemBackground">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/tvLink"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="13sp"
-                    android:textColor="@color/textColor"
+                    android:textColor="@color/purple_primary"
+                    android:textSize="14sp"
                     android:textStyle="bold"
                     tools:text="https://m2.material.io/components/cards" />
             </LinearLayout>
