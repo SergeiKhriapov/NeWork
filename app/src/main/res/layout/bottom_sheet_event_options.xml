@@ -22,7 +22,6 @@
             android:background="#79747E"
             android:alpha="0.3" />
 
-        <!-- Date -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -32,7 +31,6 @@
             android:textColor="@color/textColor"
             android:layout_marginBottom="8dp" />
 
-        <!-- Поле выбора даты и времени -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
@@ -55,7 +53,6 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Формат -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -64,7 +61,6 @@
             android:textColor="@color/textColor"
             android:layout_marginBottom="24dp" />
 
-        <!-- Type -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -74,7 +70,6 @@
             android:textColor="@color/textColor"
             android:layout_marginBottom="12dp" />
 
-        <!-- Radio Group вертикально -->
         <RadioGroup
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

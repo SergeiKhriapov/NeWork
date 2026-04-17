@@ -31,7 +31,7 @@ interface EventRepository {
         coords: Coordinates?,
         eventType: EventType,
         eventDateTime: LocalDateTime,
-        speakerIds: Set<Long>  // Используем speakerIds вместо participantIds
+        speakerIds: Set<Long>
     ): Result<Event>
 
     suspend fun updateEvent(
@@ -41,6 +41,6 @@ interface EventRepository {
         coords: Coordinates?,
         eventType: EventType,
         eventDateTime: LocalDateTime,
-        speakerIds: Set<Long>  // Используем speakerIds вместо participantIds
+        speakerIds: Set<Long>
     ): Result<Event>
 }

@@ -42,7 +42,6 @@ class TokenManager @Inject constructor(
         CoroutineScope(Dispatchers.IO).launch {
             context.dataStore.data.first().let { prefs ->
                 _token.value = prefs[TOKEN_KEY]
-                // Читаем userId как String и конвертируем в Long?
                 _currentUserId.value = prefs[USER_ID_KEY]?.toLongOrNull()
                 val name = prefs[USER_NAME_KEY]
                 val avatar = prefs[USER_AVATAR_KEY]

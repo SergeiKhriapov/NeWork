@@ -4,7 +4,6 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,7 +27,6 @@ import ru.netology.nework.model.EventType
 import ru.netology.nework.utils.DateUtils.formatForDisplay
 import ru.netology.nework.utils.LetterAvatarDrawable
 
-private const val TAG = "EventAdapter"
 private const val PROGRESS_UPDATE_INTERVAL_MS = 200L
 
 class EventAdapter(
@@ -67,19 +65,16 @@ class EventAdapter(
         }
 
         override fun onPlayerError(error: PlaybackException) {
-            Log.e(TAG, "Audio player error: ${error.message}")
             stopAudioPlayback()
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventViewHolder {
-        Log.d(TAG, "onCreateViewHolder")
         val binding = ItemEventBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return EventViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: EventViewHolder, position: Int) {
-        Log.d(TAG, "onBindViewHolder position=$position")
         holder.bind(getItem(position))
     }
 
@@ -163,7 +158,6 @@ class EventAdapter(
         fun bind(event: Event) = with(b) {
             currentEventId = event.id
 
-            // Header
             tvAuthor.text = event.author
 
             if (!event.authorAvatar.isNullOrBlank()) {
@@ -186,14 +180,12 @@ class EventAdapter(
 
             tvDate.text = event.published.formatForDisplay()
 
-            // Event info
             tvEventStatus.text = when (event.type) {
                 EventType.OFFLINE -> "Offline"
                 EventType.ONLINE -> "Online"
             }
             tvEventDate.text = event.datetime.formatForDisplay()
 
-            // Content
             if (event.content.isBlank()) {
                 tvContent.visibility = View.GONE
             } else {
@@ -201,7 +193,6 @@ class EventAdapter(
                 tvContent.text = event.content
             }
 
-            // Link
             if (!event.link.isNullOrBlank()) {
                 tvLink.visibility = View.VISIBLE
                 tvLink.text = event.link
@@ -209,7 +200,6 @@ class EventAdapter(
                 tvLink.visibility = View.GONE
             }
 
-            // Actions
             tvLikes.text = event.likeOwnerIds.size.toString()
             ivLike.setImageResource(
                 if (event.likedByMe) R.drawable.ic_liked else R.drawable.ic_like
@@ -230,7 +220,6 @@ class EventAdapter(
                 onParticipate(event)
             }
 
-            // Media
             mediaContainer.visibility = View.GONE
             ivImage.visibility = View.GONE
             ivVideoPreview.visibility = View.GONE
@@ -292,7 +281,6 @@ class EventAdapter(
                 }
             }
 
-            // Menu (edit/delete)
             if (isOwnedByUser(event)) {
                 btnMore.visibility = View.VISIBLE
                 btnMore.setOnClickListener { onMenu(event, btnMore) }
@@ -300,7 +288,6 @@ class EventAdapter(
                 btnMore.visibility = View.GONE
             }
 
-            // Open on click
             root.setOnClickListener { onOpen(event) }
         }
 

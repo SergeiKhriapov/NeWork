@@ -2,7 +2,6 @@ package ru.netology.nework.ui.events
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -49,7 +48,7 @@ class EventsFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         showFab()
-        viewModel.loadEvents()  // Перезагружаем события при возврате
+        viewModel.loadEvents()
     }
 
     override fun onPause() {
@@ -83,7 +82,6 @@ class EventsFragment : Fragment() {
                 findNavController().navigate(R.id.newEventFragment)
             }
         } catch (e: Exception) {
-            Log.e("EventsFragment", "Error setting up FAB: ${e.message}")
         }
     }
 
@@ -91,7 +89,6 @@ class EventsFragment : Fragment() {
         try {
             requireActivity().findViewById<FloatingActionButton>(R.id.fab_create)?.show()
         } catch (e: Exception) {
-            Log.e("EventsFragment", "Error showing FAB: ${e.message}")
         }
     }
 
@@ -99,7 +96,6 @@ class EventsFragment : Fragment() {
         try {
             requireActivity().findViewById<FloatingActionButton>(R.id.fab_create)?.hide()
         } catch (e: Exception) {
-            Log.e("EventsFragment", "Error hiding FAB: ${e.message}")
         }
     }
 
@@ -145,19 +141,15 @@ class EventsFragment : Fragment() {
             }
             popup.show()
         } catch (e: Exception) {
-            Log.e("EventsFragment", "Error showing popup menu: ${e.message}")
         }
     }
 
     private fun editEvent(event: Event) {
-        Log.d("EventsFragment", "editEvent: event.id = ${event.id}")
-        Log.d("EventsFragment", "editEvent: event.datetime = ${event.datetime}")
-
         val bundle = Bundle().apply {
             putLong("eventId", event.id)
             putString("content", event.content)
             putString("eventType", event.type.name)
-            putString("eventDateTime", event.datetime.toString())  // Преобразуем OffsetDateTime в строку
+            putString("eventDateTime", event.datetime.toString())
             putString("attachmentUrl", event.attachment?.url ?: "")
             putString("attachmentType", event.attachment?.type?.name ?: "")
             putDouble("lat", event.coords?.lat ?: 0.0)
@@ -165,18 +157,17 @@ class EventsFragment : Fragment() {
             putLongArray("participantIds", event.participantsIds.toLongArray())
         }
 
-        Log.d("EventsFragment", "editEvent: eventDateTime string = ${bundle.getString("eventDateTime")}")
         findNavController().navigate(R.id.newEventFragment, bundle)
     }
 
     private fun showDeleteConfirmation(eventId: Long) {
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Удалить событие")
-            .setMessage("Вы уверены, что хотите удалить это событие?")
-            .setPositiveButton("Да") { _, _ ->
+            .setTitle("Delete event")
+            .setMessage("Are you sure you want to delete this event?")
+            .setPositiveButton("Yes") { _, _ ->
                 viewModel.deleteEvent(eventId)
             }
-            .setNegativeButton("Нет", null)
+            .setNegativeButton("No", null)
             .show()
     }
 
@@ -184,12 +175,12 @@ class EventsFragment : Fragment() {
         val shareText = "${event.author}: ${event.content}\n\n" +
                 "📅 ${event.datetime.formatForDisplay()}\n" +
                 "📍 ${event.type}\n\n" +
-                "Присоединяйтесь в NeWork!"
+                "Join on NeWork!"
         val sendIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, shareText)
         }
-        startActivity(Intent.createChooser(sendIntent, "Поделиться событием"))
+        startActivity(Intent.createChooser(sendIntent, "Share event"))
     }
 
     override fun onDestroyView() {

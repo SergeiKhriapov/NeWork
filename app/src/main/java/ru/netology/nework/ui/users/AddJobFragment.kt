@@ -50,7 +50,7 @@ class AddJobFragment : Fragment() {
                     val dateText = if (endDate != null) {
                         "$startDate – $endDate"
                     } else {
-                        "$startDate – НВ"
+                        "$startDate – Present"
                     }
                     binding.tvStartDate.text = dateText
                 },

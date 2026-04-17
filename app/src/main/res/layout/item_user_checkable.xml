@@ -47,7 +47,7 @@
                     android:textColor="@color/textColor"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    tools:text="Lydia Westervelt" />
+                    tools:text="User Name" />
 
                 <TextView
                     android:id="@+id/tv_login"
@@ -55,10 +55,9 @@
                     android:layout_height="wrap_content"
                     android:textColor="@color/textColor"
                     android:textSize="14sp"
-                    tools:text="lwestervelt" />
+                    tools:text="username" />
             </LinearLayout>
 
-            <!-- ✅ ИСПРАВЛЕННЫЙ CHECKBOX -->
             <CheckBox
                 android:id="@+id/cb_selected"
                 android:layout_width="wrap_content"

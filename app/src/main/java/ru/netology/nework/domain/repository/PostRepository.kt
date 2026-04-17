@@ -14,22 +14,20 @@ interface PostRepository {
     suspend fun likePost(id: Long): Result<Post>
     suspend fun unlikePost(id: Long): Result<Post>
 
-    // Создание нового поста (id = 0)
     suspend fun savePost(
-        content: String,  // убрал nullable
+        content: String,
         attachment: Attachment?,
         coords: Coordinates?,
         mentionIds: Set<Long>?
-    ): Result<Post>  // Возвращаем созданный пост
+    ): Result<Post>
 
-    // Обновление существующего поста
     suspend fun updatePost(
         id: Long,
-        content: String,  // убрал nullable
+        content: String,
         attachment: Attachment?,
         coords: Coordinates?,
         mentionIds: Set<Long>?
-    ): Result<Post>  // Возвращаем обновленный пост
+    ): Result<Post>
 
     suspend fun deletePost(id: Long): Result<Unit>
 }

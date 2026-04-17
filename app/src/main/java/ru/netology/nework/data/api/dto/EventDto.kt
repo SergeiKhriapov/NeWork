@@ -43,7 +43,6 @@ data class EventDto(
     val users: Map<Long, UserPreviewDto>?
 )
 
-// DTO для создания/обновления события
 @JsonClass(generateAdapter = true)
 data class CreateEventRequest(
     @Json(name = "id") val id: Long = 0,

@@ -17,7 +17,6 @@
             android:orientation="vertical"
             android:padding="12dp">
 
-            <!-- HEADER (аватар + имя/логин) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -53,7 +52,7 @@
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@color/textColor"
-                        tools:text="Lydia Westervelt" />
+                        tools:text="User Name" />
 
                     <TextView
                         android:id="@+id/tv_login"
@@ -61,10 +60,8 @@
                         android:layout_height="wrap_content"
                         android:textSize="14sp"
                         android:textColor="@color/textColor"
-                        tools:text="lwestervelt" />
+                        tools:text="username" />
                 </LinearLayout>
-
-                <!-- Кнопка меню отсутствует, так как для пользователей не нужна -->
 
             </LinearLayout>
 

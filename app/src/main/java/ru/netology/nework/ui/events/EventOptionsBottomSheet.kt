@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.textfield.TextInputLayout
-import ru.netology.nework.R
 import ru.netology.nework.databinding.BottomSheetEventOptionsBinding
 import ru.netology.nework.model.EventType
 import java.time.LocalDateTime

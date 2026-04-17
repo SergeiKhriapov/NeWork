@@ -33,16 +33,13 @@ class DatePickerDialogFragment(
     }
 
     private fun setupDatePickers() {
-        // Устанавливаем начальные значения
         binding.etStartDate.setText(selectedStartDate)
         binding.etEndDate.setText(selectedEndDate)
 
-        // Обработчик для иконки event
         binding.ivEvent.setOnClickListener {
             Toast.makeText(requireContext(), "Open calendar", Toast.LENGTH_SHORT).show()
         }
 
-        // Обработчик для выбора даты начала (клик по полю)
         binding.etStartDate.setOnClickListener {
             showDatePicker { date ->
                 selectedStartDate = date
@@ -50,7 +47,6 @@ class DatePickerDialogFragment(
             }
         }
 
-        // Обработчик для выбора даты окончания (клик по полю)
         binding.etEndDate.setOnClickListener {
             showDatePicker { date ->
                 selectedEndDate = date

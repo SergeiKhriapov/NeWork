@@ -34,7 +34,7 @@ class UsersListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val users = arguments?.getParcelableArrayList<User>("users") ?: arrayListOf()
-        val title = arguments?.getString("title") ?: "Пользователи"
+        val title = arguments?.getString("title") ?: "Users"
 
         (requireActivity() as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.title = title
 
@@ -43,7 +43,6 @@ class UsersListFragment : Fragment() {
 
     private fun setupRecyclerView(users: List<User>) {
         adapter = UsersAdapter { user ->
-            // Переход на детальный просмотр пользователя
             try {
                 val bundle = Bundle().apply {
                     putLong("user_id", user.id)
@@ -51,7 +50,7 @@ class UsersListFragment : Fragment() {
                 }
                 findNavController().navigate(R.id.userDetailFragment, bundle)
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
         binding.rvUsers.layoutManager = LinearLayoutManager(requireContext())

@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
 
-    <!-- TOP APP BAR -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
@@ -21,14 +20,12 @@
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             app:menu="@menu/top_app_bar_menu"
-            app:title="AppName"
+            app:title="NeWork"
             app:titleCentered="false"
             app:titleTextColor="@color/black" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
-
-    <!--Контент -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
@@ -38,8 +35,6 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         app:navGraph="@navigation/nav_graph" />
 
-
-    <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
@@ -52,8 +47,6 @@
         app:labelVisibilityMode="labeled"
         app:menu="@menu/bottom_nav_menu" />
 
-
-    <!-- FAB кнопка -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_create"
         android:layout_width="56dp"

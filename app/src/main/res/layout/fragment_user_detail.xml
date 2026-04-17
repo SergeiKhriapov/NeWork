@@ -14,7 +14,6 @@
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:elevation="0dp">
 
-        <!-- Avatar Container - уходит вверх при скролле -->
         <FrameLayout
             android:id="@+id/avatarContainer"
             android:layout_width="match_parent"
@@ -31,7 +30,6 @@
 
         </FrameLayout>
 
-        <!-- Tabs - ЗАКРЕПЛЕНЫ, не скроллятся, всегда вверху -->
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabLayout"
             android:layout_width="match_parent"
@@ -57,7 +55,6 @@
         android:background="@color/white"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-    <!-- FAB для добавления работы (видна только в своем профиле) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add_job"
         android:layout_width="56dp"
@@ -73,7 +70,6 @@
         app:srcCompat="@drawable/ic_plus_math"
         app:tint="@color/black" />
 
-    <!-- Progress Bar -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"

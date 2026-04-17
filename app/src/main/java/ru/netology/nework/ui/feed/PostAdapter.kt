@@ -4,7 +4,6 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,7 +26,6 @@ import ru.netology.nework.model.Post
 import ru.netology.nework.utils.DateUtils.formatForDisplay
 import ru.netology.nework.utils.LetterAvatarDrawable
 
-private const val TAG = "PostAdapter"
 private const val PROGRESS_UPDATE_INTERVAL_MS = 500L
 private const val SEEK_BAR_UPDATE_THRESHOLD = 2
 
@@ -66,7 +64,6 @@ class PostAdapter(
         }
 
         override fun onPlayerError(error: PlaybackException) {
-            Log.e(TAG, "Audio player error: ${error.message}")
             stopAudioPlayback()
         }
     }
@@ -180,10 +177,8 @@ class PostAdapter(
         fun bind(post: Post) = with(binding) {
             currentPostId = post.id
 
-            // --- Имя автора ---
             tvAuthor.text = post.author
 
-            // --- Аватар ---
             if (!post.authorAvatar.isNullOrBlank()) {
                 Glide.with(itemView)
                     .load(post.authorAvatar)
@@ -202,10 +197,8 @@ class PostAdapter(
                 ivAvatar.setImageDrawable(letterDrawable)
             }
 
-            // --- Дата ---
             tvDate.text = post.published.formatForDisplay()
 
-            // --- Контент ---
             if (post.content.isBlank()) {
                 tvContent.visibility = View.GONE
             } else {
@@ -213,7 +206,6 @@ class PostAdapter(
                 tvContent.text = post.content
             }
 
-            // --- Лайки ---
             tvLikes.text = post.likeOwnerIds.size.toString()
             val likeIcon = if (post.likedByMe) R.drawable.ic_liked else R.drawable.ic_like
             ivLike.setImageResource(likeIcon)
@@ -223,7 +215,6 @@ class PostAdapter(
                 onLike(post)
             }
 
-            // --- Медиа ---
             mediaContainer.visibility = View.GONE
             ivImage.visibility = View.GONE
             ivVideoPreview.visibility = View.GONE
@@ -279,7 +270,6 @@ class PostAdapter(
                 }
             }
 
-            // --- Меню ---
             if (isOwnedByUser(post)) {
                 btnMore.visibility = View.VISIBLE
                 btnMore.setOnClickListener { onMenu(post, btnMore) }
@@ -360,7 +350,6 @@ class PostAdapter(
                     lastCachedDurationText = durationText
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error updating audio state: ${e.message}")
             }
         }
 

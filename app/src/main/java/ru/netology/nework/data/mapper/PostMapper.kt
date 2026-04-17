@@ -70,7 +70,7 @@ fun PostEntity.toDomain(): Post {
         authorId = authorId,
         author = author,
         authorAvatar = authorAvatar,
-        content = content,  // <-- добавлен content
+        content = content,
         published = OffsetDateTime.ofInstant(Instant.ofEpochMilli(published), ZoneOffset.UTC),
         coords = coords,
         link = link,
@@ -78,7 +78,7 @@ fun PostEntity.toDomain(): Post {
         likeOwnerIds = likeOwnerIds,
         likedByMe = likedByMe,
         users = users,
-        authorJob = null,  // <-- authorJob после users
+        authorJob = null,
         mentionIds = mentionIds,
         mentionedMe = mentionedMe
     )
@@ -110,7 +110,7 @@ fun PostDto.toDomain(): Post {
         authorId = authorId,
         author = author,
         authorAvatar = authorAvatar,
-        content = content,  // <-- добавлен content
+        content = content,
         published = publishedDateTime,
         coords = coords,
         link = link,
@@ -118,7 +118,7 @@ fun PostDto.toDomain(): Post {
         likeOwnerIds = likeOwnerIds?.toSet() ?: emptySet(),
         likedByMe = likedByMe,
         users = users,
-        authorJob = authorJob,  // <-- authorJob после users
+        authorJob = authorJob,
         mentionIds = mentionIds?.toSet() ?: emptySet(),
         mentionedMe = mentionedMe
     )

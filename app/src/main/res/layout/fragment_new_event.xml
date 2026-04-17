@@ -24,7 +24,6 @@
             android:orientation="vertical"
             android:padding="8dp">
 
-            <!-- Поле ввода -->
             <EditText
                 android:id="@+id/editTextEvent"
                 android:layout_width="match_parent"
@@ -38,7 +37,6 @@
                 android:scrollbars="vertical"
                 android:textColorHint="@color/textColor" />
 
-            <!-- Контейнер для медиа (фото/видео/аудио) -->
             <FrameLayout
                 android:id="@+id/imageContainer"
                 android:layout_width="match_parent"
@@ -135,7 +133,6 @@
 
             </FrameLayout>
 
-            <!-- Блок упомянутых пользователей (между медиа и картой) -->
             <TextView
                 android:id="@+id/tv_mentioned_label"
                 android:layout_width="match_parent"
@@ -157,7 +154,6 @@
                 android:visibility="gone"
                 tools:visibility="visible" />
 
-            <!-- Блок выбора местоположения -->
             <FrameLayout
                 android:id="@+id/locationContainer"
                 android:layout_width="match_parent"
@@ -167,7 +163,6 @@
                 android:visibility="gone"
                 tools:visibility="visible">
 
-                <!-- Карта -->
                 <FrameLayout
                     android:id="@+id/map_container"
                     android:layout_width="match_parent"
@@ -183,7 +178,6 @@
 
                 </FrameLayout>
 
-                <!-- Кнопка удаления локации -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnRemoveLocation"
                     android:layout_width="wrap_content"
@@ -208,7 +202,6 @@
 
             </FrameLayout>
 
-            <!-- Индикатор выбранного местоположения (текст) -->
             <TextView
                 android:id="@+id/tv_location_info"
                 android:layout_width="match_parent"

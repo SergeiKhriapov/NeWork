@@ -16,7 +16,6 @@ class Converters {
 
     private val gson = Gson()
 
-    // ========== AttachmentType ==========
     @TypeConverter
     fun fromAttachmentType(type: AttachmentType?): String? = type?.name
 
@@ -24,7 +23,6 @@ class Converters {
     fun toAttachmentType(name: String?): AttachmentType? =
         name?.let { AttachmentType.valueOf(it) }
 
-    // ========== List<Long> (через joinToString) ==========
     @TypeConverter
     fun fromLongList(ids: List<Long>?): String? = ids?.joinToString(",")
 
@@ -32,7 +30,6 @@ class Converters {
     fun toLongList(data: String?): List<Long>? =
         data?.split(",")?.mapNotNull { it.toLongOrNull() }
 
-    // ========== Map<Long, UserPreviewEntity> (через Moshi) ==========
     @TypeConverter
     fun fromUserPreviewMap(map: Map<Long, UserPreviewEntity>?): String? {
         val type = Types.newParameterizedType(
@@ -56,7 +53,6 @@ class Converters {
         return adapter.fromJson(json)
     }
 
-    // ========== Map<Long, String> (через Gson) ==========
     @TypeConverter
     fun fromLongStringMap(map: Map<Long, String>?): String? {
         if (map == null) return null
@@ -70,7 +66,6 @@ class Converters {
         return gson.fromJson(json, type)
     }
 
-    // ========== Map<Long, Any> (общий, если нужен) ==========
     @TypeConverter
     fun fromLongAnyMap(map: Map<Long, Any>?): String? {
         if (map == null) return null

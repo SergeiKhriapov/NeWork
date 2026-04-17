@@ -1,6 +1,5 @@
 package ru.netology.nework.ui.events
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,8 +12,6 @@ import ru.netology.nework.model.Coordinates
 import ru.netology.nework.model.EventType
 import java.time.LocalDateTime
 import javax.inject.Inject
-
-private const val TAG = "NewEventViewModel"
 
 @HiltViewModel
 class NewEventViewModel @Inject constructor(
@@ -68,7 +65,6 @@ class NewEventViewModel @Inject constructor(
         eventDateTime: LocalDateTime?,
         speakerIds: Set<Long>
     ) {
-        Log.d(TAG, "initEditing: eventId=$eventId, eventDateTime=$eventDateTime")
         _isEditing.value = true
         _editingEventId.value = eventId
         _eventText.value = content
@@ -80,7 +76,6 @@ class NewEventViewModel @Inject constructor(
     }
 
     fun initNew() {
-        Log.d(TAG, "initNew")
         _isEditing.value = false
         _editingEventId.value = null
         _eventText.value = ""
@@ -123,15 +118,11 @@ class NewEventViewModel @Inject constructor(
         eventDateTime: LocalDateTime?,
         speakerIds: Set<Long>?
     ) {
-        Log.d(TAG, "saveEvent: text=$text, eventType=${eventType.name}, eventDateTime=$eventDateTime")
-
         if (text.isBlank() && attachment == null) {
-            Log.e(TAG, "saveEvent: text is blank and attachment is null")
             _saveCompleted.value = false
             return
         }
         if (eventDateTime == null) {
-            Log.e(TAG, "saveEvent: eventDateTime is null!")
             _saveCompleted.value = false
             return
         }
@@ -139,12 +130,9 @@ class NewEventViewModel @Inject constructor(
         viewModelScope.launch {
             _isSaving.value = true
             try {
-                Log.d(TAG, "Calling repository.saveEvent")
                 val result = repository.saveEvent(text, attachment, coords, eventType, eventDateTime, speakerIds ?: emptySet())
-                Log.d(TAG, "repository.saveEvent result.isSuccess = ${result.isSuccess}")
                 _saveCompleted.value = result.isSuccess
             } catch (e: Exception) {
-                Log.e(TAG, "saveEvent exception", e)
                 _saveCompleted.value = false
             } finally {
                 _isSaving.value = false
@@ -161,20 +149,11 @@ class NewEventViewModel @Inject constructor(
         eventDateTime: LocalDateTime?,
         speakerIds: Set<Long>?
     ) {
-        Log.d(TAG, "=== updateEvent IN VIEWMODEL ===")
-        Log.d(TAG, "updateEvent: id=$id")
-        Log.d(TAG, "updateEvent: content=$content")
-        Log.d(TAG, "updateEvent: eventType=${eventType.name}")
-        Log.d(TAG, "updateEvent: eventDateTime=$eventDateTime")
-        Log.d(TAG, "updateEvent: speakerIds=${speakerIds?.joinToString()}")
-
         if (content.isBlank() && attachment == null) {
-            Log.e(TAG, "updateEvent: content is blank and attachment is null")
             _saveCompleted.value = false
             return
         }
         if (eventDateTime == null) {
-            Log.e(TAG, "updateEvent: eventDateTime is null!")
             _saveCompleted.value = false
             return
         }
@@ -182,12 +161,9 @@ class NewEventViewModel @Inject constructor(
         viewModelScope.launch {
             _isSaving.value = true
             try {
-                Log.d(TAG, "Calling repository.updateEvent")
                 val result = repository.updateEvent(id, content, attachment, coords, eventType, eventDateTime, speakerIds ?: emptySet())
-                Log.d(TAG, "repository.updateEvent result.isSuccess = ${result.isSuccess}")
                 _saveCompleted.value = result.isSuccess
             } catch (e: Exception) {
-                Log.e(TAG, "updateEvent exception", e)
                 _saveCompleted.value = false
             } finally {
                 _isSaving.value = false

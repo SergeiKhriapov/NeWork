@@ -11,7 +11,6 @@ import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -61,7 +60,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private const val TAG = "NewPostFragment"
 private const val LOCATION_REQUEST_KEY = "location_request"
 
 @AndroidEntryPoint
@@ -76,10 +74,8 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
     private var currentPhotoPath: String? = null
 
-    // Лаунчеры для результатов
     private val cameraLauncher =
         registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-            Log.d(TAG, "cameraLauncher success=$success, currentPhotoPath=$currentPhotoPath")
             if (success && currentPhotoPath != null) {
                 val file = File(currentPhotoPath!!)
                 val uri = FileProvider.getUriForFile(
@@ -89,38 +85,34 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 )
                 handleMediaResult(uri, AttachmentType.IMAGE)
             } else {
-                Toast.makeText(requireContext(), "Не удалось сделать фото", Toast.LENGTH_SHORT)
+                Toast.makeText(requireContext(), "Failed to take photo", Toast.LENGTH_SHORT)
                     .show()
             }
         }
 
     private val galleryImageLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            Log.d(TAG, "galleryImageLauncher uri=$uri")
             uri?.let { handleMediaResult(it, AttachmentType.IMAGE) }
         }
 
     private val galleryVideoLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            Log.d(TAG, "galleryVideoLauncher uri=$uri")
             uri?.let { handleMediaResult(it, AttachmentType.VIDEO) }
         }
 
     private val audioLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            Log.d(TAG, "audioLauncher uri=$uri")
             uri?.let { handleMediaResult(it, AttachmentType.AUDIO) }
         }
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            Log.d(TAG, "requestPermissionLauncher isGranted=$isGranted")
             if (isGranted) {
                 openCamera()
             } else {
                 Toast.makeText(
                     requireContext(),
-                    "Необходимо разрешение на камеру",
+                    "Camera permission required",
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -140,7 +132,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
         hideFab()
 
-        // Загружаем аргументы только один раз
         if (!viewModel.isArgumentsLoaded()) {
             loadArguments()
             viewModel.markArgumentsLoaded()
@@ -156,12 +147,10 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             val postId = args.getLong("postId", -1)
 
             if (postId != -1L) {
-                // Режим редактирования
                 val content = args.getString("content", "")
                 val attachmentUrl = args.getString("attachmentUrl", "")
                 val attachmentTypeStr = args.getString("attachmentType", "")
 
-                // Создаем Attachment с URL, НЕ пытаемся проверить существование файла
                 val attachment = if (attachmentUrl.isNotBlank() && attachmentTypeStr.isNotBlank()) {
                     try {
                         Attachment(attachmentUrl, AttachmentType.valueOf(attachmentTypeStr))
@@ -178,21 +167,18 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
                 viewModel.initEditing(postId, content, attachment, coords, mentionIds)
             } else {
-                // Режим создания нового поста
                 viewModel.initNew()
             }
         }
     }
 
     private fun setupObservers() {
-        // Подписываемся на текст
         viewModel.postText.observe(viewLifecycleOwner) { text ->
             if (binding.editTextPost.text.toString() != text) {
                 binding.editTextPost.setText(text)
             }
         }
 
-        // Подписываемся на изменения текста в EditText
         binding.editTextPost.doAfterTextChanged { text ->
             val newText = text?.toString() ?: ""
             if (viewModel.postText.value != newText) {
@@ -241,7 +227,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                     true -> {
                         Toast.makeText(
                             requireContext(),
-                            if (isEditing) "Пост обновлён" else "Пост сохранён",
+                            if (isEditing) "Post updated" else "Post saved",
                             Toast.LENGTH_SHORT
                         ).show()
                         viewLifecycleOwner.lifecycleScope.launch {
@@ -251,7 +237,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                     }
 
                     false -> {
-                        Toast.makeText(requireContext(), "Ошибка", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Error", Toast.LENGTH_SHORT).show()
                     }
                 }
                 viewModel.resetSaveCompleted()
@@ -292,45 +278,40 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
         binding.btnRemoveLocation.setOnClickListener {
             viewModel.setCoordinates(null)
-            Toast.makeText(requireContext(), "Местоположение удалено", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Location removed", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun setupResultListeners() {
         setFragmentResultListener(LOCATION_REQUEST_KEY) { _, bundle ->
-            // Проверяем, есть ли результат с координатами
             if (bundle.containsKey("lat") && bundle.containsKey("lng")) {
                 val lat = bundle.getDouble("lat")
                 val lng = bundle.getDouble("lng")
 
                 if (lat != 0.0 && lng != 0.0) {
-                    // Пользователь выбрал новую локацию
                     viewModel.setCoordinates(Coordinates(lat, lng))
-                    Toast.makeText(requireContext(), "Местоположение выбрано", Toast.LENGTH_SHORT)
+                    Toast.makeText(requireContext(), "Location selected", Toast.LENGTH_SHORT)
                         .show()
                 } else {
-                    // Пользователь нажал Cancel - удаляем координаты
                     viewModel.setCoordinates(null)
-                    Toast.makeText(requireContext(), "Местоположение удалено", Toast.LENGTH_SHORT)
+                    Toast.makeText(requireContext(), "Location removed", Toast.LENGTH_SHORT)
                         .show()
                 }
             } else {
-                // Нет данных - удаляем координаты
                 viewModel.setCoordinates(null)
-                Toast.makeText(requireContext(), "Местоположение удалено", Toast.LENGTH_SHORT)
+                Toast.makeText(requireContext(), "Location removed", Toast.LENGTH_SHORT)
                     .show()
             }
         }
 
         setFragmentResultListener(REQUEST_KEY) { _, bundle ->
             val selectedIds = bundle.getLongArray(SELECTED_USERS_KEY)?.toSet() ?: emptySet()
-            Log.d(TAG, "Received selected users: ${selectedIds.joinToString()}")
             viewModel.setMentionIds(selectedIds)
             val count = selectedIds.size
             val message = when (count) {
-                0 -> "Пользователи не выбраны"
-                1 -> "Выбран 1 пользователь"
-                else -> "Выбрано $count пользователей"
+                0 -> "No users selected"
+                1 -> "1 user selected"
+                else -> "$count users selected"
             }
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
         }
@@ -364,7 +345,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 R.id.fab_create
             )?.hide()
         } catch (e: Exception) {
-            Log.e(TAG, "Error hiding FAB: ${e.message}")
         }
     }
 
@@ -374,7 +354,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 R.id.fab_create
             )?.show()
         } catch (e: Exception) {
-            Log.e(TAG, "Error showing FAB: ${e.message}")
         }
     }
 
@@ -384,7 +363,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
     private fun openUserSelection() {
         val selectedIds = viewModel.mentionIds.value?.toLongArray() ?: longArrayOf()
-        Log.d(TAG, "openUserSelection with selectedIds: ${selectedIds.joinToString()}")
         val args = Bundle().apply {
             putLongArray("selected_ids", selectedIds)
             putString("title", "Select mentioned")
@@ -398,12 +376,10 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 requireContext(),
                 Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED -> {
-                Log.d(TAG, "Camera permission already granted")
                 openCamera()
             }
 
             else -> {
-                Log.d(TAG, "Requesting camera permission")
                 requestPermissionLauncher.launch(Manifest.permission.CAMERA)
             }
         }
@@ -414,16 +390,14 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         if (intent.resolveActivity(requireContext().packageManager) != null) {
             val photoFile = createImageFile()
             if (photoFile == null) {
-                Log.e(TAG, "Failed to create image file")
                 Toast.makeText(
                     requireContext(),
-                    "Не удалось создать файл для фото",
+                    "Failed to create image file",
                     Toast.LENGTH_SHORT
                 ).show()
                 return
             }
             currentPhotoPath = photoFile.absolutePath
-            Log.d(TAG, "openCamera: photoFile created at $currentPhotoPath")
             val photoUri = FileProvider.getUriForFile(
                 requireContext(),
                 "${requireContext().packageName}.fileprovider",
@@ -432,8 +406,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
             cameraLauncher.launch(photoUri)
         } else {
-            Log.e(TAG, "openCamera: no camera app found")
-            Toast.makeText(requireContext(), "Камера не найдена", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Camera not found", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -442,7 +415,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val storageDir = requireContext().getExternalFilesDir("Pictures")
             if (storageDir == null) {
-                Log.e(TAG, "External files dir for Pictures is null")
                 return null
             }
             if (!storageDir.exists()) {
@@ -450,15 +422,14 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             }
             File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir)
         } catch (e: Exception) {
-            Log.e(TAG, "Error creating image file", e)
             null
         }
     }
 
     private fun showAttachmentDialog() {
-        val options = arrayOf("Изображение", "Видео", "Аудио")
+        val options = arrayOf("Image", "Video", "Audio")
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Выберите тип вложения")
+            .setTitle("Select attachment type")
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> galleryImageLauncher.launch("image/*")
@@ -470,19 +441,17 @@ class NewPostFragment : Fragment(), OnPostActionListener {
     }
 
     private fun handleMediaResult(uri: Uri, type: AttachmentType) {
-        Log.d(TAG, "handleMediaResult uri=$uri type=$type")
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val internalPath = copyFileToInternalStorage(uri)
             withContext(Dispatchers.Main) {
                 if (internalPath == null) {
                     Toast.makeText(
                         requireContext(),
-                        "Не удалось скопировать файл",
+                        "Failed to copy file",
                         Toast.LENGTH_SHORT
                     ).show()
                     return@withContext
                 }
-                Log.d(TAG, "File copied to $internalPath")
                 val attachment = Attachment(internalPath, type)
                 viewModel.setAttachment(attachment)
             }
@@ -498,13 +467,11 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             }
             file.absolutePath
         } catch (e: Exception) {
-            Log.e(TAG, "Error copying file", e)
             null
         }
     }
 
     private fun updateMediaPreview(attachment: Attachment?) {
-        Log.d(TAG, "updateMediaPreview attachment=$attachment")
         Glide.with(this).clear(binding.imagePreview)
         Glide.with(this).clear(binding.videoPreview)
 
@@ -520,8 +487,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         binding.audioPlayer.visibility = View.GONE
 
         val url = attachment.url
-
-        // Проверяем, является ли URL локальным файлом или удаленным
         val isLocalFile = !url.startsWith("http://") && !url.startsWith("https://")
 
         when (attachment.type) {
@@ -529,11 +494,9 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 binding.imagePreview.visibility = View.VISIBLE
 
                 if (isLocalFile) {
-                    // Локальный файл - проверяем существование
                     val file = File(url)
                     if (!file.exists()) {
-                        Log.e(TAG, "File not found: $url")
-                        Toast.makeText(requireContext(), "Файл не найден", Toast.LENGTH_SHORT)
+                        Toast.makeText(requireContext(), "File not found", Toast.LENGTH_SHORT)
                             .show()
                         viewModel.setAttachment(null)
                         return
@@ -543,7 +506,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                         .centerCrop()
                         .into(binding.imagePreview)
                 } else {
-                    // Удаленный URL - загружаем через Glide
                     Glide.with(this)
                         .load(url)
                         .centerCrop()
@@ -557,11 +519,9 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 binding.videoContainer.visibility = View.VISIBLE
 
                 if (isLocalFile) {
-                    // Локальное видео - создаем превью
                     val file = File(url)
                     if (!file.exists()) {
-                        Log.e(TAG, "Video file not found: $url")
-                        Toast.makeText(requireContext(), "Видео не найдено", Toast.LENGTH_SHORT)
+                        Toast.makeText(requireContext(), "Video not found", Toast.LENGTH_SHORT)
                             .show()
                         viewModel.setAttachment(null)
                         return
@@ -580,7 +540,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                         }
                     }
                 } else {
-                    // Удаленное видео - используем Glide для превью
                     Glide.with(this)
                         .load(url)
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
@@ -595,7 +554,7 @@ class NewPostFragment : Fragment(), OnPostActionListener {
                 binding.videoContainer.setOnClickListener {
                     Toast.makeText(
                         requireContext(),
-                        "Видео пока не поддерживается",
+                        "Video playback is not supported yet",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -603,9 +562,8 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
             AttachmentType.AUDIO -> {
                 binding.audioPlayer.visibility = View.VISIBLE
-                // Для аудио не нужно проверять существование файла
                 binding.btnPlayPause.setOnClickListener {
-                    Toast.makeText(requireContext(), "Воспроизведение аудио", Toast.LENGTH_SHORT)
+                    Toast.makeText(requireContext(), "Audio playback", Toast.LENGTH_SHORT)
                         .show()
                 }
             }
@@ -652,7 +610,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
             placemark?.setOpacity(1.0f)
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error creating marker from vector", e)
             val fallbackPlacemark = mapView?.map?.mapObjects?.addPlacemark(point)
             fallbackPlacemark?.setOpacity(1.0f)
         }
@@ -837,21 +794,21 @@ class NewPostFragment : Fragment(), OnPostActionListener {
 
     private fun showRemoveUserDialog(user: User) {
         AlertDialog.Builder(requireContext())
-            .setTitle("Убрать пользователя")
-            .setMessage("Убрать ${user.name} из упомянутых?")
-            .setPositiveButton("Да") { _, _ ->
+            .setTitle("Remove user")
+            .setMessage("Remove ${user.name} from mentioned?")
+            .setPositiveButton("Yes") { _, _ ->
                 val currentIds =
                     viewModel.mentionIds.value?.toMutableSet() ?: return@setPositiveButton
                 currentIds.remove(user.id)
                 viewModel.setMentionIds(currentIds)
             }
-            .setNegativeButton("Нет", null)
+            .setNegativeButton("No", null)
             .show()
     }
 
     override fun onPostAction() {
         if (viewModel.isSaving.value == true) {
-            Toast.makeText(requireContext(), "Сохранение уже выполняется", Toast.LENGTH_SHORT)
+            Toast.makeText(requireContext(), "Saving in progress", Toast.LENGTH_SHORT)
                 .show()
             return
         }
@@ -859,7 +816,6 @@ class NewPostFragment : Fragment(), OnPostActionListener {
         val attachment = viewModel.attachment.value
         val coordinates = viewModel.coordinates.value
         val mentionIds = viewModel.mentionIds.value
-        Log.d(TAG, "onPostAction: mentionIds = ${mentionIds?.joinToString()}")
 
         val isEditing = viewModel.isEditing.value == true
         if (isEditing) {

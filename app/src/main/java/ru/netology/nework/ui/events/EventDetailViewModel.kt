@@ -1,6 +1,5 @@
 package ru.netology.nework.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -14,8 +13,6 @@ import ru.netology.nework.model.User
 import ru.netology.nework.model.UserPreview
 import javax.inject.Inject
 
-private const val TAG = "EventDetailViewModel"
-
 @HiltViewModel
 class EventDetailViewModel @Inject constructor(
     private val eventRepository: EventRepository,
@@ -25,21 +22,18 @@ class EventDetailViewModel @Inject constructor(
     private val _event = MutableLiveData<Event?>()
     val event: LiveData<Event?> = _event
 
-    // Speakers - спикеры (те, кого выбрали при создании)
     private val _speakers = MutableLiveData<List<User>>()
     val speakers: LiveData<List<User>> = _speakers
 
     private val _speakersPreview = MutableLiveData<List<UserPreview>>()
     val speakersPreview: LiveData<List<UserPreview>> = _speakersPreview
 
-    // Likers - лайкнувшие
     private val _likers = MutableLiveData<List<User>>()
     val likers: LiveData<List<User>> = _likers
 
     private val _likersPreview = MutableLiveData<List<UserPreview>>()
     val likersPreview: LiveData<List<UserPreview>> = _likersPreview
 
-    // Participants - участники (те, кто нажал "Участвовать")
     private val _participants = MutableLiveData<List<User>>()
     val participants: LiveData<List<User>> = _participants
 
@@ -56,24 +50,15 @@ class EventDetailViewModel @Inject constructor(
                 result.fold(
                     onSuccess = { event ->
                         _event.value = event
-                        Log.d(TAG, "Event loaded: id=${event.id}, speakerIds=${event.speakerIds}, participantsIds=${event.participantsIds}")
-
-                        // Загружаем спикеров (те, кого выбрали при создании)
                         loadSpeakers(event.speakerIds.toList())
-
-                        // Загружаем лайкнувших
                         loadLikers(event.likeOwnerIds.toList())
-
-                        // Загружаем участников (те, кто нажал "Участвовать")
                         loadParticipants(event.participantsIds.toList())
                     },
                     onFailure = { error ->
-                        Log.e(TAG, "Error loading event: ${error.message}")
                         _event.value = null
                     }
                 )
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading event", e)
                 _event.value = null
             }
         }
@@ -85,13 +70,11 @@ class EventDetailViewModel @Inject constructor(
                 try {
                     userRepository.getUserById(userId).getOrNull()
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error loading speaker $userId", e)
                     null
                 }
             }
             _speakers.value = speakersList
             _speakersPreview.value = speakersList.map { UserPreview(it.name, it.avatar) }
-            Log.d(TAG, "Speakers loaded: ${speakersList.size}")
         } else {
             _speakers.value = emptyList()
             _speakersPreview.value = emptyList()
@@ -104,13 +87,11 @@ class EventDetailViewModel @Inject constructor(
                 try {
                     userRepository.getUserById(userId).getOrNull()
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error loading liker $userId", e)
                     null
                 }
             }
             _likers.value = likersList
             _likersPreview.value = likersList.map { UserPreview(it.name, it.avatar) }
-            Log.d(TAG, "Likers loaded: ${likersList.size}")
         } else {
             _likers.value = emptyList()
             _likersPreview.value = emptyList()
@@ -123,13 +104,11 @@ class EventDetailViewModel @Inject constructor(
                 try {
                     userRepository.getUserById(userId).getOrNull()
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error loading participant $userId", e)
                     null
                 }
             }
             _participants.value = participantsList
             _participantsPreview.value = participantsList.map { UserPreview(it.name, it.avatar) }
-            Log.d(TAG, "Participants loaded: ${participantsList.size}")
         } else {
             _participants.value = emptyList()
             _participantsPreview.value = emptyList()
@@ -141,15 +120,10 @@ class EventDetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 eventRepository.deleteEvent(currentEvent.id).fold(
-                    onSuccess = {
-                        Log.d(TAG, "Event deleted: ${currentEvent.id}")
-                    },
-                    onFailure = { error ->
-                        Log.e(TAG, "Error deleting event: ${error.message}")
-                    }
+                    onSuccess = { },
+                    onFailure = { error -> }
                 )
             } catch (e: Exception) {
-                Log.e(TAG, "Error deleting event", e)
             }
         }
     }
@@ -167,12 +141,9 @@ class EventDetailViewModel @Inject constructor(
                         _event.value = updatedEvent
                         loadLikers(updatedEvent.likeOwnerIds.toList())
                     },
-                    onFailure = { error ->
-                        Log.e(TAG, "Error liking event: ${error.message}")
-                    }
+                    onFailure = { error -> }
                 )
             } catch (e: Exception) {
-                Log.e(TAG, "Error liking event", e)
             }
         }
     }
@@ -186,12 +157,9 @@ class EventDetailViewModel @Inject constructor(
                         _event.value = updatedEvent
                         loadLikers(updatedEvent.likeOwnerIds.toList())
                     },
-                    onFailure = { error ->
-                        Log.e(TAG, "Error unliking event: ${error.message}")
-                    }
+                    onFailure = { error -> }
                 )
             } catch (e: Exception) {
-                Log.e(TAG, "Error unliking event", e)
             }
         }
     }
@@ -205,12 +173,9 @@ class EventDetailViewModel @Inject constructor(
                         _event.value = updatedEvent
                         loadParticipants(updatedEvent.participantsIds.toList())
                     },
-                    onFailure = { error ->
-                        Log.e(TAG, "Error participating in event: ${error.message}")
-                    }
+                    onFailure = { error -> }
                 )
             } catch (e: Exception) {
-                Log.e(TAG, "Error participating in event", e)
             }
         }
     }
@@ -224,12 +189,9 @@ class EventDetailViewModel @Inject constructor(
                         _event.value = updatedEvent
                         loadParticipants(updatedEvent.participantsIds.toList())
                     },
-                    onFailure = { error ->
-                        Log.e(TAG, "Error unparticipating from event: ${error.message}")
-                    }
+                    onFailure = { error -> }
                 )
             } catch (e: Exception) {
-                Log.e(TAG, "Error unparticipating from event", e)
             }
         }
     }

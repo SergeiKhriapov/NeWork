@@ -91,14 +91,11 @@ class UserDetailFragment : Fragment() {
     }
 
     private fun setupFabForJobsTab() {
-        // Изначально FAB скрыт (пока не переключились на вкладку Jobs)
         binding.fabAddJob.visibility = View.GONE
 
-        // Слушаем переключение вкладок
         binding.viewPager.registerOnPageChangeCallback(object : androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-                // Показываем FAB только на вкладке Jobs (позиция 1) и только если это свой профиль
                 if (position == 1 && isMyProfile) {
                     binding.fabAddJob.visibility = View.VISIBLE
                     binding.fabAddJob.setOnClickListener {

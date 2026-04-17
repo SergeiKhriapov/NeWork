@@ -6,7 +6,6 @@
     android:orientation="vertical"
     android:padding="24dp">
 
-    <!-- Select date заголовок -->
     <TextView
         android:id="@+id/select_date"
         android:layout_width="match_parent"
@@ -17,7 +16,6 @@
         android:textColor="#49454F"
         android:textSize="14sp" />
 
-    <!-- Enter dates с иконкой справа -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -42,13 +40,11 @@
 
     </LinearLayout>
 
-    <!-- Дата начала и конца в одной строке -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <!-- Поле Start date -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_start_date"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -74,7 +70,6 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Поле End date -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_end_date"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -102,7 +97,6 @@
 
     </LinearLayout>
 
-    <!-- Кнопки Cancel и OK в одном стиле -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

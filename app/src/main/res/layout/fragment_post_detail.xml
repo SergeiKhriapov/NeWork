@@ -8,7 +8,7 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">/>
+        android:layout_height="wrap_content">
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -26,7 +26,6 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Блок автора -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -63,7 +62,7 @@
                         android:textColor="@color/textColor"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        tools:text="Leo Lipshutz" />
+                        tools:text="Author Name" />
 
                     <TextView
                         android:id="@+id/tv_author_login"
@@ -71,11 +70,10 @@
                         android:layout_height="wrap_content"
                         android:textColor="@color/textColor"
                         android:textSize="14sp"
-                        tools:text="lwestervelt" />
+                        tools:text="username" />
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Текст поста -->
             <TextView
                 android:id="@+id/tv_post_content"
                 android:layout_width="match_parent"
@@ -83,9 +81,8 @@
                 android:layout_marginTop="12dp"
                 android:textColor="@color/textColor"
                 android:textSize="16sp"
-                tools:text="Шляпа — это головной убор, который носили в Древней Греции." />
+                tools:text="Post content text" />
 
-            <!-- Медиа-вложение -->
             <FrameLayout
                 android:id="@+id/media_container"
                 android:layout_width="match_parent"
@@ -161,7 +158,6 @@
                 </LinearLayout>
             </FrameLayout>
 
-            <!-- Дата -->
             <TextView
                 android:id="@+id/tv_post_date"
                 android:layout_width="wrap_content"
@@ -171,7 +167,6 @@
                 android:textSize="14sp"
                 tools:text="28.08.22 19:00" />
 
-            <!-- Блок лайков -->
             <LinearLayout
                 android:id="@+id/likers_layout"
                 android:layout_width="match_parent"
@@ -205,7 +200,6 @@
                 </HorizontalScrollView>
             </LinearLayout>
 
-            <!-- Блок упомянутых -->
             <LinearLayout
                 android:id="@+id/mentioned_layout"
                 android:layout_width="match_parent"
@@ -239,7 +233,6 @@
                 </HorizontalScrollView>
             </LinearLayout>
 
-            <!-- Карта -->
             <FrameLayout
                 android:id="@+id/map_container"
                 android:layout_width="match_parent"

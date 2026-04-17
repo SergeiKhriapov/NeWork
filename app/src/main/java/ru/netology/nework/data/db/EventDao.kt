@@ -5,12 +5,12 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import ru.netology.nework.data.db.entity.EventEntity  // Этот импорт должен быть!
+import ru.netology.nework.data.db.entity.EventEntity
 
 @Dao
 interface EventDao {
     @Query("SELECT * FROM events ORDER BY datetime DESC")
-    fun getAllLiveData(): LiveData<List<EventEntity>>  // Возвращает List<EventEntity>
+    fun getAllLiveData(): LiveData<List<EventEntity>>
 
     @Query("SELECT * FROM events ORDER BY datetime DESC")
     suspend fun getAll(): List<EventEntity>

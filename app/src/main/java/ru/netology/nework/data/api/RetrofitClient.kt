@@ -4,7 +4,6 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
-import ru.netology.nework.BuildConfig
 
 object RetrofitClient {
     private const val BASE_URL = "http://94.228.125.136:8080/"

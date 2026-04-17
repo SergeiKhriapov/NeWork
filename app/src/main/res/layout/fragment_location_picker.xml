@@ -15,7 +15,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Центральный маркер -->
     <ImageView
         android:id="@+id/ivCenterMarker"
         android:layout_width="24dp"
@@ -29,7 +28,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.45" />
 
-    <!-- Нижняя панель с кнопками Отмена и Выбрать -->
     <LinearLayout
         android:id="@+id/bottomButtons"
         android:layout_width="match_parent"
@@ -83,7 +81,6 @@
             android:textSize="14sp" />
     </LinearLayout>
 
-    <!-- Блок с кнопками управления (кнопка местоположения слева, масштаб справа) -->
     <LinearLayout
         android:id="@+id/controlButtons"
         android:layout_width="match_parent"
@@ -95,7 +92,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <!-- Кнопка "Моё местоположение" (слева) - исправлено выравнивание -->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btnMyLocation"
             android:layout_width="48dp"
@@ -112,7 +108,6 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <!-- Кнопки масштаба (справа) -->
         <LinearLayout
             android:id="@+id/zoomControls"
             android:layout_width="wrap_content"

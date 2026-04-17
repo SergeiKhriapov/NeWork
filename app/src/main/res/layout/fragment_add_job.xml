@@ -18,7 +18,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Поле Company Name -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_name"
                 style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
@@ -38,7 +37,6 @@
                     android:textColor="@color/black" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Поле Position -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_position"
                 style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
@@ -58,7 +56,6 @@
                     android:textColor="@color/black" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Поле Link -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_link"
                 style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
@@ -78,7 +75,6 @@
                     android:textColor="@color/black" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Дата -->
             <com.google.android.material.chip.Chip
                 android:id="@+id/tv_start_date"
                 android:layout_width="wrap_content"
@@ -101,7 +97,6 @@
 
     </ScrollView>
 
-    <!-- Кнопка Create -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_create"
         android:layout_width="match_parent"

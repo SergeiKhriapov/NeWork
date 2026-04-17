@@ -7,7 +7,6 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -65,15 +64,10 @@ class LocationPickerFragment : Fragment() {
 
         override fun onLocationStatusUpdated(status: LocationStatus) {
             when (status) {
-                LocationStatus.AVAILABLE -> {
-                    Log.d("LocationPicker", "Location available")
-                }
                 LocationStatus.NOT_AVAILABLE -> {
-                    Toast.makeText(requireContext(), "Местоположение недоступно", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Location unavailable", Toast.LENGTH_SHORT).show()
                 }
-                else -> {
-                    Log.d("LocationPicker", "Other status: $status")
-                }
+                else -> { }
             }
         }
     }
@@ -122,17 +116,13 @@ class LocationPickerFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        // НЕ ПОКАЗЫВАЕМ FAB обратно, чтобы не мешать NewEventFragment
-        // Глобальный FAB должен управляться MainActivity при смене фрагмента
     }
 
     private fun hideGlobalFAB() {
         try {
             val fab = requireActivity().findViewById<FloatingActionButton>(R.id.fab_create)
             fab?.hide()
-            Log.d("LocationPickerFragment", "Global FAB hidden")
         } catch (e: Exception) {
-            Log.e("LocationPickerFragment", "Error hiding FAB: ${e.message}")
         }
     }
 
@@ -275,7 +265,7 @@ class LocationPickerFragment : Fragment() {
         } else {
             locationManager = MapKitFactory.getInstance().createLocationManager()
             locationManager?.requestSingleUpdate(locationListener)
-            Toast.makeText(requireContext(), "Определяем местоположение...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Determining location...", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -296,7 +286,7 @@ class LocationPickerFragment : Fragment() {
 
             Toast.makeText(
                 requireContext(),
-                "Нет разрешения на геолокацию",
+                "Location permission denied",
                 Toast.LENGTH_SHORT
             ).show()
 

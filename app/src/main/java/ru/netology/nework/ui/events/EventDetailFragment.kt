@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -56,7 +55,6 @@ import ru.netology.nework.viewmodel.EventDetailViewModel
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
-private const val TAG = "EventDetailFragment"
 private const val PROGRESS_UPDATE_INTERVAL_MS = 200L
 
 @AndroidEntryPoint
@@ -68,7 +66,6 @@ class EventDetailFragment : Fragment() {
     private val viewModel: EventDetailViewModel by viewModels()
     private var mapView: MapView? = null
 
-    // Audio player
     private var audioPlayer: ExoPlayer? = null
     private var currentAudioUrl: String? = null
     private var isAudioPlaying = false
@@ -90,7 +87,6 @@ class EventDetailFragment : Fragment() {
         }
 
         override fun onPlayerError(error: PlaybackException) {
-            Log.e(TAG, "Audio player error: ${error.message}")
             stopAudioPlayback()
         }
     }
@@ -109,7 +105,6 @@ class EventDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val eventId = arguments?.getLong("eventId") ?: run {
-            Log.e(TAG, "No eventId in arguments")
             findNavController().navigateUp()
             return
         }
@@ -121,7 +116,7 @@ class EventDetailFragment : Fragment() {
 
         viewModel.event.observe(viewLifecycleOwner) { event ->
             if (event == null) {
-                Toast.makeText(requireContext(), "Событие не найдено", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Event not found", Toast.LENGTH_SHORT).show()
                 findNavController().navigateUp()
                 return@observe
             }
@@ -154,7 +149,6 @@ class EventDetailFragment : Fragment() {
             }
         }
 
-        // Speakers carousel - ТОЛЬКО АВАТАРКИ (без иконки и счетчика, без отступа слева)
         viewModel.speakersPreview.observe(viewLifecycleOwner) { usersPreview ->
             buildSpeakersCarousel(
                 container = binding.llSpeakers,
@@ -168,7 +162,6 @@ class EventDetailFragment : Fragment() {
             )
         }
 
-        // Likers carousel - с иконкой
         viewModel.likersPreview.observe(viewLifecycleOwner) { usersPreview ->
             buildCarouselWithIcon(
                 container = binding.llLikers,
@@ -183,7 +176,6 @@ class EventDetailFragment : Fragment() {
             )
         }
 
-        // Participants carousel - с иконкой
         viewModel.participantsPreview.observe(viewLifecycleOwner) { usersPreview ->
             buildCarouselWithIcon(
                 container = binding.llParticipants,
@@ -224,7 +216,7 @@ class EventDetailFragment : Fragment() {
             append("📍 ${if (event.type == EventType.ONLINE) "Online" else "Offline"}\n")
             append("📅 ${formatDateTime(event.datetime)}\n")
             if (event.coords != null) {
-                append("🗺️ Координаты: ${event.coords.lat}, ${event.coords.lng}\n")
+                append("🗺️ Coordinates: ${event.coords.lat}, ${event.coords.lng}\n")
             }
         }
 
@@ -232,7 +224,7 @@ class EventDetailFragment : Fragment() {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, shareText)
         }
-        startActivity(Intent.createChooser(shareIntent, "Поделиться событием"))
+        startActivity(Intent.createChooser(shareIntent, "Share event"))
     }
 
     private fun openUsersList(users: List<User>, title: String) {
@@ -252,7 +244,6 @@ class EventDetailFragment : Fragment() {
         }
     }
 
-    // Для спикеров - только аватарки, без иконки и счетчика, без отступа слева
     private fun buildSpeakersCarousel(
         container: LinearLayout,
         parentLayout: View,
@@ -270,13 +261,11 @@ class EventDetailFragment : Fragment() {
         val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)
         val overlap = resources.getDimensionPixelSize(R.dimen.avatar_overlap)
 
-        // Убираем отступ слева для первой аватарки
         val firstAvatarMarginStart = 0
 
         val visibleCount = minOf(users.size, 5)
         val extraCount = users.size - 5
 
-        // Добавляем аватарки без иконки и счетчика
         for (i in 0 until visibleCount) {
             val user = users[i]
             val avatarView = createAvatarView(user)
@@ -299,7 +288,6 @@ class EventDetailFragment : Fragment() {
         }
     }
 
-    // Для лайкнувших и участников - с иконкой и счетчиком
     private fun buildCarouselWithIcon(
         container: LinearLayout,
         parentLayout: View,
@@ -322,7 +310,6 @@ class EventDetailFragment : Fragment() {
         val countMarginEnd = resources.getDimensionPixelSize(R.dimen.carousel_count_margin_end)
         val firstAvatarMarginStart = resources.getDimensionPixelSize(R.dimen.carousel_avatar_first_margin_start)
 
-        // Иконка
         val iconView = ImageView(requireContext()).apply {
             setImageResource(iconResId)
             layoutParams = ViewGroup.MarginLayoutParams(avatarSize, avatarSize).apply {
@@ -332,7 +319,6 @@ class EventDetailFragment : Fragment() {
         }
         container.addView(iconView)
 
-        // Счетчик
         val countView = TextView(requireContext()).apply {
             text = users.size.toString()
             layoutParams = LinearLayout.LayoutParams(
@@ -602,7 +588,6 @@ class EventDetailFragment : Fragment() {
             val placemark = mapView?.map?.mapObjects?.addPlacemark(point, imageProvider)
             placemark?.setOpacity(1.0f)
         } catch (e: Exception) {
-            Log.e(TAG, "Error creating marker", e)
             mapView?.map?.mapObjects?.addPlacemark(point)?.setOpacity(1.0f)
         }
     }
@@ -653,7 +638,6 @@ class EventDetailFragment : Fragment() {
                             }
                         }
                     } catch (e: Exception) {
-                        Log.e(TAG, "Error loading video thumbnail", e)
                         withContext(Dispatchers.Main) {
                             binding.videoPreview.setImageResource(R.drawable.ic_play_circle_filled)
                             binding.ivPlay.visibility = View.VISIBLE
@@ -661,7 +645,7 @@ class EventDetailFragment : Fragment() {
                     }
                 }
                 binding.videoContainer.setOnClickListener {
-                    Toast.makeText(requireContext(), "Видео пока не поддерживается", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Video playback is not supported yet", Toast.LENGTH_SHORT).show()
                 }
             }
 

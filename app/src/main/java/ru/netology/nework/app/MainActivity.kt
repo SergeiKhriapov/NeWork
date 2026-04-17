@@ -5,7 +5,6 @@ import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.widget.PopupWindow
 import android.widget.TextView
@@ -83,7 +82,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             combine(tokenManager.tokenFlow, tokenManager.currentUser) { token, user ->
                 isLoggedIn = token != null
                 currentUser = user
-                Log.d("MainActivity", "Current user: id=${user?.id}, name=${user?.name}, login=${user?.login}")
                 updateProfileIcon()
             }.collect { }
         }
@@ -164,10 +162,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     }
 
     private fun updateMenuVisibilityForDestination(destinationId: Int?) {
-        Log.d("MainActivity", "Destination changed to: $destinationId")
         when (destinationId) {
             R.id.feedFragment -> {
-                Log.d("MainActivity", "Showing FAB for posts")
                 profileMenuItem?.isVisible = true
                 postMenuItem?.isVisible = false
                 logoutMenuItem?.isVisible = false
@@ -177,7 +173,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             }
 
             R.id.eventsFragment -> {
-                Log.d("MainActivity", "Showing FAB for events")
                 profileMenuItem?.isVisible = true
                 postMenuItem?.isVisible = false
                 logoutMenuItem?.isVisible = false
@@ -187,7 +182,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             }
 
             R.id.usersFragment -> {
-                Log.d("MainActivity", "Hiding FAB for users (no create action)")
                 profileMenuItem?.isVisible = true
                 postMenuItem?.isVisible = false
                 logoutMenuItem?.isVisible = false
@@ -196,8 +190,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             }
 
             R.id.userDetailFragment -> {
-                Log.d("MainActivity", "User detail - hiding global FAB (using local FAB in JobsFragment)")
-                // Скрываем глобальную FAB, так как используем локальную в JobsFragment
                 hideFab()
                 hideBottomNav()
 
@@ -226,7 +218,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             }
 
             R.id.newPostFragment -> {
-                Log.d("MainActivity", "Hiding FAB and BottomNav (newPostFragment)")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = true
                 logoutMenuItem?.isVisible = false
@@ -235,7 +226,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             }
 
             R.id.newEventFragment, R.id.locationPickerFragment, R.id.userSelectionFragment -> {
-                Log.d("MainActivity", "Hiding FAB for newEventFragment and related fragments")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = true
                 logoutMenuItem?.isVisible = false
@@ -244,7 +234,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             }
 
             R.id.loginFragment, R.id.registerFragment -> {
-                Log.d("MainActivity", "Hiding FAB and BottomNav (login/register)")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false
                 logoutMenuItem?.isVisible = false
@@ -253,7 +242,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             }
 
             R.id.postDetailFragment, R.id.eventDetailFragment -> {
-                Log.d("MainActivity", "Hiding FAB and BottomNav (detail fragments)")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false
                 logoutMenuItem?.isVisible = false
@@ -262,7 +250,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             }
 
             R.id.usersListFragment -> {
-                Log.d("MainActivity", "Hiding FAB and BottomNav (usersListFragment)")
                 profileMenuItem?.isVisible = false
                 postMenuItem?.isVisible = false
                 logoutMenuItem?.isVisible = false
@@ -271,7 +258,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             }
 
             else -> {
-                Log.d("MainActivity", "Unknown destination, showing FAB and BottomNav")
                 profileMenuItem?.isVisible = true
                 postMenuItem?.isVisible = false
                 logoutMenuItem?.isVisible = false

@@ -15,7 +15,6 @@
         android:orientation="vertical"
         android:padding="12dp">
 
-        <!-- HEADER -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -46,7 +45,7 @@
                     android:textColor="@color/textColor"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    tools:text="Lydia Westervelt" />
+                    tools:text="Author Name" />
 
                 <TextView
                     android:id="@+id/tv_date"
@@ -65,7 +64,6 @@
                 android:src="@drawable/ic_more_vert" />
         </LinearLayout>
 
-        <!-- EVENT INFO (статус и дата проведения) -->
         <LinearLayout
             android:id="@+id/event_info_container"
             android:layout_width="match_parent"
@@ -73,7 +71,6 @@
             android:layout_marginTop="8dp"
             android:orientation="vertical">
 
-            <!-- Статус события (Online/Offline) -->
             <TextView
                 android:id="@+id/tv_event_status"
                 android:layout_width="wrap_content"
@@ -81,10 +78,8 @@
                 android:gravity="center"
                 android:textColor="@color/textColor"
                 android:textSize="12sp"
-
                 tools:text="Offline" />
 
-            <!-- Дата проведения (под статусом) -->
             <TextView
                 android:id="@+id/tv_event_date"
                 android:layout_width="wrap_content"
@@ -97,7 +92,6 @@
                 tools:text="16.05.22 12:00" />
         </LinearLayout>
 
-        <!-- ТЕКСТ СОБЫТИЯ (описание) -->
         <TextView
             android:id="@+id/tv_content"
             android:layout_width="match_parent"
@@ -106,9 +100,8 @@
             android:lineHeight="20sp"
             android:textColor="@color/textColor"
             android:textSize="14sp"
-            tools:text="Приглашаю провести уютный вечер за увлекательными играми! У нас есть несколько вариантов настолок, подходящих для любой компании." />
+            tools:text="Join us for a cozy evening of board games! We have several options suitable for any group." />
 
-        <!-- ССЫЛКА (если есть) -->
         <TextView
             android:id="@+id/tv_link"
             android:layout_width="match_parent"
@@ -120,10 +113,9 @@
             android:textSize="12sp"
             android:textStyle="bold"
             android:visibility="gone"
-            tools:text="https://m2.material.io/components/cards"
+            tools:text="https://example.com"
             tools:visibility="visible" />
 
-        <!-- MEDIA (изображения / видео) -->
         <FrameLayout
             android:id="@+id/media_container"
             android:layout_width="match_parent"
@@ -159,7 +151,6 @@
                 tools:visibility="visible" />
         </FrameLayout>
 
-        <!-- АУДИОПЛЕЕР -->
         <LinearLayout
             android:id="@+id/audio_player"
             android:layout_width="match_parent"
@@ -194,13 +185,11 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- ДЕЙСТВИЯ -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="40dp"
             android:layout_marginTop="12dp">
 
-            <!-- Лайк слева -->
             <LinearLayout
                 android:id="@+id/btn_like"
                 android:layout_width="wrap_content"
@@ -230,7 +219,6 @@
                     tools:text="10" />
             </LinearLayout>
 
-            <!-- Поделиться (справа от лайка) -->
             <LinearLayout
                 android:id="@+id/btn_share"
                 android:layout_width="wrap_content"
@@ -260,7 +248,6 @@
                     tools:text="5" />
             </LinearLayout>
 
-            <!-- Участники справа -->
             <LinearLayout
                 android:id="@+id/btn_participants"
                 android:layout_width="wrap_content"

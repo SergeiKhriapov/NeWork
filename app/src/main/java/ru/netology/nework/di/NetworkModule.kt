@@ -7,13 +7,12 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import ru.netology.nework.data.api.ApiKeyInterceptor
 import ru.netology.nework.data.api.ApiService
 import ru.netology.nework.data.api.AuthInterceptor
-import ru.netology.nework.data.api.adapter.OffsetDateTimeAdapter  // ← этот импорт
+import ru.netology.nework.data.api.adapter.OffsetDateTimeAdapter
 import ru.netology.nework.data.datastore.TokenManager
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
@@ -30,15 +29,10 @@ object NetworkModule {
         apiKeyInterceptor: ApiKeyInterceptor,
         authInterceptor: AuthInterceptor
     ): OkHttpClient {
-        val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
-
         return OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
-            .addInterceptor(logging)
             .addInterceptor(apiKeyInterceptor)
             .addInterceptor(authInterceptor)
             .build()
@@ -57,7 +51,7 @@ object NetworkModule {
     @Singleton
     fun provideMoshi(): Moshi {
         return Moshi.Builder()
-            .add(OffsetDateTimeAdapter())  // ← теперь не красный
+            .add(OffsetDateTimeAdapter())
             .add(KotlinJsonAdapterFactory())
             .build()
     }

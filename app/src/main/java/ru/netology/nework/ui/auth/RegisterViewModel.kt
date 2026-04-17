@@ -10,9 +10,6 @@ import ru.netology.nework.domain.repository.AuthRepository
 import ru.netology.nework.model.User
 import java.io.File
 import javax.inject.Inject
-import android.util.Log
-
-private const val TAG = "RegisterViewModel"
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
@@ -26,17 +23,12 @@ class RegisterViewModel @Inject constructor(
 
     fun setAvatarFile(file: File?) {
         avatarFile = file
-        Log.d(TAG, "setAvatarFile: $file")
     }
 
     fun register(login: String, password: String, name: String) {
-        Log.d(TAG, "register called with login=$login, name=$name")
         viewModelScope.launch {
-            Log.d(TAG, "Launching coroutine")
             val result = authRepository.register(login, password, name, avatarFile)
-            Log.d(TAG, "repository.register returned: $result")
             _registerResult.emit(result)
-            Log.d(TAG, "Result emitted")
         }
     }
 }

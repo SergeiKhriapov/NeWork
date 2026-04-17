@@ -31,7 +31,7 @@
                     android:textColor="@color/textColor"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    tools:text="ПАО ПСБ" />
+                    tools:text="Company Name" />
 
                 <ImageButton
                     android:id="@+id/btnDelete"
@@ -43,7 +43,6 @@
                     tools:visibility="visible" />
             </LinearLayout>
 
-            <!-- Должность - увеличен отступ -->
             <TextView
                 android:id="@+id/tvPeriod"
                 android:layout_width="match_parent"
@@ -51,7 +50,7 @@
                 android:layout_marginTop="0dp"
                 android:textColor="@color/textColor"
                 android:textSize="14sp"
-                tools:text="1 августа 2020 – НВ" />
+                tools:text="August 1, 2020 – Present" />
 
             <TextView
                 android:id="@+id/tvPosition"
@@ -60,9 +59,8 @@
                 android:layout_marginTop="12dp"
                 android:textColor="@color/textColor"
                 android:textSize="16sp"
-                tools:text="Главный инженер-программист" />
+                tools:text="Lead Software Engineer" />
 
-            <!-- Ссылка - синий цвет и увеличен отступ -->
             <LinearLayout
                 android:id="@+id/llLink"
                 android:layout_width="wrap_content"
@@ -81,7 +79,7 @@
                     android:textColor="@color/purple_primary"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    tools:text="https://m2.material.io/components/cards" />
+                    tools:text="https://example.com" />
             </LinearLayout>
 
         </LinearLayout>

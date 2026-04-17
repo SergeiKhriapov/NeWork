@@ -17,7 +17,6 @@
             android:background="@color/background"
             android:padding="12dp">
 
-            <!-- HEADER -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -48,7 +47,7 @@
                         android:textColor="@color/textColor"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        tools:text="Lydia Westervelt" />
+                        tools:text="Author Name" />
 
                     <TextView
                         android:id="@+id/tv_date"
@@ -67,7 +66,6 @@
                     android:src="@drawable/ic_more_vert" />
             </LinearLayout>
 
-            <!-- MEDIA (изображения / видео) -->
             <FrameLayout
                 android:id="@+id/media_container"
                 android:layout_width="match_parent"
@@ -103,7 +101,6 @@
                     tools:visibility="visible" />
             </FrameLayout>
 
-            <!-- АУДИОПЛЕЕР (без верхнего отступа) -->
             <LinearLayout
                 android:id="@+id/audio_player"
                 android:layout_width="match_parent"
@@ -138,7 +135,6 @@
                     android:paddingEnd="8dp" />
             </LinearLayout>
 
-            <!-- ТЕКСТ ПОСТА -->
             <TextView
                 android:id="@+id/tv_content"
                 android:layout_width="match_parent"
@@ -148,10 +144,9 @@
                 android:textColor="@color/textColor"
                 android:lineHeight="20sp"
                 android:visibility="gone"
-                tools:text="Шляпа — это головной убор, который носили в Древней Греции."
+                tools:text="Post content text"
                 tools:visibility="visible" />
 
-            <!-- ДЕЙСТВИЯ (лайк, шеры) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

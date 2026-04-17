@@ -1,7 +1,6 @@
 package ru.netology.nework.ui.users
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -22,7 +21,6 @@ import ru.netology.nework.R
 import ru.netology.nework.databinding.FragmentUserSelectionBinding
 import ru.netology.nework.viewmodel.UsersViewModel
 
-private const val TAG = "UserSelectionFragment"
 const val REQUEST_KEY = "user_selection"
 const val SELECTED_USERS_KEY = "selected_users"
 
@@ -47,22 +45,17 @@ class UserSelectionFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Получаем заголовок из аргументов, если нет - используем "Choose users"
         val title = arguments?.getString("title", "Choose users") ?: "Choose users"
         (requireActivity() as AppCompatActivity).supportActionBar?.title = title
 
         setupRecyclerView()
         observeViewModel()
 
-        // Восстанавливаем выбранных пользователей из ViewModel
         val savedSelectedIds = viewModel.getSelectedUserIds()
         if (savedSelectedIds.isNotEmpty()) {
-            Log.d(TAG, "Restoring selected users from ViewModel: ${savedSelectedIds.joinToString()}")
             adapter.setSelectedIds(savedSelectedIds)
         } else {
-            // Если в ViewModel нет, пробуем из аргументов
             arguments?.getLongArray("selected_ids")?.let { ids ->
-                Log.d(TAG, "Restoring selected users from arguments: ${ids.joinToString()}")
                 adapter.setSelectedIds(ids.toSet())
                 viewModel.updateSelectedUsers(ids.toSet())
             }
@@ -75,11 +68,9 @@ class UserSelectionFragment : Fragment() {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
                     R.id.action_post -> {
-                        Log.d(TAG, "Menu item action_post clicked")
                         confirmSelection()
                         true
                     }
-
                     else -> false
                 }
             }
@@ -88,17 +79,14 @@ class UserSelectionFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // При возврате на фрагмент обновляем выбранных пользователей из ViewModel
         val savedSelectedIds = viewModel.getSelectedUserIds()
         if (savedSelectedIds.isNotEmpty() && ::adapter.isInitialized) {
-            Log.d(TAG, "onResume: restoring selected users: ${savedSelectedIds.joinToString()}")
             adapter.setSelectedIds(savedSelectedIds)
         }
     }
 
     private fun confirmSelection() {
         val selectedIds = adapter.getSelectedIds().toList().toLongArray()
-        Log.d(TAG, "confirmSelection: selectedIds = ${selectedIds.joinToString()}")
         val bundle = Bundle().apply {
             putLongArray(SELECTED_USERS_KEY, selectedIds)
         }
@@ -108,7 +96,6 @@ class UserSelectionFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = UserSelectionAdapter { user, isChecked ->
-            // При каждом нажатии сохраняем в ViewModel
             val currentIds = viewModel.getSelectedUserIds().toMutableSet()
             if (isChecked) {
                 currentIds.add(user.id)
@@ -116,7 +103,6 @@ class UserSelectionFragment : Fragment() {
                 currentIds.remove(user.id)
             }
             viewModel.updateSelectedUsers(currentIds)
-            Log.d(TAG, "User ${user.id} $isChecked, total selected: ${currentIds.size}")
         }
         binding.rvUsers.layoutManager = LinearLayoutManager(requireContext())
         binding.rvUsers.adapter = adapter
@@ -124,7 +110,6 @@ class UserSelectionFragment : Fragment() {
 
     private fun observeViewModel() {
         viewModel.users.observe(viewLifecycleOwner) { users ->
-            Log.d(TAG, "Users loaded, count: ${users.size}")
             adapter.submitList(users)
         }
 

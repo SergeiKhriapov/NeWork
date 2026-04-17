@@ -24,7 +24,6 @@
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
 
-                <!-- Поле логина -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/til_login"
                     style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
@@ -44,7 +43,6 @@
                         android:textColor="@color/black" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Поле пароля -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/til_password"
                     style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
@@ -65,7 +63,6 @@
                         android:textColor="@color/black" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Кнопка входа -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_login"
                     android:layout_width="match_parent"
@@ -77,7 +74,6 @@
                     android:textColor="@android:color/white"
                     android:backgroundTint="@color/purple_primary" />
 
-                <!-- Ссылка на регистрацию -->
                 <TextView
                     android:id="@+id/tv_register_link"
                     android:layout_width="wrap_content"

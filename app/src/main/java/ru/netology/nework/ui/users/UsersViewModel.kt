@@ -24,7 +24,6 @@ class UsersViewModel @Inject constructor(
     private val _error = MutableLiveData<String?>(null)
     val error: LiveData<String?> = _error
 
-    // Сохраняем выбранных пользователей
     private val _selectedUserIds = MutableLiveData<Set<Long>>(emptySet())
     val selectedUserIds: LiveData<Set<Long>> = _selectedUserIds
 
@@ -41,7 +40,7 @@ class UsersViewModel @Inject constructor(
             result.onSuccess { list ->
                 _users.value = list.sortedByDescending { it.id }
             }.onFailure { exception ->
-                _error.value = exception.message ?: "Ошибка загрузки"
+                _error.value = exception.message ?: "Failed to load users"
             }
         }
     }

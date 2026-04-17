@@ -1,6 +1,5 @@
 package ru.netology.nework.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -44,12 +43,10 @@ class FeedViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
-            Log.d("FeedViewModel", "Loading latest posts...")
             val result = postRepository.getLatestPosts(20)
             _isLoading.value = false
             result.onFailure { exception ->
-                Log.e("FeedViewModel", "Error loading posts", exception)
-                _error.value = exception.message ?: "Ошибка загрузки"
+                _error.value = exception.message ?: "Failed to load posts"
             }
         }
     }
@@ -64,7 +61,7 @@ class FeedViewModel @Inject constructor(
             val result = postRepository.getPostsBefore(oldestId, 15)
             _isLoadingMore.value = false
             result.onFailure { exception ->
-                _error.value = exception.message ?: "Ошибка загрузки"
+                _error.value = exception.message ?: "Failed to load posts"
             }
         }
     }
@@ -78,8 +75,8 @@ class FeedViewModel @Inject constructor(
             }
             result.onFailure { error ->
                 when (error.message) {
-                    "Нужно авторизоваться" -> _authError.value = error.message
-                    else -> _error.value = error.message ?: "Ошибка при обновлении лайка"
+                    "Authentication required" -> _authError.value = error.message
+                    else -> _error.value = error.message ?: "Failed to update like"
                 }
             }
         }
@@ -94,7 +91,7 @@ class FeedViewModel @Inject constructor(
         viewModelScope.launch {
             val result = postRepository.deletePost(postId)
             if (result.isFailure) {
-                _error.value = result.exceptionOrNull()?.message ?: "Ошибка удаления"
+                _error.value = result.exceptionOrNull()?.message ?: "Failed to delete post"
             }
         }
     }
@@ -103,7 +100,7 @@ class FeedViewModel @Inject constructor(
         viewModelScope.launch {
             val result = postRepository.updatePost(postId, content, attachment, null, null)
             if (result.isFailure) {
-                _error.value = result.exceptionOrNull()?.message ?: "Ошибка обновления"
+                _error.value = result.exceptionOrNull()?.message ?: "Failed to update post"
             }
         }
     }

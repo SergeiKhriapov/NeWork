@@ -1,7 +1,6 @@
 package ru.netology.nework.data.repository
 
 import CreatePostRequest
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -22,8 +21,6 @@ import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private const val TAG = "PostRepositoryImpl"
-
 @Singleton
 class PostRepositoryImpl @Inject constructor(
     private val apiService: ApiService,
@@ -40,7 +37,6 @@ class PostRepositoryImpl @Inject constructor(
 
     override suspend fun getLatestPosts(count: Int): Result<List<Post>> {
         return try {
-            Log.d(TAG, "Fetching latest $count posts from network")
             val response = apiService.getLatestPosts(count)
             if (response.isSuccessful) {
                 val postsDto = response.body() ?: emptyList()
@@ -57,21 +53,18 @@ class PostRepositoryImpl @Inject constructor(
                     hasMore = posts.size == count
                 }
 
-                Log.d(TAG, "Loaded ${posts.size} posts")
                 Result.success(posts)
             } else {
-                Log.e(TAG, "Network error: ${response.code()}")
                 val cached = postDao.getAll().map { it.toDomain() }
                 if (cached.isNotEmpty()) {
                     currentPosts = cached
                     _allPosts.postValue(cached)
                     Result.success(cached)
                 } else {
-                    Result.failure(Exception("Нет данных и нет сети"))
+                    Result.failure(Exception("No data and no network connection"))
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Exception in getLatestPosts", e)
             val cached = postDao.getAll().map { it.toDomain() }
             if (cached.isNotEmpty()) {
                 currentPosts = cached
@@ -90,7 +83,6 @@ class PostRepositoryImpl @Inject constructor(
             }
 
             isLoadingMore = true
-            Log.d(TAG, "Fetching posts before $id")
             val response = apiService.getPostsBefore(id, count)
             isLoadingMore = false
 
@@ -107,19 +99,16 @@ class PostRepositoryImpl @Inject constructor(
 
                     oldestPostId = newPosts.last().id
                     hasMore = newPosts.size == count
-
-                    Log.d(TAG, "Loaded ${newPosts.size} more posts")
                 } else {
                     hasMore = false
                 }
 
                 Result.success(newPosts)
             } else {
-                Result.failure(Exception("Ошибка загрузки"))
+                Result.failure(Exception("Failed to load posts"))
             }
         } catch (e: Exception) {
             isLoadingMore = false
-            Log.e(TAG, "Exception in getPostsBefore", e)
             Result.failure(e)
         }
     }
@@ -141,10 +130,9 @@ class PostRepositoryImpl @Inject constructor(
 
                 Result.success(newPosts)
             } else {
-                Result.failure(Exception("Ошибка загрузки"))
+                Result.failure(Exception("Failed to load posts"))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Exception in getPostsAfter", e)
             Result.failure(e)
         }
     }
@@ -156,10 +144,10 @@ class PostRepositoryImpl @Inject constructor(
             }
             val response = apiService.getPostById(id)
             if (response.isSuccessful) {
-                val postDto = response.body() ?: return Result.failure(Exception("Пустой ответ"))
+                val postDto = response.body() ?: return Result.failure(Exception("Empty response"))
                 Result.success(postDto.toDomain())
             } else {
-                Result.failure(Exception("Пост не найден"))
+                Result.failure(Exception("Post not found"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -170,16 +158,16 @@ class PostRepositoryImpl @Inject constructor(
         return try {
             val response = apiService.likePost(id)
             if (response.isSuccessful) {
-                val postDto = response.body() ?: return Result.failure(Exception("Пустой ответ"))
+                val postDto = response.body() ?: return Result.failure(Exception("Empty response"))
                 val updatedPost = postDto.toDomain()
                 currentPosts = currentPosts.map { if (it.id == id) updatedPost else it }
                 _allPosts.postValue(currentPosts)
                 Result.success(updatedPost)
             } else {
                 val errorMsg = when (response.code()) {
-                    403 -> "Нужно авторизоваться"
-                    404 -> "Пост не найден"
-                    else -> "Ошибка ${response.code()}"
+                    403 -> "Authentication required"
+                    404 -> "Post not found"
+                    else -> "Error ${response.code()}"
                 }
                 Result.failure(Exception(errorMsg))
             }
@@ -192,16 +180,16 @@ class PostRepositoryImpl @Inject constructor(
         return try {
             val response = apiService.unlikePost(id)
             if (response.isSuccessful) {
-                val postDto = response.body() ?: return Result.failure(Exception("Пустой ответ"))
+                val postDto = response.body() ?: return Result.failure(Exception("Empty response"))
                 val updatedPost = postDto.toDomain()
                 currentPosts = currentPosts.map { if (it.id == id) updatedPost else it }
                 _allPosts.postValue(currentPosts)
                 Result.success(updatedPost)
             } else {
                 val errorMsg = when (response.code()) {
-                    403 -> "Нужно авторизоваться"
-                    404 -> "Пост не найден"
-                    else -> "Ошибка ${response.code()}"
+                    403 -> "Authentication required"
+                    404 -> "Post not found"
+                    else -> "Error ${response.code()}"
                 }
                 Result.failure(Exception(errorMsg))
             }
@@ -219,7 +207,7 @@ class PostRepositoryImpl @Inject constructor(
                 postDao.deleteById(id)
                 Result.success(Unit)
             } else {
-                Result.failure(Exception("Ошибка удаления"))
+                Result.failure(Exception("Failed to delete post"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -233,7 +221,6 @@ class PostRepositoryImpl @Inject constructor(
         mentionIds: Set<Long>?
     ): Result<Post> {
         return try {
-            // Загружаем медиа, если есть И если это локальный файл
             val (mediaUrl, attachmentType) = uploadMediaIfNeeded(attachment)
 
             val attachmentDto = mediaUrl?.let { url ->
@@ -265,7 +252,6 @@ class PostRepositoryImpl @Inject constructor(
                 Result.failure(Exception("Server error: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error saving post", e)
             Result.failure(e)
         }
     }
@@ -278,8 +264,6 @@ class PostRepositoryImpl @Inject constructor(
         mentionIds: Set<Long>?
     ): Result<Post> {
         return try {
-            // Проверяем, нужно ли загружать медиа
-            // Загружаем ТОЛЬКО если это новый локальный файл (начинается с file:// или /data)
             val isNewLocalFile = attachment?.let {
                 !it.url.startsWith("http://") && !it.url.startsWith("https://") && File(it.url).exists()
             } ?: false
@@ -287,7 +271,6 @@ class PostRepositoryImpl @Inject constructor(
             val (mediaUrl, attachmentType) = if (isNewLocalFile) {
                 uploadMediaIfNeeded(attachment)
             } else {
-                // Если это URL с сервера или null, просто используем существующий attachment
                 if (attachment != null) {
                     Pair(attachment.url, attachment.type)
                 } else {
@@ -324,20 +307,16 @@ class PostRepositoryImpl @Inject constructor(
                 Result.failure(Exception("Server error: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating post", e)
             Result.failure(e)
         }
     }
 
-    // Вспомогательный метод для загрузки медиа
     private suspend fun uploadMediaIfNeeded(attachment: Attachment?): Pair<String?, AttachmentType?> {
         if (attachment == null) return Pair(null, null)
 
-        // Проверяем, является ли URL локальным файлом
         val isLocalFile = !attachment.url.startsWith("http://") && !attachment.url.startsWith("https://")
 
         if (!isLocalFile) {
-            // Это URL с сервера, не нужно загружать
             return Pair(attachment.url, attachment.type)
         }
 

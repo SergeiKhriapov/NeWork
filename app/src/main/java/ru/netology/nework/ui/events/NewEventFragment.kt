@@ -11,7 +11,6 @@ import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -66,7 +65,6 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
-private const val TAG = "NewEventFragment"
 private const val LOCATION_REQUEST_KEY = "location_request"
 
 @AndroidEntryPoint
@@ -92,7 +90,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
                 )
                 handleMediaResult(uri, AttachmentType.IMAGE)
             } else {
-                Toast.makeText(requireContext(), "Не удалось сделать фото", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Failed to take photo", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -114,7 +112,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) openCamera()
-            else Toast.makeText(requireContext(), "Необходимо разрешение на камеру", Toast.LENGTH_SHORT).show()
+            else Toast.makeText(requireContext(), "Camera permission required", Toast.LENGTH_SHORT).show()
         }
 
     override fun onCreateView(
@@ -129,8 +127,6 @@ class NewEventFragment : Fragment(), OnPostActionListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        Log.d(TAG, "=== onViewCreated START ===")
-
         if (!viewModel.isArgumentsLoaded()) {
             loadArguments()
             viewModel.markArgumentsLoaded()
@@ -144,18 +140,12 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         binding.fabEventOptions.post {
             binding.fabEventOptions.show()
             binding.fabEventOptions.bringToFront()
-            Log.d(TAG, "Local FAB visibility after post: ${binding.fabEventOptions.visibility}")
         }
-
-        Log.d(TAG, "=== onViewCreated END ===")
     }
 
     private fun loadArguments() {
         arguments?.let { args ->
             val eventId = args.getLong("eventId", -1)
-
-            Log.d(TAG, "loadArguments: eventId = $eventId")
-            Log.d(TAG, "All arguments keys: ${args.keySet().joinToString()}")
 
             if (eventId != -1L) {
                 val content = args.getString("content", "")
@@ -181,29 +171,20 @@ class NewEventFragment : Fragment(), OnPostActionListener {
                 }
 
                 val eventDateTimeStr = args.getString("eventDateTime")
-                Log.d(TAG, "loadArguments: eventDateTimeStr = $eventDateTimeStr")
-
                 val eventDateTime = eventDateTimeStr?.let {
                     try {
                         OffsetDateTime.parse(it).toLocalDateTime()
                     } catch (e: Exception) {
-                        Log.e(TAG, "Error parsing eventDateTime", e)
                         null
                     }
                 }
 
-                Log.d(TAG, "loadArguments: parsed eventDateTime = $eventDateTime")
-
-                // ВАЖНО: speakerIds - это спикеры
                 val speakerIds = args.getLongArray("speakerIds")?.toSet() ?: emptySet()
 
                 viewModel.initEditing(
                     eventId, content, attachment, coords,
                     eventType, eventDateTime, speakerIds
                 )
-
-                Log.d(TAG, "After initEditing: viewModel.eventDateTime.value = ${viewModel.eventDateTime.value}")
-                Log.d(TAG, "After initEditing: viewModel.speakerIds.value = ${viewModel.speakerIds.value}")
             } else {
                 viewModel.initNew()
             }
@@ -241,7 +222,6 @@ class NewEventFragment : Fragment(), OnPostActionListener {
             }
         }
 
-        // Наблюдаем за спикерами
         viewModel.speakerIds.observe(viewLifecycleOwner) {
             updateSelectedSpeakersDisplay()
         }
@@ -250,13 +230,9 @@ class NewEventFragment : Fragment(), OnPostActionListener {
             updateSelectedSpeakersDisplay()
         }
 
-        viewModel.eventType.observe(viewLifecycleOwner) { type ->
-            // Обновляем UI если нужно
-        }
+        viewModel.eventType.observe(viewLifecycleOwner) { type -> }
 
-        viewModel.eventDateTime.observe(viewLifecycleOwner) { dateTime ->
-            // Обновляем UI если нужно
-        }
+        viewModel.eventDateTime.observe(viewLifecycleOwner) { dateTime -> }
 
         viewModel.isEditing.observe(viewLifecycleOwner) { isEditing ->
             val title = if (isEditing) "Edit event" else "New event"
@@ -298,7 +274,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         binding.btnRemove.setOnClickListener { viewModel.setAttachment(null) }
         binding.btnRemoveLocation.setOnClickListener {
             viewModel.setCoordinates(null)
-            Toast.makeText(requireContext(), "Местоположение удалено", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Location removed", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -306,20 +282,16 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         try {
             val fab = binding.fabEventOptions
             fab.setOnClickListener {
-                Log.d(TAG, "FAB clicked in NewEventFragment")
                 openEventOptionsBottomSheet()
             }
             fab.show()
             fab.isEnabled = true
             fab.isClickable = true
-            Log.d(TAG, "Local FAB configured successfully")
         } catch (e: Exception) {
-            Log.e(TAG, "setupLocalFAB error: ${e.message}")
         }
     }
 
     private fun openEventOptionsBottomSheet() {
-        Log.d(TAG, "Opening bottom sheet")
         try {
             val bottomSheet = EventOptionsBottomSheet.newInstance()
 
@@ -330,7 +302,6 @@ class NewEventFragment : Fragment(), OnPostActionListener {
             }
 
             bottomSheet.onOptionsSelected = { eventType, dateTime ->
-                Log.d(TAG, "Options selected: type=$eventType, dateTime=$dateTime")
                 viewModel.setEventType(eventType)
                 viewModel.setEventDateTime(dateTime)
                 val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm", Locale.getDefault())
@@ -338,7 +309,6 @@ class NewEventFragment : Fragment(), OnPostActionListener {
             }
             bottomSheet.show(parentFragmentManager, "event_options")
         } catch (e: Exception) {
-            Log.e(TAG, "Error opening bottom sheet: ${e.message}")
         }
     }
 
@@ -355,10 +325,8 @@ class NewEventFragment : Fragment(), OnPostActionListener {
             ).show()
         }
 
-        // Получаем выбранных спикеров
         setFragmentResultListener(REQUEST_KEY) { _, bundle ->
             val selectedIds = bundle.getLongArray(SELECTED_USERS_KEY)?.toSet() ?: emptySet()
-            Log.d(TAG, "Speakers selected: ${selectedIds.joinToString()}")
             viewModel.setSpeakerIds(selectedIds)
         }
     }
@@ -385,7 +353,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
             Bundle().apply {
                 putLongArray("selected_ids", viewModel.speakerIds.value?.toLongArray() ?: longArrayOf())
                 putString("title", "Select speakers")
-                putString("selection_mode", "speakers") // Указываем, что выбираем спикеров
+                putString("selection_mode", "speakers")
             }
         )
     }
@@ -539,7 +507,6 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         }
     }
 
-    // Обновляем отображение выбранных спикеров
     private fun updateSelectedSpeakersDisplay() {
         val allUsers = usersViewModel.users.value ?: return
         val selectedIds = viewModel.speakerIds.value ?: emptySet()
@@ -553,7 +520,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
 
         binding.llSelectedUsers.visibility = View.VISIBLE
         binding.tvMentionedLabel.visibility = View.VISIBLE
-        binding.tvMentionedLabel.text = "Speakers:" // Меняем текст на "Speakers:"
+        binding.tvMentionedLabel.text = "Speakers:"
         binding.llSelectedUsers.removeAllViews()
 
         val avatarSize = resources.getDimensionPixelSize(R.dimen.avatar_size)
@@ -562,7 +529,7 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         val countMarginEnd = resources.getDimensionPixelSize(R.dimen.mention_count_margin)
 
         val iconView = ImageView(requireContext()).apply {
-            setImageResource(R.drawable.ic_mentioned) // Иконка для спикеров
+            setImageResource(R.drawable.ic_mentioned)
             layoutParams = ViewGroup.MarginLayoutParams(avatarSize, avatarSize).apply {
                 marginEnd = iconMarginEnd
             }
@@ -717,25 +684,18 @@ class NewEventFragment : Fragment(), OnPostActionListener {
 
     private fun showRemoveSpeakerDialog(user: User) {
         AlertDialog.Builder(requireContext())
-            .setTitle("Убрать спикера")
-            .setMessage("Убрать ${user.name} из спикеров?")
-            .setPositiveButton("Да") { _, _ ->
+            .setTitle("Remove speaker")
+            .setMessage("Remove ${user.name} from speakers?")
+            .setPositiveButton("Yes") { _, _ ->
                 val currentIds = viewModel.speakerIds.value?.toMutableSet() ?: return@setPositiveButton
                 currentIds.remove(user.id)
                 viewModel.setSpeakerIds(currentIds)
             }
-            .setNegativeButton("Нет", null)
+            .setNegativeButton("No", null)
             .show()
     }
 
     override fun onPostAction() {
-        Log.d(TAG, "=== onPostAction CALLED ===")
-        Log.d(TAG, "viewModel.isSaving.value = ${viewModel.isSaving.value}")
-        Log.d(TAG, "viewModel.eventDateTime.value = ${viewModel.eventDateTime.value}")
-        Log.d(TAG, "viewModel.isEditing.value = ${viewModel.isEditing.value}")
-        Log.d(TAG, "viewModel.editingEventId.value = ${viewModel.editingEventId.value}")
-        Log.d(TAG, "viewModel.speakerIds.value = ${viewModel.speakerIds.value}")
-
         if (viewModel.isSaving.value == true) {
             Toast.makeText(requireContext(), "Saving in progress", Toast.LENGTH_SHORT).show()
             return
@@ -745,37 +705,31 @@ class NewEventFragment : Fragment(), OnPostActionListener {
         val eventDateTime = viewModel.eventDateTime.value
 
         if (eventDateTime == null) {
-            Log.e(TAG, "eventDateTime is NULL!")
-            Toast.makeText(requireContext(), "Сначала выберите дату и время мероприятия!", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), "Please select event date and time first!", Toast.LENGTH_LONG).show()
             return
         }
 
         if (text.isBlank() && viewModel.attachment.value == null) {
-            Toast.makeText(requireContext(), "Введите текст или добавьте медиа", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Enter text or add media", Toast.LENGTH_SHORT).show()
             return
         }
 
         if (viewModel.isEditing.value == true) {
             val editingEventId = viewModel.editingEventId.value
-            Log.d(TAG, "editingEventId = $editingEventId")
-
             if (editingEventId != null) {
-                Log.d(TAG, "Calling updateEvent with id=$editingEventId, text=$text, eventDateTime=$eventDateTime")
                 viewModel.updateEvent(
                     editingEventId, text, viewModel.attachment.value, viewModel.coordinates.value,
                     viewModel.eventType.value ?: EventType.OFFLINE, eventDateTime,
-                    viewModel.speakerIds.value // Передаем спикеров
+                    viewModel.speakerIds.value
                 )
             } else {
-                Log.e(TAG, "editingEventId is NULL!")
-                Toast.makeText(requireContext(), "Ошибка: ID события не найден", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Error: Event ID not found", Toast.LENGTH_SHORT).show()
             }
         } else {
-            Log.d(TAG, "Creating new event")
             viewModel.saveEvent(
                 text, viewModel.attachment.value, viewModel.coordinates.value,
                 viewModel.eventType.value ?: EventType.OFFLINE, eventDateTime,
-                viewModel.speakerIds.value // Передаем спикеров
+                viewModel.speakerIds.value
             )
         }
     }

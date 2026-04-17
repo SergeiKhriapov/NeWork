@@ -1,6 +1,5 @@
 package ru.netology.nework.ui.users
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -13,8 +12,6 @@ import ru.netology.nework.databinding.ItemUserCheckableBinding
 import ru.netology.nework.model.User
 import ru.netology.nework.utils.LetterAvatarDrawable
 
-private const val TAG = "UserSelectionAdapter"
-
 class UserSelectionAdapter(
     private val onItemClick: (User, Boolean) -> Unit
 ) : ListAdapter<User, UserSelectionAdapter.UserViewHolder>(DiffCallback) {
@@ -24,7 +21,6 @@ class UserSelectionAdapter(
     fun getSelectedIds(): Set<Long> = selectedIds.toSet()
 
     fun setSelectedIds(ids: Set<Long>) {
-        Log.d(TAG, "setSelectedIds: $ids")
         selectedIds.clear()
         selectedIds.addAll(ids)
         notifyDataSetChanged()
@@ -57,9 +53,7 @@ class UserSelectionAdapter(
                         } else {
                             selectedIds.remove(user.id)
                         }
-                        // Уведомляем об изменении при каждом клике
                         onItemClick(user, isChecked)
-                        Log.d(TAG, "Selection changed: user=${user.id}, isChecked=$isChecked, selectedIds=$selectedIds")
                     }
                 }
             }
@@ -87,10 +81,8 @@ class UserSelectionAdapter(
                     ivAvatar.setImageDrawable(drawable)
                 }
 
-                // Временно отключаем слушатель, чтобы не вызвать событие при установке состояния
                 cbSelected.setOnCheckedChangeListener(null)
                 cbSelected.isChecked = selectedIds.contains(user.id)
-                // Возвращаем слушатель
                 cbSelected.setOnCheckedChangeListener { _, isChecked ->
                     currentUser?.let { u ->
                         if (selectedIds.contains(u.id) != isChecked) {

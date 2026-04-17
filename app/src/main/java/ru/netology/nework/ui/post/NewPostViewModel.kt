@@ -16,7 +16,6 @@ class NewPostViewModel @Inject constructor(
     private val repository: PostRepository
 ) : ViewModel() {
 
-    // Основные поля состояния
     private val _postText = MutableLiveData("")
     val postText: LiveData<String> = _postText
 
@@ -29,21 +28,18 @@ class NewPostViewModel @Inject constructor(
     private val _mentionIds = MutableLiveData<Set<Long>>(emptySet())
     val mentionIds: LiveData<Set<Long>> = _mentionIds
 
-    // Режим редактирования
     private val _isEditing = MutableLiveData(false)
     val isEditing: LiveData<Boolean> = _isEditing
 
     private val _editingPostId = MutableLiveData<Long?>(null)
     val editingPostId: LiveData<Long?> = _editingPostId
 
-    // Состояние сохранения
     private val _isSaving = MutableLiveData(false)
     val isSaving: LiveData<Boolean> = _isSaving
 
     private val _saveCompleted = MutableLiveData<Boolean?>(null)
     val saveCompleted: LiveData<Boolean?> = _saveCompleted
 
-    // Флаг для предотвращения повторной загрузки аргументов
     private var argumentsLoaded = false
 
     fun markArgumentsLoaded() {

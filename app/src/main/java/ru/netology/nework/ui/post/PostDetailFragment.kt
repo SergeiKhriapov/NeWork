@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -55,7 +54,6 @@ import ru.netology.nework.utils.DateUtils.formatForDisplay
 import ru.netology.nework.utils.LetterAvatarDrawable
 import ru.netology.nework.viewmodel.PostDetailViewModel
 
-private const val TAG = "PostDetailFragment"
 private const val PROGRESS_UPDATE_INTERVAL_MS = 200L
 
 @AndroidEntryPoint
@@ -67,7 +65,6 @@ class PostDetailFragment : Fragment() {
     private val viewModel: PostDetailViewModel by viewModels()
     private var mapView: MapView? = null
 
-    // Audio player
     private var audioPlayer: ExoPlayer? = null
     private var currentAudioUrl: String? = null
     private var isAudioPlaying = false
@@ -97,7 +94,6 @@ class PostDetailFragment : Fragment() {
         }
 
         override fun onPlayerError(error: PlaybackException) {
-            Log.e(TAG, "Audio player error: ${error.message}")
             stopAudioPlayback()
         }
     }
@@ -116,11 +112,9 @@ class PostDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val postId = arguments?.getLong("postId") ?: run {
-            Log.e(TAG, "No postId in arguments")
             findNavController().navigateUp()
             return
         }
-        Log.d(TAG, "Received postId = $postId")
 
         setupSeekBar()
         setupAudioButton()
@@ -128,15 +122,11 @@ class PostDetailFragment : Fragment() {
         viewModel.loadPost(postId)
 
         viewModel.post.observe(viewLifecycleOwner) { post ->
-            Log.d(TAG, "post observed: $post")
             if (post == null) {
-                Log.e(TAG, "Post is null, finishing")
-                Toast.makeText(requireContext(), "Пост не найден", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Post not found", Toast.LENGTH_SHORT).show()
                 findNavController().navigateUp()
                 return@observe
             }
-
-            Log.d(TAG, "Post loaded: id=${post.id}, author=${post.author}, content=${post.content}")
 
             loadAvatar(binding.ivAvatar, post.authorAvatar, post.author)
             binding.tvAuthorName.text = post.author
@@ -151,23 +141,20 @@ class PostDetailFragment : Fragment() {
             updateMediaPreview(post.attachment)
 
             if (post.coords != null) {
-                Log.d(TAG, "Post has coordinates: ${post.coords}")
                 showMap(post.coords.lat, post.coords.lng)
             } else {
                 binding.mapContainer.visibility = View.GONE
             }
         }
 
-        // Для карусели используем Preview (только имя и аватар)
         viewModel.likersPreview.observe(viewLifecycleOwner) { usersPreview ->
-            Log.d(TAG, "likersPreview observed: size=${usersPreview.size}")
             buildCarousel(
                 container = binding.llLikers,
                 parentLayout = binding.likersLayout,
                 users = usersPreview,
                 iconResId = R.drawable.ic_liked,
                 onPlusClick = if (usersPreview.size > 5) {
-                    { openUsersList(viewModel.likers.value ?: emptyList(), "Лайкнувшие") }
+                    { openUsersList(viewModel.likers.value ?: emptyList(), "Likers") }
                 } else {
                     null
                 }
@@ -175,14 +162,13 @@ class PostDetailFragment : Fragment() {
         }
 
         viewModel.mentionedPreview.observe(viewLifecycleOwner) { usersPreview ->
-            Log.d(TAG, "mentionedPreview observed: size=${usersPreview.size}")
             buildCarousel(
                 container = binding.llMentioned,
                 parentLayout = binding.mentionedLayout,
                 users = usersPreview,
                 iconResId = R.drawable.ic_mentioned,
                 onPlusClick = if (usersPreview.size > 5) {
-                    { openUsersList(viewModel.mentioned.value ?: emptyList(), "Упомянутые") }
+                    { openUsersList(viewModel.mentioned.value ?: emptyList(), "Mentioned") }
                 } else {
                     null
                 }
@@ -217,7 +203,7 @@ class PostDetailFragment : Fragment() {
             append("\n\n")
             append("📅 ${post.published.formatForDisplay()}\n")
             if (post.coords != null) {
-                append("🗺️ Координаты: ${post.coords.lat}, ${post.coords.lng}\n")
+                append("🗺️ Coordinates: ${post.coords.lat}, ${post.coords.lng}\n")
             }
             if (post.link != null) {
                 append("🔗 ${post.link}\n")
@@ -228,7 +214,7 @@ class PostDetailFragment : Fragment() {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, shareText)
         }
-        startActivity(Intent.createChooser(shareIntent, "Поделиться постом"))
+        startActivity(Intent.createChooser(shareIntent, "Share post"))
     }
 
     private fun openUsersList(users: List<User>, title: String) {
@@ -375,7 +361,6 @@ class PostDetailFragment : Fragment() {
             placemark?.setOpacity(1.0f)
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error creating marker from vector", e)
             val fallbackPlacemark = mapView?.map?.mapObjects?.addPlacemark(point)
             fallbackPlacemark?.setOpacity(1.0f)
         }
@@ -402,11 +387,9 @@ class PostDetailFragment : Fragment() {
         onPlusClick: (() -> Unit)?
     ) {
         if (users.isEmpty()) {
-            Log.d(TAG, "No users, hiding carousel")
             parentLayout.visibility = View.GONE
             return
         }
-        Log.d(TAG, "Building carousel with ${users.size} users")
         parentLayout.visibility = View.VISIBLE
         container.removeAllViews()
 
@@ -615,7 +598,6 @@ class PostDetailFragment : Fragment() {
                             }
                         }
                     } catch (e: Exception) {
-                        Log.e(TAG, "Error loading video thumbnail", e)
                         withContext(Dispatchers.Main) {
                             binding.videoPreview.setImageResource(R.drawable.ic_play_circle_filled)
                             binding.ivPlay.visibility = View.VISIBLE
@@ -624,7 +606,7 @@ class PostDetailFragment : Fragment() {
                 }
 
                 binding.videoContainer.setOnClickListener {
-                    Toast.makeText(requireContext(), "Видео пока не поддерживается", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Video playback is not supported yet", Toast.LENGTH_SHORT).show()
                 }
             }
 

@@ -15,7 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class EventsViewModel @Inject constructor(
     private val repository: EventRepository,
-    private val tokenManager: TokenManager  // Добавлен TokenManager для получения userId
+    private val tokenManager: TokenManager
 ) : ViewModel() {
 
     val events: LiveData<List<Event>> = repository.getEventsLiveData()
@@ -42,7 +42,7 @@ class EventsViewModel @Inject constructor(
             val result = repository.getEvents()
             _isLoading.value = false
             result.onFailure { exception ->
-                _error.value = exception.message ?: "Ошибка загрузки"
+                _error.value = exception.message ?: "Failed to load events"
             }
         }
     }
@@ -56,8 +56,8 @@ class EventsViewModel @Inject constructor(
             }
             result.onFailure { error ->
                 when (error.message) {
-                    "Нужно авторизоваться" -> _authError.value = error.message
-                    else -> _error.value = error.message ?: "Ошибка при обновлении лайка"
+                    "Authentication required" -> _authError.value = error.message
+                    else -> _error.value = error.message ?: "Failed to update like"
                 }
             }
         }
@@ -72,8 +72,8 @@ class EventsViewModel @Inject constructor(
             }
             result.onFailure { error ->
                 when (error.message) {
-                    "Нужно авторизоваться" -> _authError.value = error.message
-                    else -> _error.value = error.message ?: "Ошибка при обновлении участия"
+                    "Authentication required" -> _authError.value = error.message
+                    else -> _error.value = error.message ?: "Failed to update participation"
                 }
             }
         }
@@ -83,7 +83,7 @@ class EventsViewModel @Inject constructor(
         viewModelScope.launch {
             val result = repository.deleteEvent(eventId)
             if (result.isFailure) {
-                _error.value = result.exceptionOrNull()?.message ?: "Ошибка удаления"
+                _error.value = result.exceptionOrNull()?.message ?: "Failed to delete event"
             }
         }
     }

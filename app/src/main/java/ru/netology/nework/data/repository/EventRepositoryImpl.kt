@@ -1,6 +1,5 @@
 package ru.netology.nework.data.repository
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -23,8 +22,6 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private const val TAG = "EventRepositoryImpl"
-
 @Singleton
 class EventRepositoryImpl @Inject constructor(
     private val apiService: ApiService
@@ -42,7 +39,7 @@ class EventRepositoryImpl @Inject constructor(
                 _events.postValue(events)
                 Result.success(events)
             } else {
-                Result.failure(Exception("Ошибка загрузки событий"))
+                Result.failure(Exception("Failed to load events"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -53,10 +50,10 @@ class EventRepositoryImpl @Inject constructor(
         return try {
             val response = apiService.getEventById(id)
             if (response.isSuccessful) {
-                val event = response.body()?.toDomain() ?: throw Exception("Событие не найдено")
+                val event = response.body()?.toDomain() ?: throw Exception("Event not found")
                 Result.success(event)
             } else {
-                Result.failure(Exception("Ошибка загрузки события"))
+                Result.failure(Exception("Failed to load event"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -67,11 +64,11 @@ class EventRepositoryImpl @Inject constructor(
         return try {
             val response = apiService.likeEvent(id)
             if (response.isSuccessful) {
-                val event = response.body()?.toDomain() ?: throw Exception("Ошибка")
+                val event = response.body()?.toDomain() ?: throw Exception("Error")
                 updateEventInList(event)
                 Result.success(event)
             } else {
-                Result.failure(Exception("Ошибка лайка"))
+                Result.failure(Exception("Failed to like event"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -82,11 +79,11 @@ class EventRepositoryImpl @Inject constructor(
         return try {
             val response = apiService.unlikeEvent(id)
             if (response.isSuccessful) {
-                val event = response.body()?.toDomain() ?: throw Exception("Ошибка")
+                val event = response.body()?.toDomain() ?: throw Exception("Error")
                 updateEventInList(event)
                 Result.success(event)
             } else {
-                Result.failure(Exception("Ошибка снятия лайка"))
+                Result.failure(Exception("Failed to unlike event"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -97,11 +94,11 @@ class EventRepositoryImpl @Inject constructor(
         return try {
             val response = apiService.participateEvent(id)
             if (response.isSuccessful) {
-                val event = response.body()?.toDomain() ?: throw Exception("Ошибка")
+                val event = response.body()?.toDomain() ?: throw Exception("Error")
                 updateEventInList(event)
                 Result.success(event)
             } else {
-                Result.failure(Exception("Ошибка участия"))
+                Result.failure(Exception("Failed to participate in event"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -112,11 +109,11 @@ class EventRepositoryImpl @Inject constructor(
         return try {
             val response = apiService.unparticipateEvent(id)
             if (response.isSuccessful) {
-                val event = response.body()?.toDomain() ?: throw Exception("Ошибка")
+                val event = response.body()?.toDomain() ?: throw Exception("Error")
                 updateEventInList(event)
                 Result.success(event)
             } else {
-                Result.failure(Exception("Ошибка отмены участия"))
+                Result.failure(Exception("Failed to cancel participation"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -131,7 +128,7 @@ class EventRepositoryImpl @Inject constructor(
                 _events.postValue(currentList.filter { it.id != id })
                 Result.success(Unit)
             } else {
-                Result.failure(Exception("Ошибка удаления"))
+                Result.failure(Exception("Failed to delete event"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -144,7 +141,7 @@ class EventRepositoryImpl @Inject constructor(
         coords: Coordinates?,
         eventType: EventType,
         eventDateTime: LocalDateTime,
-        speakerIds: Set<Long>  // ИСПРАВЛЕНО: speakerIds вместо participantIds
+        speakerIds: Set<Long>
     ): Result<Event> {
         return try {
             var mediaUrl: String? = null
@@ -182,9 +179,6 @@ class EventRepositoryImpl @Inject constructor(
             val dateTimeStr = eventDateTime.atZone(java.time.ZoneId.systemDefault())
                 .format(formatter)
 
-            // ИСПРАВЛЕНО: используем speakerIds, а не participantsIds
-            Log.d(TAG, "Sending event: content=$content, datetime=$dateTimeStr, type=${eventType.name}, speakers=${speakerIds.size}")
-
             val request = CreateEventRequest(
                 id = 0,
                 content = content,
@@ -192,25 +186,20 @@ class EventRepositoryImpl @Inject constructor(
                 type = eventType.name,
                 attachment = attachmentDto,
                 coords = coordinatesDto,
-                speakerIds = speakerIds.toList()  // ИСПРАВЛЕНО: speakerIds
+                speakerIds = speakerIds.toList()
             )
 
             val response = apiService.createEvent(request)
 
-            Log.d(TAG, "Response code: ${response.code()}")
             if (response.isSuccessful) {
                 val event = response.body()?.toDomain() ?: throw Exception("Empty response")
                 val currentList = _events.value ?: emptyList()
                 _events.postValue(listOf(event) + currentList)
-                Log.d(TAG, "Event saved successfully, new list size: ${_events.value?.size}")
                 Result.success(event)
             } else {
-                val errorBody = response.errorBody()?.string()
-                Log.e(TAG, "Server error: ${response.code()}, body: $errorBody")
                 Result.failure(Exception("Server error: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Exception in saveEvent", e)
             Result.failure(e)
         }
     }
@@ -222,25 +211,19 @@ class EventRepositoryImpl @Inject constructor(
         coords: Coordinates?,
         eventType: EventType,
         eventDateTime: LocalDateTime,
-        speakerIds: Set<Long>  // ИСПРАВЛЕНО: speakerIds вместо participantIds
+        speakerIds: Set<Long>
     ): Result<Event> {
-        Log.d(TAG, "=== updateEvent IN REPOSITORY ===")
-        Log.d(TAG, "id=$id, content=$content, eventType=${eventType.name}, eventDateTime=$eventDateTime, speakerIds=${speakerIds.joinToString()}")
-
         return try {
             var mediaUrl: String? = null
             var attachmentType: AttachmentType? = null
 
-            // Проверяем, нужно ли загружать новое медиа
             val isNewLocalFile = attachment != null &&
                     !attachment.url.startsWith("http://") &&
                     !attachment.url.startsWith("https://")
 
             if (isNewLocalFile) {
-                Log.d(TAG, "Uploading new media...")
                 val file = File(attachment.url)
                 if (!file.exists()) {
-                    Log.e(TAG, "File not found: ${attachment.url}")
                     return Result.failure(Exception("File not found"))
                 }
 
@@ -251,18 +234,14 @@ class EventRepositoryImpl @Inject constructor(
 
                 val uploadResponse = apiService.uploadMedia(part)
                 if (!uploadResponse.isSuccessful) {
-                    Log.e(TAG, "Media upload failed")
                     return Result.failure(Exception("Media upload failed"))
                 }
 
                 val mediaResponse = uploadResponse.body()
                 mediaUrl = mediaResponse?.url ?: return Result.failure(Exception("No URL in media response"))
-                Log.d(TAG, "Media uploaded: $mediaUrl")
             } else if (attachment != null) {
-                // Существующее вложение с сервера - используем его URL
                 mediaUrl = attachment.url
                 attachmentType = attachment.type
-                Log.d(TAG, "Using existing media: $mediaUrl")
             }
 
             val attachmentDto = mediaUrl?.let { url ->
@@ -277,9 +256,6 @@ class EventRepositoryImpl @Inject constructor(
             val dateTimeStr = eventDateTime.atZone(java.time.ZoneId.systemDefault())
                 .format(formatter)
 
-            Log.d(TAG, "Sending request with datetime=$dateTimeStr, speakerIds=${speakerIds.joinToString()}")
-
-            // ИСПРАВЛЕНО: используем speakerIds
             val request = CreateEventRequest(
                 id = id,
                 content = content,
@@ -287,24 +263,19 @@ class EventRepositoryImpl @Inject constructor(
                 type = eventType.name,
                 attachment = attachmentDto,
                 coords = coordinatesDto,
-                speakerIds = speakerIds.toList()  // ИСПРАВЛЕНО: speakerIds
+                speakerIds = speakerIds.toList()
             )
 
             val response = apiService.createEvent(request)
-            Log.d(TAG, "Response code: ${response.code()}")
 
             if (response.isSuccessful) {
                 val event = response.body()?.toDomain() ?: throw Exception("Empty response")
-                Log.d(TAG, "Event updated successfully: id=${event.id}")
                 updateEventInList(event)
                 Result.success(event)
             } else {
-                val errorBody = response.errorBody()?.string()
-                Log.e(TAG, "Server error: ${response.code()}, body: $errorBody")
                 Result.failure(Exception("Server error: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "updateEvent exception", e)
             Result.failure(e)
         }
     }
